@@ -1,0 +1,161 @@
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  /* Preserving the blue and yellow gradient background */
+  background: radial-gradient(circle, #a6c1ee, #f5d087);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* Style for the logo image */
+.branding-logo {
+  max-width: 120px; /* Adjust the size as needed */
+  height: auto;
+  margin-bottom: 1.5rem; /* Adds space between the logo and the heading */
+}
+
+/* Update the branding panel to properly align all content */
+.login-branding-panel {
+  display: flex;
+  flex-direction: column; /* Stacks content vertically */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 3rem;
+}
+
+/* This is the new "square" container */
+.login-wrapper {
+  max-width: 950px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Ensures child elements conform to the border-radius */
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Styling for the left "Welcome Back!" panel */
+.login-branding-panel {
+  background-color: #f8f9fa; /* A subtle off-white for contrast */
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.branding-content h1 {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.branding-content p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* Styling for the right login form panel */
+.login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-form-container h2 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.login-form-container .subtitle {
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+/* Custom form styles */
+.form-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.form-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #adb5bd;
+}
+
+.form-control-custom {
+  border-radius: 0.5rem;
+  padding: 0.9rem 1rem 0.9rem 2.5rem; /* Left padding for icon */
+  border: 1px solid #ced4da;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control-custom:focus {
+  border-color: #a6c1ee;
+  box-shadow: 0 0 0 0.25rem rgba(166, 193, 238, 0.4);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #adb5bd;
+  cursor: pointer;
+}
+
+.forgot-password-link, .signup-link {
+  color: #0d6efd;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.forgot-password-link:hover, .signup-link:hover {
+  text-decoration: underline;
+}
+
+/* Custom Button Style */
+.btn-custom-login {
+  padding: 12px;
+  background: linear-gradient(90deg, #1064d4, #4a90e2);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-custom-login:hover {
+  transform: translateY(-2px);
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .login-wrapper {
+    max-width: 500px;
+  }
+  .login-form-panel {
+    padding: 2rem;
+  }
+}

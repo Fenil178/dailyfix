@@ -1,0 +1,49 @@
+/* =================================
+   Footer Styles
+   ================================= */
+   footer {
+    background-color: #ffffff; /* Light mode background color */
+    color: #333; /* Light mode text color */
+    padding: 2rem 0;
+    text-align: center;
+    border-top: 1px solid #e0e0e0;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.social-icons {
+    margin-top: 1rem;
+}
+
+.social-icons a {
+    color: #333; /* Light mode icon color */
+    margin: 0 0.8rem;
+    font-size: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: var(--primary-color); /* Uses primary color on hover */
+}
+
+/* =================================
+   Dark Mode Specific Overrides
+   ================================= */
+body.dark-mode footer {
+    background-color: #1f1f1f; /* Dark mode background color */
+    color: #e0e0e0; /* Dark mode text color */
+    border-top: 1px solid #444;
+}
+
+body.dark-mode .social-icons a {
+    color: #e0e0e0; /* Dark mode icon color */
+}
+
+body.dark-mode .social-icons a:hover {
+    color: var(--primary-color);
+}

@@ -1,0 +1,80 @@
+/* =================================
+   Dashboard CSS (Light Mode)
+   ================================= */
+   :root {
+    --dashboard-bg-light: #f4f7f9;
+    --card-bg-light: #ffffff;
+    --card-shadow-light: rgba(0,0,0,0.1);
+    --text-color-light: #333;
+    --primary-color: #007bff;
+    --secondary-color: #ffc107;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+}
+
+body.dark-mode {
+    --dashboard-bg-light: #121212;
+    --card-bg-light: #1f1f1f;
+    --card-shadow-light: rgba(0,0,0,0.2);
+    --text-color-light: #e0e0e0;
+    --primary-color: #ffc107; /* Invert for better contrast */
+    --secondary-color: #007bff; /* Invert for better contrast */
+    --success-color: #28a745; /* Keep green */
+    --info-color: #17a2b8; /* Keep teal */
+}
+
+body {
+    background-color: var(--dashboard-bg-light);
+}
+
+.dashboard-card {
+    background-color: var(--card-bg-light);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px var(--card-shadow-light);
+    padding: 25px;
+    text-align: center;
+    transition: transform 0.3s ease;
+    color: var(--text-color-light);
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+.dashboard-card i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+.dashboard-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+.dashboard-card p {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.dashboard-card a.btn-card {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: var(--card-bg-light);
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* Worker specific colors */
+.dashboard-card.worker-card i { color: var(--secondary-color); }
+.dashboard-card.worker-card p { color: var(--secondary-color); }
+.dashboard-card.worker-card a.btn-card { background-color: var(--secondary-color); }
+
+/* Success card colors */
+.dashboard-card.success-card i { color: var(--success-color); }
+.dashboard-card.success-card p { color: var(--success-color); }
+.dashboard-card.success-card a.btn-card { background-color: var(--success-color); }
+
+/* Info card colors */
+.dashboard-card.info-card i { color: var(--info-color); }
+.dashboard-card.info-card p { color: var(--info-color); }
+.dashboard-card.info-card a.btn-card { background-color: var(--info-color); }

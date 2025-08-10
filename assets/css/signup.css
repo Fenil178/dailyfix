@@ -1,0 +1,244 @@
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: radial-gradient(circle, #a6c1ee, #f5d087);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* Style for the logo image */
+.branding-logo {
+  max-width: 120px; /* Adjust the size as needed */
+  height: auto;
+  margin-bottom: 1.5rem; /* Adds space between the logo and the heading */
+}
+
+/* Update the branding panel to properly align all content */
+.login-branding-panel {
+  display: flex;
+  flex-direction: column; /* Stacks content vertically */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 3rem;
+}
+
+.login-wrapper {
+  max-width: 950px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.login-branding-panel {
+  background-color: #f8f9fa;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.branding-content h1 {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.branding-content p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 3rem;
+  overflow-y: auto;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 450px;
+}
+
+.login-form-container h2 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.login-form-container .subtitle {
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+/* Custom form styles from login.css */
+.form-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.form-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #adb5bd;
+  z-index: 2; /* Ensure icon is above the select arrow */
+}
+
+/* Style for text inputs and select dropdowns */
+.form-control-custom {
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  padding: 0.9rem 1rem 0.9rem 2.5rem; /* Left padding for icon */
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  background-clip: padding-box;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.form-control-custom:focus {
+  border-color: #a6c1ee;
+  box-shadow: 0 0 0 0.25rem rgba(166, 193, 238, 0.4);
+  outline: 0;
+}
+
+select.form-control-custom {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #adb5bd;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Signup-specific styles for file drop area */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.file-drop-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 2px dashed #1064d4;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.file-drop-area.is-active {
+    background-color: #e9ecef;
+    border-color: #0056b3;
+}
+
+.file-drop-area .file-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #1064d4;
+}
+.file-drop-area .file-msg {
+    font-size: 0.9rem;
+}
+
+.file-input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.file-preview-container {
+    margin: 1rem auto 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: none;
+}
+
+.file-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Custom button for signup */
+.btn-signup {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #1064d4, #4a90e2);
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-signup:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+.signup-link {
+  color: #0d6efd;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .login-wrapper {
+    max-width: 500px;
+  }
+  .login-form-panel {
+    padding: 2rem;
+  }
+}

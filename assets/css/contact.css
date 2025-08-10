@@ -1,0 +1,213 @@
+/*===== Contact Page Styles (Updated) =====*/
+
+/* Root variables for theming */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #ffc107;
+  --background-color-light: #f4f7f9;
+  --background-color-card: #ffffff;
+  --text-color-dark: #333;
+  --text-color-light: #6c757d;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
+
+body.dark-mode {
+  --primary-color: #ffc107; /* A slight change for better contrast in dark mode */
+  --secondary-color: #007bff; /* A slight change for better contrast in dark mode */
+  --background-color-light: #121212;
+  --background-color-card: #1f1f1f;
+  --text-color-dark: #e0e0e0;
+  --text-color-light: #bdc3c7;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  color: var(--text-color-dark);
+  background-color: var(--background-color-light);
+  transition: background-color 0.3s ease;
+}
+
+.page-content {
+  padding-top: 5rem;
+}
+
+.contact-hero {
+  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: #fff;
+  padding: 5rem 2rem;
+  text-align: center;
+  margin-top: 0;
+  animation: gradientBG 8s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.contact-hero h1 {
+  font-weight: 700;
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.contact-hero p {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: var(--background-color-card);
+  border-radius: 1rem;
+  box-shadow: var(--box-shadow);
+}
+
+.contact-form h2, .faq-section h2 {
+  color: var(--primary-color);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.contact-form p {
+  font-size: 1rem;
+  color: var(--text-color-light);
+  margin-bottom: 2rem;
+}
+
+.contact-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.contact-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color-dark);
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-color-dark);
+  background-color: var(--background-color-light);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.contact-form textarea {
+  min-height: 120px;
+}
+
+.btn-main {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--secondary-color);
+  color: var(--text-color-dark);
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-main:hover {
+    background-color: #e0a800;
+    transform: translateY(-2px);
+}
+
+.faq-section {
+  padding-left: 1rem;
+}
+
+.faq-section details {
+  margin-bottom: 1rem;
+  background-color: var(--background-color-light);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+  transition: background-color 0.3s ease;
+}
+
+body.dark-mode .faq-section details {
+    background-color: #2c2c2c;
+    border-color: #444;
+}
+
+.faq-section details:hover {
+  background-color: #f0f3f6;
+}
+
+body.dark-mode .faq-section details:hover {
+    background-color: #3c3c3c;
+}
+
+.faq-section summary {
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none; /* Removes the default arrow */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq-section summary::after {
+  content: "»";
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+  color: var(--primary-color);
+}
+
+.faq-section details[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.faq-section p {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  color: var(--text-color-light);
+  font-size: 0.95rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .contact-hero h1 {
+    font-size: 2rem;
+  }
+  .contact-hero p {
+    font-size: 1rem;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    margin: 2rem auto;
+  }
+  .faq-section {
+      padding-left: 0;
+      margin-top: 2rem;
+  }
+}
