@@ -1,0 +1,75 @@
+/* assets/css/worker_list.css */
+
+/* ADDED: Pushes the main content down below the fixed header */
+.page-content {
+    padding-top: 80px; /* Adjust this value if your header height changes */
+}
+
+.page-header { 
+    margin: 2rem auto; 
+    padding: 0 1rem;
+    max-width: 1200px;
+}
+
+.page-header h1 { 
+    font-size: 2.5rem; 
+    margin-bottom: 0.5rem; 
+    text-align: center;
+    /* REMOVED: !important is no longer needed as color was not the issue */
+    color: var(--text-color-dark); 
+}
+
+/* --- Styles for the "Back to Services" Link --- */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.back-link i {
+  transition: transform 0.3s ease;
+}
+
+.back-link:hover i {
+  transform: translateX(-5px);
+}
+/* --- End of Back Link Styles --- */
+
+.worker-list-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+.worker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+.worker-card-link { text-decoration: none; color: inherit; }
+.worker-card {
+    background: var(--background-color-card);
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.worker-card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px -10px rgba(0,0,0,0.15); }
+.worker-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid var(--primary-color); }
+.worker-name { font-size: 1.5rem; margin: 0.5rem 0; color: var(--text-color-dark); }
+.worker-bio { color: var(--text-color-light); font-size: 0.9rem; min-height: 50px; }
+.worker-meta { display: flex; justify-content: space-around; font-size: 0.9rem; color: var(--text-color-light); margin: 1rem 0; }
+.worker-meta span { display: flex; align-items: center; gap: 0.5rem; }
+.view-profile-btn { display: inline-block; padding: 10px 25px; background-color: var(--primary-color); color: #fff; border-radius: 8px; font-weight: 600; transition: background-color 0.3s ease; }
+.worker-card:hover .view-profile-btn { background-color: var(--secondary-color); color: #000; }
+
+.no-workers-found { text-align: center; padding: 4rem 1rem; background: var(--background-color-card); border-radius: 12px; }
+.no-workers-found i { font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem; }
+.no-workers-found h2 { color: var(--text-color-dark); }
+.no-workers-found p { color: var(--text-color-light); }
+
+
+/* --- Dark Mode Styles --- */
+body.dark-mode .worker-card:hover {
+  box-shadow: 0 8px 30px -10px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .view-profile-btn {
+    color: var(--text-color-dark);
+}

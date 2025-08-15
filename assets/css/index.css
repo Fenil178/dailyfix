@@ -643,3 +643,213 @@ body.dark-mode .btn-main:hover {
   background-color: #ffc107;
   color: #000;
 }
+
+/* =================================
+   NEW Minimalist Dashboard UI
+   ================================= */
+   .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    padding-top: 84px; /* Add this line */
+}
+
+.dashboard-header {
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-color-light);
+}
+
+.dashboard-header p {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+body.dark-mode .dashboard-header p {
+    color: #a0a0a0;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background-color: var(--card-bg-light);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 25px -10px var(--card-shadow-light);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.dark-mode .stat-card {
+    border: 1px solid #333;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px -10px var(--card-shadow-light);
+}
+
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.stat-card-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color-light);
+}
+
+.stat-card-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+    text-align: left;
+}
+
+/* Color Variants */
+.stat-card-icon.success, .stat-card-value.success {
+    color: var(--success-color);
+}
+.stat-card-icon.warning, .stat-card-value.warning {
+    color: var(--secondary-color);
+}
+
+/* Action Card Style */
+.action-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary-color), #0056b3);
+}
+body.dark-mode .action-card {
+    background: linear-gradient(135deg, #333, #111);
+}
+
+.action-card .stat-card-icon {
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+.action-card .stat-card-title {
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card-cta {
+    display: inline-block;
+    padding: 10px 25px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+body.dark-mode .stat-card-cta {
+     background-color: var(--primary-color);
+     color: #000;
+}
+.stat-card-cta:hover {
+    background-color: #fff;
+}
+
+/* ===== Dashboard Activity List ===== */
+.dashboard-section {
+  margin-top: 3rem;
+}
+
+.activity-list {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 25px -10px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+body.dark-mode .activity-list {
+  background-color: #1c1c1c;
+  border-color: #333;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+body.dark-mode .activity-item {
+  border-color: #333;
+}
+
+.activity-icon {
+  font-size: 1.5rem;
+  color: #007bff;
+  margin-right: 1.5rem;
+  width: 40px;
+  text-align: center;
+}
+
+.activity-details {
+  flex-grow: 1;
+}
+
+.activity-details p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.activity-details small {
+  color: #6c757d;
+}
+
+body.dark-mode .activity-details small {
+  color: #a0a0a0;
+}
+
+.status-completed { color: #28a745; }
+.status-pending { color: #ffc107; }
+
+.btn-view {
+  padding: 6px 16px;
+  background-color: #f0f0f0;
+  color: #333;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-view:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+body.dark-mode .btn-view {
+  background-color: #333;
+  color: #e0e0e0;
+}

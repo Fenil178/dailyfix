@@ -19,47 +19,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $profile_image = $_FILES['profile_image'] ?? null;
     $profile_imagePath = null;
 
-   // --- File Upload Handling ---
-if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = __DIR__ . '/customer/uploads/';
-    if (!is_dir($uploadDir)) {
-        // Attempt to create the directory if it doesn't exist
-        if (!mkdir($uploadDir, 0755, true)) {
-            $response = ['status' => 'error', 'message' => 'Failed to create upload directory. Check server permissions.'];
-            echo json_encode($response);
-            exit;
-        }
-    }
-    
-    $imageFileType = strtolower(pathinfo($profile_image['name'], PATHINFO_EXTENSION));
-    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-
-    if (in_array($imageFileType, $allowedExtensions)) {
-        $fileName = uniqid('', true) . '.' . $imageFileType;
-        $uploadFilePath = $uploadDir . $fileName;
-
-        if (move_uploaded_file($profile_image['tmp_name'], $uploadFilePath)) {
-            // Success! Set the path for the database.
-            $profile_imagePath = '/dailyfix/customer/uploads/' . $fileName;
+   // --- MODIFIED: File Upload Handling with Conditional Paths ---
+    if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
+        $uploadSubDir = '';
+        if ($role === 'worker') {
+            $uploadSubDir = 'worker/uploads/';
+        } elseif ($role === 'customer') {
+            $uploadSubDir = 'customer/uploads/';
         } else {
-            // Failed to move file, send a specific error message.
-            $uploadError = error_get_last(); // Get the underlying system error
-            $response = ['status' => 'error', 'message' => 'Failed to upload profile image. Error: ' . ($uploadError['message'] ?? 'Unknown error.')];
+            // If a role isn't selected, we can't save the image.
+            $response = ['status' => 'error', 'message' => 'Please select a role before uploading an image.'];
             echo json_encode($response);
             exit;
         }
-    } else {
-        // Invalid file type
-        $response = ['status' => 'error', 'message' => 'Invalid file type. Please upload a JPG, JPEG, PNG, or GIF.'];
+        
+        // Server path for moving the file
+        $uploadDir = __DIR__ . '/' . $uploadSubDir;
+        
+        if (!is_dir($uploadDir)) {
+            // Attempt to create the directory if it doesn't exist
+            if (!mkdir($uploadDir, 0755, true)) {
+                $response = ['status' => 'error', 'message' => 'Failed to create upload directory. Check server permissions.'];
+                echo json_encode($response);
+                exit;
+            }
+        }
+        
+        $imageFileType = strtolower(pathinfo($profile_image['name'], PATHINFO_EXTENSION));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+        if (in_array($imageFileType, $allowedExtensions)) {
+            $fileName = uniqid('', true) . '.' . $imageFileType;
+            $uploadFilePath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($profile_image['tmp_name'], $uploadFilePath)) {
+                // Success! Set the web-accessible path for the database.
+                $profile_imagePath = '/dailyfix/' . $uploadSubDir . $fileName;
+            } else {
+                $response = ['status' => 'error', 'message' => 'Failed to upload profile image.'];
+                echo json_encode($response);
+                exit;
+            }
+        } else {
+            $response = ['status' => 'error', 'message' => 'Invalid file type. Please upload a JPG, JPEG, PNG, or GIF.'];
+            echo json_encode($response);
+            exit;
+        }
+    } elseif ($profile_image && $profile_image['error'] !== UPLOAD_ERR_OK) {
+        $response = ['status' => 'error', 'message' => 'There was an error with the file upload. Code: ' . $profile_image['error']];
         echo json_encode($response);
         exit;
     }
-} elseif ($profile_image && $profile_image['error'] !== UPLOAD_ERR_OK) {
-    // Handle other potential upload errors
-    $response = ['status' => 'error', 'message' => 'There was an error with the file upload. Code: ' . $profile_image['error']];
-    echo json_encode($response);
-    exit;
-}
 
     // Simple validation
     if (empty($full_name) || empty($email) || empty($password) || empty($role)) {
@@ -76,7 +86,7 @@ if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
 
     try {
         // Check if email already exists
-        $stmt = $conn->prepare("SELECT id FROM dailyfix.users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id FROM public.users WHERE email = ?");
         $stmt->execute([$email]);
         if ($stmt->fetch()) {
             $response = ['status' => 'error', 'message' => 'An account with this email already exists.'];
@@ -84,30 +94,32 @@ if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
             exit;
         }
 
-        // Hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $accountStatus = 'active';
-
+        
         // Insert new user
-        $sql = "INSERT INTO dailyfix.users (full_name, email, password, phone, role, profile_image, account_status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO public.users (full_name, email, password, phone, role, profile_image, account_status) VALUES (?, ?, ?, ?, ?, ?, 'active')";
         $stmt = $conn->prepare($sql);
         
-        if ($stmt->execute([$full_name, $email, $hashedPassword, $phone, $role, $profile_imagePath, $accountStatus])) {
-            // ---- START: NEW LOGIN LOGIC ----
-
-            // Get the ID of the user we just created
+        if ($stmt->execute([$full_name, $email, $hashedPassword, $phone, $role, $profile_imagePath])) {
             $new_user_id = $conn->lastInsertId();
 
-            // Set the exact same cookies that login.php sets to create the session
+            if ($role === 'worker') {
+                $stmt_profile = $conn->prepare(
+                    "INSERT INTO public.worker_profiles (user_id, bio) VALUES (?, 'Welcome!')"
+                );
+                $stmt_profile->execute([$new_user_id]);
+            }
+            
             setcookie("encrypted_user_id", encrypt_id($new_user_id), time() + 86400, "/");
             setcookie("encrypted_user_role", encrypt_id($role), time() + 86400, "/");
             setcookie("encrypted_user_name", encrypt_id($full_name), time() + 86400, "/");
             setcookie("encrypted_profile_image", encrypt_id($profile_imagePath ?? ''), time() + 86400, "/");
 
-            // Update the response to redirect to the dashboard
-            $response = ['status' => 'success', 'message' => 'Account created! Redirecting to your dashboard...', 'redirect' => 'dashboard.php?action=new_user'];
-
-            // ---- END: NEW LOGIN LOGIC ----
+            $redirect_url = 'dashboard.php?action=new_user';
+            if ($role === 'worker') {
+                $redirect_url = 'worker/setup.php';
+            }
+            $response = ['status' => 'success', 'message' => 'Account created! Redirecting...', 'redirect' => $redirect_url];
         } else {
             $response = ['status' => 'error', 'message' => 'Failed to create account. Please try again.'];
         }

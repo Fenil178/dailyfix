@@ -192,3 +192,22 @@ body {
     gap: 1.5rem;
   }
 }
+
+/* In services.css */
+.sub-service-card .book-now-btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 8px 20px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.sub-service-card:hover .book-now-btn {
+  background-color: var(--secondary-color);
+  color: var(--text-color-dark);
+  transform: scale(1.05);
+}

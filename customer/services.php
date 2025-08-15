@@ -26,21 +26,21 @@ $subServices = [];
 
 try {
     // Fetch main services
-    $stmt = $conn->prepare("SELECT id, name, icon, slug FROM dailyfix.services ORDER BY id");
+    $stmt = $conn->prepare("SELECT id, name, icon, slug FROM public.services ORDER BY id");
     $stmt->execute();
     $mainServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Fetch all sub-services and organize them by service_id
-    $stmt = $conn->prepare("SELECT service_id, name, icon, link FROM dailyfix.sub_services ORDER BY name");
+    $stmt = $conn->prepare("SELECT service_id, name, icon, slug FROM public.sub_services ORDER BY name"); // Fetch slug instead of link
     $stmt->execute();
     $allSubServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($allSubServices as $sub) {
-        $subServices[$sub['service_id']][] = [
-            'name' => $sub['name'],
-            'icon' => $sub['icon'],
-            'link' => $sub['link']
-        ];
+      $subServices[$sub['service_id']][] = [
+          'name' => $sub['name'],
+          'icon' => $sub['icon'],
+          'slug' => $sub['slug'] // Add slug here
+      ];
     }
 } catch (PDOException $e) {
     error_log("Database Error: " . $e->getMessage());

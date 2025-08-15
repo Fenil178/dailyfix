@@ -1,0 +1,206 @@
+/* assets/css/worker_profile.css */
+
+.page-content {
+    padding-top: 80px;
+}
+
+.profile-container {
+    max-width: 800px;
+    margin: 2rem auto 4rem auto;
+    padding: 2rem 2.5rem;
+    background-color: var(--background-color-card);
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .profile-container {
+    border: 1px solid #2c2c2c;
+}
+
+.profile-container h1 {
+    text-align: center;
+    font-weight: 700;
+    font-size: 2.25rem;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.profile-container > p {
+    text-align: center;
+    color: var(--text-color-light);
+    margin-bottom: 3rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.1rem;
+}
+
+.form-section {
+    margin-bottom: 3rem;
+}
+
+.form-section h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color-dark);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+body.dark-mode .form-section h3 {
+    border-bottom-color: #333;
+}
+
+.form-section p {
+    color: var(--text-color-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-color-dark);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    color: var(--text-color-dark);
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box; 
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea {
+    background-color: #2c2c2c;
+    border-color: #444;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-translucent, rgba(0, 123, 255, 0.2));
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group textarea:focus {
+    box-shadow: 0 0 0 3px var(--primary-color-translucent, rgba(255, 193, 7, 0.2));
+}
+
+.form-group ::placeholder {
+    color: #999;
+}
+
+body.dark-mode .form-group ::placeholder {
+    color: #777;
+}
+
+/* --- Modern Checkbox Tags --- */
+.services-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-item label {
+    display: block;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    font-weight: 500;
+}
+
+body.dark-mode .checkbox-item label {
+    border-color: #444;
+}
+
+.checkbox-item label:hover {
+    border-color: var(--primary-color);
+    background-color: var(--background-color-light);
+}
+
+.checkbox-item input[type="checkbox"]:checked + label {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+}
+
+body.dark-mode .checkbox-item input[type="checkbox"]:checked + label {
+    color: #111;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 1.5rem;
+    border: none;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: var(--secondary-color);
+    color: #111;
+}
+
+body.dark-mode .submit-btn {
+    color: var(--text-color-dark);
+}
+
+/* --- Responsive Styles --- */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-container {
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+}
+
+/* --- ADDED: Hide number input arrows --- */
+/* For Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}

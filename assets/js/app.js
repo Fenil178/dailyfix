@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentTheme === "dark") {
       document.body.classList.add("dark-mode");
       if (icon) {
-        icon.classList.remove("fa-sun");
-        icon.classList.add("fa-moon");
+        icon.classList.remove("fa-moon");
+        icon.classList.add("fa-sun");
       }
     }
 
@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.toggle("dark-mode");
       const isDark = document.body.classList.contains("dark-mode");
       if (icon) {
-        icon.classList.toggle("fa-sun", !isDark);
-        icon.classList.toggle("fa-moon", isDark);
+        icon.classList.toggle("fa-moon", !isDark);
+        icon.classList.toggle("fa-sun", isDark);
       }
       localStorage.setItem("theme", isDark ? "dark" : "light");
     });

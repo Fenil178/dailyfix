@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
     $password = trim($_POST['password']);
 
     try {
-        $stmt = $conn->prepare('SELECT id, password, role, full_name, profile_image, account_status FROM dailyfix.users WHERE email = ?');
+        $stmt = $conn->prepare('SELECT id, password, role, full_name, profile_image, account_status FROM public.users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 

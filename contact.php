@@ -1,6 +1,8 @@
 <?php
-// This block checks if the user is logged in and redirects to the login page if not.
-include_once __DIR__ . "/../api/encryption.php"; // Path to encryption file
+
+include_once __DIR__ . "/api/encryption.php";
+include_once __DIR__ . "/api/connect.php";
+include_once __DIR__ . "/api/header.php";
 
 $isLoggedIn = false;
 
@@ -41,7 +43,7 @@ if (!$isLoggedIn) {
 <script defer src="/dailyfix/assets/js/app.js"></script>
 
 <body class="light-mode">
-<?php include_once __DIR__ . "/../api/header.php"; ?>
+<?php include_once __DIR__ . "/api/header.php"; ?>
 
 <main class="page-content">
   <section class="contact-hero">
@@ -103,7 +105,7 @@ if (!$isLoggedIn) {
   </section>
 </main>
 
-<?php include_once __DIR__ . "/../api/footer.php"; ?>
+<?php include_once __DIR__ . "/api/footer.php"; ?>
 
 </body>
 </html>

@@ -25,15 +25,15 @@ if (isset($_COOKIE['encrypted_profile_image'])) {
 }
 
 // If the role or user ID can't be verified, redirect to the login page.
-if (!$role || !$userId) {
+// We add an exception for login.php and signup.php to prevent a redirect loop.
+$currentPage = basename($_SERVER['PHP_SELF']);
+if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'signup.php') {
     header("Location: /dailyfix/login.php");
     exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -51,10 +51,18 @@ if (!$role || !$userId) {
     </div>
 
     <ul class="nav-links" id="navLinks">
-        <li><a href="/dailyfix/dashboard.php">Dashboard</a></li>
-        <li><a href="/dailyfix/customer/services.php">Services</a></li>
-        <li><a href="/dailyfix/customer/about.php">About</a></li>
-        <li><a href="/dailyfix/customer/contact.php">Help</a></li>
+        <?php if ($role === 'customer'): ?>
+            <li><a href="/dailyfix/dashboard.php">Dashboard</a></li>
+            <li><a href="/dailyfix/customer/services.php">Browse Services</a></li>
+            <li><a href="/dailyfix/customer/bookings.php">My Bookings</a></li>
+            <li><a href="/dailyfix/contact.php">Help</a></li>
+
+        <?php elseif ($role === 'worker'): ?>
+            <li><a href="/dailyfix/dashboard.php">Dashboard</a></li>
+            <li><a href="/dailyfix/worker/jobs.php">Job Requests</a></li>
+            <li><a href="/dailyfix/worker/earnings.php">My Earnings</a></li>
+            <li><a href="/dailyfix/contact.php">Help</a></li>
+        <?php endif; ?>
     </ul>
 
     <div class="user-menu">
@@ -81,16 +89,16 @@ if (!$role || !$userId) {
         </div>
     </div>
     <div id="custom-logout-modal" class="modal">
-  <div class="modal-content">
-    <span class="close-button">&times;</span>
-    <h2>Are you sure you want to log out?</h2>
-    <p>You will be redirected to the login page.</p>
-    <div class="modal-buttons">
-      <button id="confirm-logout-btn">Yes, Log Out</button>
-      <button id="cancel-logout-btn">Cancel</button>
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Are you sure you want to log out?</h2>
+            <p>You will be redirected to the login page.</p>
+            <div class="modal-buttons">
+                <button id="confirm-logout-btn">Yes, Log Out</button>
+                <button id="cancel-logout-btn">Cancel</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 </nav>
 </body>
 </html>
