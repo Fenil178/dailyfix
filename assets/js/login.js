@@ -33,7 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 let alertClass = data.status === 'success' ? 'alert-success' : 'alert-danger';
+                let iconClass = data.status === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
                 alertPlaceholder.innerHTML = `<div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                                                <i class="${iconClass} me-2"></i>
                                                 ${data.message}
                                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                               </div>`;
@@ -50,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 alertPlaceholder.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
                                                 An unexpected error occurred. Please try again.
                                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                               </div>`;

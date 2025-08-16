@@ -242,3 +242,102 @@ select.form-control-custom {
     padding: 2rem;
   }
 }
+
+/* Styles for the two-step form layout */
+[data-step] {
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+[data-step="1"].fade-out,
+[data-step="2"].fade-out {
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none; /* Disables clicks during transition */
+}
+
+/* Styles for the worker details section inputs */
+#step-2 .form-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+#step-2 .form-group .form-icon {
+    top: 3.5rem; /* Adjusts icon position for stacked label/input */
+}
+
+#step-2 .form-group input,
+#step-2 .form-group textarea {
+    padding-left: 2.5rem;
+}
+
+/* New styles for the categorized services section */
+.services-category-list {
+    display: grid;
+    gap: 1.5rem; /* Space between categories */
+}
+
+.service-category-group {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.service-category-group h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.service-category-group h4 i {
+    font-size: 1.25rem;
+    color: #1064d4;
+    margin-right: 0.75rem;
+}
+
+.services-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.checkbox-item {
+    position: relative;
+}
+
+.checkbox-item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkbox-item label {
+    display: block;
+    cursor: pointer;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.checkbox-item input[type="checkbox"]:checked + label {
+    background-color: #1064d4;
+    color: #fff;
+    border-color: #1064d4;
+    box-shadow: 0 0 0 0.25rem rgba(16, 100, 212, 0.25);
+}
+
+.checkbox-item input[type="checkbox"]:hover + label {
+    background-color: #e9ecef;
+}

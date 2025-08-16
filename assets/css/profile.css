@@ -113,6 +113,7 @@ body.dark-mode .form-section h3 {
     background-color: var(--background-color-light);
     color: var(--text-color-dark);
     box-sizing: border-box;
+    font-family: 'Poppins';
 }
 
 body.dark-mode .form-group label {

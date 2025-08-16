@@ -12,26 +12,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
 
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
+    
+    // Check for missing '@' in the email format
+    if (strpos($email, '@') === false) {
+        $response = ['status' => 'error', 'message' => 'Missing "@" in email address.'];
+        echo json_encode($response);
+        exit();
+    }
 
     try {
         $stmt = $conn->prepare('SELECT id, password, role, full_name, profile_image, account_status FROM public.users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user && password_verify($password, $user['password'])) {
-            if ($user['account_status'] === 'suspended') {
-                $response = ['status' => 'error', 'message' => 'Your account has been suspended.'];
-            } else {
-                // Set cookies for the session
-                setcookie("encrypted_user_id", encrypt_id($user['id']), time() + 86400, "/");
-                setcookie("encrypted_user_role", encrypt_id($user['role']), time() + 86400, "/");
-                setcookie("encrypted_user_name", encrypt_id($user['full_name']), time() + 86400, "/");
-                setcookie("encrypted_profile_image", encrypt_id($user['profile_image'] ?? ''), time() + 86400, "/");
+        if ($user) {
+            if (password_verify($password, $user['password'])) {
+                if ($user['account_status'] === 'suspended') {
+                    $response = ['status' => 'error', 'message' => 'Your account has been suspended.'];
+                } else {
+                    // Set cookies for the session
+                    setcookie("encrypted_user_id", encrypt_id($user['id']), time() + 86400, "/");
+                    setcookie("encrypted_user_role", encrypt_id($user['role']), time() + 86400, "/");
+                    setcookie("encrypted_user_name", encrypt_id($user['full_name']), time() + 86400, "/");
+                    setcookie("encrypted_profile_image", encrypt_id($user['profile_image'] ?? ''), time() + 86400, "/");
 
-                $response = ['status' => 'success', 'message' => 'Login successful! Redirecting...', 'redirect' => 'dashboard.php'];
+                    $response = ['status' => 'success', 'message' => 'Login successful! Redirecting...', 'redirect' => 'dashboard.php'];
+                }
+            } else {
+                $response = ['status' => 'error', 'message' => 'Invalid password.'];
             }
         } else {
-            $response = ['status' => 'error', 'message' => 'Invalid email or password.'];
+            $response = ['status' => 'error', 'message' => 'An email doesn\'t exist. Please check it again or signup.'];
         }
     } catch (PDOException $e) {
         error_log($e->getMessage());
