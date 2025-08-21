@@ -18,28 +18,54 @@
 }
 
 /* --- Tab Navigation --- */
+/* assets/css/management.css */
+
+/* --- Tab Navigation --- */
 .tab-nav {
     display: flex;
-    border-bottom: 1px solid #ddd;
+    gap: 2.5rem; /* Adds spacing between the large titles */
+    border-bottom: none; /* Removes the underline */
     margin-bottom: 2rem;
 }
+
+.tab-link {
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 2.5rem;     /* MATCHED: Same size as .page-title */
+    font-weight: 700;       /* MATCHED: Same boldness as .page-title */
+    color: var(--primary-color); /* MATCHED: Same color as .page-title */
+    border-bottom: none;    /* Remove underline */
+    opacity: 0.6;           /* Make inactive tabs slightly faded */
+    transition: opacity 0.3s ease;
+}
+
+.tab-link.active {
+    opacity: 1; /* Make the active tab fully visible */
+}
+
 body.dark-mode .tab-nav { border-color: #333; }
+
+/* assets/css/management.css */
 
 .tab-link {
     padding: 1rem 1.5rem;
     cursor: pointer;
     background: none;
     border: none;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--text-color-light);
+    font-size: 1.25rem; /* Increased font size */
+    font-weight: 700;    /* Changed to bold to match the title */
+    color: var(--text-color-light); /* Kept the inactive color subtle */
     position: relative;
     top: 1px;
+    border-bottom: 3px solid transparent; /* Prepare for active state */
+    transition: color 0.3s ease;
 }
 
 .tab-link.active {
-    color: var(--primary-color);
-    border-bottom: 3px solid var(--primary-color);
+    color: var(--primary-color); /* Active tab color */
+    border-bottom: 3px solid var(--primary-color); /* Bolder underline for active tab */
 }
 
 .tab-content {
@@ -111,18 +137,27 @@ body.dark-mode .job-card-header { border-color: #333; }
     margin-top: 1.5rem;
 }
 
+/* assets/css/management.css */
 .job-card-actions .btn {
     flex-grow: 1;
-    padding: 10px;
+    padding: 12px 10px; /* Increased vertical padding for a better feel */
     text-align: center;
     text-decoration: none;
     border-radius: 8px;
-    font-weight: 600;
-    transition: opacity 0.3s;
+    font-weight: 700; /* Made font bolder */
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    border: none; /* Ensures no default borders appear */
+    cursor: pointer;
 }
-.job-card-actions .btn:hover { opacity: 0.8; }
-.btn.accept { background-color: #28a745; color: #fff; }
-.btn.decline { background-color: #dc3545; color: #fff; }
+
+.btn.accept { 
+    background-color: #28a745; /* Green for accept */
+    color: #fff; 
+}
+.btn.decline { 
+    background-color: #dc3545; /* Red for decline */
+    color: #fff; 
+}
 
 /* --- Summary Cards & Lists (Earnings/Bookings) --- */
 .summary-grid {

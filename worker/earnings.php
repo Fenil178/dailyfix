@@ -79,7 +79,7 @@ try {
                                 <small>Completed on <?php echo date("M d, Y", strtotime($job['booking_time'])); ?></small>
                             </div>
                             <div class="item-value">
-                                +$<?php echo number_format($job['final_cost'], 2); ?>
+                                +₹<?php echo number_format($job['final_cost'], 2); ?>
                             </div>
                         </div>
                     <?php endforeach; ?>

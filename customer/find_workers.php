@@ -50,30 +50,33 @@ try {
     <script defer src="/dailyfix/assets/js/app.js"></script>
     </head>
 <body>
-    <?php include_once __DIR__ . "/../api/header.php"; ?>
-
     <main class="page-content">
-        <section class="page-header">
-            <h1>Available Workers for <?php echo htmlspecialchars($serviceName); ?></h1>
-            <a href="/dailyfix/customer/services.php" class="back-link"><i class="fas fa-arrow-left"></i> Back to Services</a>
-        </section>
+    <section class="services-hero">
+        <h1>Available Workers for <?php echo htmlspecialchars($serviceName); ?></h1>
+    </section>
+    <section class="page-header">
+        <a href="/dailyfix/customer/services.php" class="back-link"><i class="fas fa-arrow-left"></i> Back to Services</a>
+    </section>
 
         <section class="worker-list-container">
             <?php if (count($workers) > 0): ?>
                 <div class="worker-grid">
-                    <?php foreach ($workers as $worker): ?>
-                        <a href="/dailyfix/customer/book_worker.php?id=<?php echo $worker['id']; ?>" class="worker-card-link">
-                            <div class="worker-card">
-                                <img src="<?php echo htmlspecialchars($worker['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="worker-avatar">
-                                <h3 class="worker-name"><?php echo htmlspecialchars($worker['full_name']); ?></h3>
-                                <p class="worker-bio"><?php echo htmlspecialchars(substr($worker['bio'], 0, 100)) . '...'; ?></p>
-                                <div class="worker-meta">
-                                    <span><i class="fas fa-star"></i> 4.8 (120 reviews)</span> <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($worker['experience_years']); ?>+ years</span>
-                                </div>
-                                <span class="view-profile-btn">View Profile & Book</span>
-                            </div>
+                <?php
+                foreach ($workers as $worker): ?>
+                    <div class="worker-card">
+                        <img src="<?php echo htmlspecialchars($worker['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="worker-avatar">
+                        <h3 class="worker-name"><?php echo htmlspecialchars($worker['full_name']); ?></h3>
+                        <p class="worker-bio"><?php echo htmlspecialchars(substr($worker['bio'], 0, 100)) . '...'; ?></p>
+                        <div class="worker-meta">
+                            <span><i class="fas fa-star"></i> 4.8 (120 reviews)</span>
+                            <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($worker['experience_years']); ?>+ years</span>
+                        </div>
+                        
+                        <a href="/dailyfix/customer/book_worker.php?id=<?php echo $worker['id']; ?>&service=<?php echo urlencode($serviceSlug); ?>" class="view-profile-btn">
+                            View Profile & Book
                         </a>
-                    <?php endforeach; ?>
+                    </div>
+                <?php endforeach; ?>
                 </div>
             <?php else: ?>
                 <div class="no-workers-found">

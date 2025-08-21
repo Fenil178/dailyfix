@@ -52,7 +52,7 @@ try {
                                 <?php echo str_replace('_', ' ', htmlspecialchars($booking['status'])); ?>
                             </div>
                             <div class="item-value">
-                                $<?php echo number_format($booking['final_cost'], 2); ?>
+                                ₹<?php echo number_format($booking['final_cost'], 2); ?>
                             </div>
                         </div>
                     <?php endforeach; ?>

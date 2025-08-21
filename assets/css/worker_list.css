@@ -1,6 +1,23 @@
-/* assets/css/worker_list.css */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #ffc107;
+  --background-color-light: #f4f7f9;
+  --background-color-card: #ffffff;
+  --text-color-dark: #333;
+  --text-color-light: #6c757d;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
 
-/* ADDED: Pushes the main content down below the fixed header */
+body.dark-mode {
+  --primary-color: #ffc107; /* A slight change for better contrast in dark mode */
+  --secondary-color: #007bff; /* A slight change for better contrast in dark mode */
+  --background-color-light: #121212;
+  --background-color-card: #1f1f1f;
+  --text-color-dark: #e0e0e0;
+  --text-color-light: #bdc3c7;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
 .page-content {
     padding-top: 80px; /* Adjust this value if your header height changes */
 }
@@ -56,9 +73,7 @@
 .worker-bio { color: var(--text-color-light); font-size: 0.9rem; min-height: 50px; }
 .worker-meta { display: flex; justify-content: space-around; font-size: 0.9rem; color: var(--text-color-light); margin: 1rem 0; }
 .worker-meta span { display: flex; align-items: center; gap: 0.5rem; }
-.view-profile-btn { display: inline-block; padding: 10px 25px; background-color: var(--primary-color); color: #fff; border-radius: 8px; font-weight: 600; transition: background-color 0.3s ease; }
-.worker-card:hover .view-profile-btn { background-color: var(--secondary-color); color: #000; }
-
+.view-profile-btn { display: inline-block; padding: 10px 25px; background-color: var(--primary-color); color: #fff; border-radius: 8px; font-weight: 600; transition: background-color 0.3s ease; text-decoration: none; }
 .no-workers-found { text-align: center; padding: 4rem 1rem; background: var(--background-color-card); border-radius: 12px; }
 .no-workers-found i { font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem; }
 .no-workers-found h2 { color: var(--text-color-dark); }
@@ -72,4 +87,20 @@ body.dark-mode .worker-card:hover {
 
 body.dark-mode .view-profile-btn {
     color: var(--text-color-dark);
+}
+
+.services-hero {
+  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: #fff;
+  padding: 5rem 2rem;
+  text-align: center;
+  margin-top: 0;
+  animation: gradientBG 8s ease infinite;
+}
+
+.services-hero h1 {
+  font-weight: 700;
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
 }

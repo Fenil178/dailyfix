@@ -1,9 +1,9 @@
 <?php
 // This block is now in header.php and handles all session-related logic.
-// All files that include this header will automatically have this logic executed.
 
-// Include the encryption file. The path is relative to the core directory.
-include_once __DIR__ . "/../api/encryption.php";
+// THIS IS THE PERMANENT FIX:
+// This stable path works correctly from any directory.
+include_once __DIR__ . "/encryption.php";
 
 $role = null;
 $userId = null;
@@ -24,9 +24,10 @@ if (isset($_COOKIE['encrypted_profile_image'])) {
     $profile_imagePath = decrypt_id($_COOKIE['encrypted_profile_image']);
 }
 
-// If the role or user ID can't be verified, redirect to the login page.
-// We add an exception for login.php and signup.php to prevent a redirect loop.
+// Get the current page's filename for the active state logic
 $currentPage = basename($_SERVER['PHP_SELF']);
+
+// If the role or user ID can't be verified, redirect to the login page.
 if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'signup.php') {
     header("Location: /dailyfix/login.php");
     exit;
@@ -51,18 +52,28 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
     </div>
 
     <ul class="nav-links" id="navLinks">
-        <?php if ($role === 'customer'): ?>
-            <li><a href="/dailyfix/dashboard.php">Dashboard</a></li>
-            <li><a href="/dailyfix/customer/services.php">Browse Services</a></li>
-            <li><a href="/dailyfix/customer/bookings.php">My Bookings</a></li>
-            <li><a href="/dailyfix/contact.php">Help</a></li>
+        <?php
+            $links = [];
+            if ($role === 'customer') {
+                $links = [ 'dashboard.php' => 'Dashboard', 'services.php' => 'Browse Services', 'bookings.php' => 'My Bookings', 'contact.php' => 'Help' ];
+                $basePath = '/dailyfix/customer/';
+            } elseif ($role === 'worker') {
+                $links = [ 'dashboard.php' => 'Dashboard', 'jobs.php' => 'Job Requests', 'earnings.php' => 'My Earnings', 'contact.php' => 'Help' ];
+                $basePath = '/dailyfix/worker/';
+            }
 
-        <?php elseif ($role === 'worker'): ?>
-            <li><a href="/dailyfix/dashboard.php">Dashboard</a></li>
-            <li><a href="/dailyfix/worker/jobs.php">Job Requests</a></li>
-            <li><a href="/dailyfix/worker/earnings.php">My Earnings</a></li>
-            <li><a href="/dailyfix/contact.php">Help</a></li>
-        <?php endif; ?>
+            foreach ($links as $file => $text) {
+                $url = "/dailyfix/dashboard.php";
+                if ($file !== 'dashboard.php' && $file !== 'contact.php') {
+                    $url = $basePath . $file;
+                } elseif ($file === 'contact.php') {
+                    $url = '/dailyfix/contact.php';
+                }
+                
+                $activeClass = ($currentPage === $file) ? 'active' : '';
+                echo "<li><a href='{$url}' class='{$activeClass}'>{$text}</a></li>";
+            }
+        ?>
     </ul>
 
     <div class="user-menu">
@@ -74,18 +85,9 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             <?php endif; ?>
         </button>
         <div class="dropdown-menu" id="dropdownMenu">
-            <a href="/dailyfix/profile.php">
-                <i class="fas fa-user-circle"></i>
-                My Profile
-            </a>
-            <button id="theme-toggle-btn">
-                <i class="fas fa-moon"></i>
-                Theme
-            </button>
-            <a href="#" id="logout-link">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
+            <a href="/dailyfix/profile.php"><i class="fas fa-user-circle"></i> My Profile</a>
+            <button id="theme-toggle-btn"><i class="fas fa-moon"></i> Theme</button>
+            <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
     <div id="custom-logout-modal" class="modal">

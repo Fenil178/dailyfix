@@ -20,19 +20,27 @@ serviceCards.forEach(card => {
 
             // This is the updated part:
             subServicesData[serviceId].forEach(sub => {
-                // 1. Create an ANCHOR <a> tag for the entire card
-                const subServiceCard = document.createElement('a');
-                
-                // 2. Set its href to the find_workers page, using the slug
-                subServiceCard.href = `/dailyfix/customer/find_workers.php?service=${sub.slug}`;
+                // 1. Create a DIV for the card, which is not a link.
+                const subServiceCard = document.createElement('div');
                 subServiceCard.classList.add('sub-service-card');
                 
-                // 3. Add the inner content, including the new "Book Now" button
-                subServiceCard.innerHTML = `
+                // 2. Create the inner content (icon and name).
+                const cardContent = `
                     <i class="${sub.icon}"></i>
                     <span>${sub.name}</span>
-                    <span class="book-now-btn">Book Now</span>
                 `;
+                
+                // 3. Create a separate <a> tag specifically for the button.
+                const bookButton = document.createElement('a');
+                bookButton.href = `/dailyfix/customer/find_workers.php?service=${sub.slug}`;
+                bookButton.classList.add('book-now-btn');
+                bookButton.textContent = 'Book Now';
+
+                // 4. Add the content and the button to the card.
+                subServiceCard.innerHTML = cardContent;
+                subServiceCard.appendChild(bookButton);
+                
+                // 5. Add the final card to the grid.
                 subServicesGrid.appendChild(subServiceCard);
             });
 

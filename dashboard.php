@@ -16,25 +16,29 @@ $recentActivities = [];
 try {
     // Fetch stat card data based on the user's role
     if ($role === 'customer') {
-        $stmt = $conn->prepare('SELECT COUNT(*) FROM dailyfix.bookings WHERE customer_id = ?');
+        // Corrected schema from 'dailyfix.bookings' to 'public.bookings'
+        $stmt = $conn->prepare('SELECT COUNT(*) FROM public.bookings WHERE customer_id = ?');
         $stmt->execute([$userId]);
         $totalBookings = $stmt->fetchColumn();
 
-        $stmt = $conn->prepare('SELECT COUNT(*) FROM dailyfix.bookings WHERE customer_id = ? AND status = \'completed\'');
+        // Corrected schema from 'dailyfix.bookings' to 'public.bookings'
+        $stmt = $conn->prepare('SELECT COUNT(*) FROM public.bookings WHERE customer_id = ? AND status = \'completed\'');
         $stmt->execute([$userId]);
         $completedJobs = $stmt->fetchColumn();
 
     } elseif ($role === 'worker') {
-        $stmt = $conn->prepare('SELECT COUNT(*) FROM dailyfix.bookings WHERE worker_id = ? AND status = \'pending\'');
+        // Corrected schema from 'dailyfix.bookings' to 'public.bookings'
+        $stmt = $conn->prepare('SELECT COUNT(*) FROM public.bookings WHERE worker_id = ? AND status = \'pending\'');
         $stmt->execute([$userId]);
         $pendingJobs = $stmt->fetchColumn();
         
-        $stmt = $conn->prepare('SELECT COUNT(*) FROM dailyfix.bookings WHERE worker_id = ? AND status = \'completed\'');
+        // Corrected schema from 'dailyfix.bookings' to 'public.bookings'
+        $stmt = $conn->prepare('SELECT COUNT(*) FROM public.bookings WHERE worker_id = ? AND status = \'completed\'');
         $stmt->execute([$userId]);
         $completedJobs = $stmt->fetchColumn();
     }
 
-    // --- MODIFIED: Fetch dynamic data for the "Recent Activity" section ---
+    // --- Fetch dynamic data for the "Recent Activity" section ---
     if ($role === 'customer') {
         $stmt = $conn->prepare("
             SELECT b.id, b.service_details, b.status, b.booking_time, u.full_name as worker_name
@@ -134,8 +138,9 @@ try {
         </section>
 
         <section class="dashboard-section">
-            <div class="dashboard-header">
+            <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Recent Activity</h2>
+                <a href="/dailyfix/api/all_activity.php" class="view-all-link">View All</a>
             </div>
             <div class="activity-list">
                 <?php if (count($recentActivities) > 0): ?>

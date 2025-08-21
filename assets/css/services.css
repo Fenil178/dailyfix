@@ -208,6 +208,6 @@ body {
 
 .sub-service-card:hover .book-now-btn {
   background-color: var(--secondary-color);
-  color: var(--text-color-dark);
+  /* color: var(--text-color-dark); */ /* REMOVED */
   transform: scale(1.05);
 }

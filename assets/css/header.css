@@ -302,3 +302,37 @@ body.dark-mode .navbar .nav-links a {
   body:not(.dark-mode) .navbar .nav-links a {
       color: #333; /* Standard dark text */
   }
+
+  /* ... (previous styles) ... */
+
+/* The selector was changed from a:hover to this */
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--primary-color);
+    background-color: var(--hover-color);
+}
+
+/* ===== HEADER LINK VISIBILITY ===== */
+
+/* This rule is now for the default link state */
+body.dark-mode .navbar .nav-links a {
+    color: #e0e0e0;
+}
+  
+/* This rule now correctly styles the active link in dark mode */
+body.dark-mode .navbar .nav-links a:hover,
+body.dark-mode .navbar .nav-links a.active {
+    color: var(--primary-color); /* Bright yellow on hover/active */
+    background-color: var(--hover-color);
+}
+  
+/* This rule is for the default link state in light mode */
+body:not(.dark-mode) .navbar .nav-links a {
+    color: #333;
+}
+
+/* This rule correctly makes the text blue on hover/active in light mode */
+body:not(.dark-mode) .navbar .nav-links a:hover,
+body:not(.dark-mode) .navbar .nav-links a.active {
+    color: var(--primary-color); /* Blue text on hover/active */
+}

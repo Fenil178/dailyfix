@@ -2144,6 +2144,7 @@ CREATE TABLE auth.sso_providers (
     resource_id text,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
+    disabled boolean,
     CONSTRAINT "resource_id not empty" CHECK (((resource_id = NULL::text) OR (char_length(resource_id) > 0)))
 );
 
@@ -2408,6 +2409,43 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: worker_keys; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.worker_keys (
+    id integer NOT NULL,
+    access_key character varying(8) NOT NULL,
+    is_used boolean DEFAULT false NOT NULL,
+    used_by_worker_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.worker_keys OWNER TO postgres;
+
+--
+-- Name: worker_keys_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.worker_keys_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.worker_keys_id_seq OWNER TO postgres;
+
+--
+-- Name: worker_keys_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.worker_keys_id_seq OWNED BY public.worker_keys.id;
+
+
+--
 -- Name: worker_profiles; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -2629,6 +2667,13 @@ ALTER TABLE ONLY auth.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('auth.r
 
 
 --
+-- Name: worker_keys id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_keys ALTER COLUMN id SET DEFAULT nextval('public.worker_keys_id_seq'::regclass);
+
+
+--
 -- Data for Name: audit_log_entries; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -2782,6 +2827,7 @@ COPY auth.schema_migrations (version) FROM stdin;
 20240802193726
 20240806073726
 20241009103726
+20250717082212
 \.
 
 
@@ -2805,7 +2851,7 @@ COPY auth.sso_domains (id, sso_provider_id, domain, created_at, updated_at) FROM
 -- Data for Name: sso_providers; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-COPY auth.sso_providers (id, resource_id, created_at, updated_at) FROM stdin;
+COPY auth.sso_providers (id, resource_id, created_at, updated_at, disabled) FROM stdin;
 \.
 
 
@@ -2822,6 +2868,16 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 --
 
 COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost) FROM stdin;
+1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N
+2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N
+3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N
+4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N
+5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N
+7	1	11	Work Details: bike repair\nAddress: Surat	2025-08-30 20:00:00+00	cancelled	2025-08-21 12:49:57.156465+00	\N
+8	1	3	Work Details: Car Washing\nAddress: Shiv Shakti Society, Bhavnagar	2025-08-25 06:30:00+00	confirmed	2025-08-21 16:40:58.668966+00	\N
+9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N
+6	1	13	Work Details: Cleaning utensils and garden\nAddress: 37, Park Street, Surat	2025-08-22 09:15:00+00	confirmed	2025-08-21 12:46:12.708408+00	\N
+10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N
 \.
 
 
@@ -2884,6 +2940,29 @@ COPY public.sub_services (id, service_id, name, icon, slug) FROM stdin;
 COPY public.users (id, full_name, email, password, phone, role, profile_image, account_status, created_at) FROM stdin;
 1	Fenil Pastagia	17fenill@gmail.com	$2y$10$OHrIBr9DFR/jEzVw6ik/gegK5kGOEHAPjUYunO9tCWPs7o6RNTCy2	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00
 3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	/dailyfix/worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00
+4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	9623014569	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00
+5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00
+6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00
+7	Swayam Shah	swayam@gmail.com	$2y$10$EKVBlEHgag1sAKIl0Cmp8Oor/rLjv7OgJnjKtHzTHffBhSinsknym	9623001236	customer	\N	active	2025-08-16 09:48:01.576568+00
+8	Ankit Verma	ankit@gmail.com	$2y$10$h0lmMCHM3ae9qv342gWjZ.BJQ69as.7JvPDJa5QBWjb5YOl3oFRhq	8523001456	customer	\N	active	2025-08-16 09:52:37.721337+00
+9	Sushant Rajput	sushant@gmail.com	$2y$10$oWRFuH4Qgcgu6HSAPcCx1uDvV/k8qYWMvqF2dSgZz41xQHApe.jrC	9852110036	customer	\N	active	2025-08-16 09:56:45.35922+00
+10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	/dailyfix/customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00
+11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	/dailyfix/worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00
+12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	/dailyfix/customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00
+13	Purvi Panchal 	purvi@gmail.com	$2y$10$zPrZvJJATh7yNwJg5Z2pD.tpusOEa3rnDin/8G2MjS8oU7ysY8ufa	8520014563	worker	/dailyfix/worker/uploads/68a06aed05d049.49404600.jpg	active	2025-08-16 11:26:33.93526+00
+14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00
+17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00
+18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00
+\.
+
+
+--
+-- Data for Name: worker_keys; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at) FROM stdin;
+2	A2B3C4D5	f	\N	2025-08-21 17:13:21.31666+00
+1	F1N6MJ1O	t	18	2025-08-21 17:13:21.31666+00
 \.
 
 
@@ -2893,6 +2972,12 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 
 COPY public.worker_profiles (user_id, bio, experience_years, hourly_rate, is_verified) FROM stdin;
 3	Hello! I'm Virat, and I love making vehicles sparkle. For me, cleaning a car or bike is about restoring its beauty and making it look its absolute best. I use the best techniques to 'cover drive' away dirt and grime from every nook and cranny. You can trust me to be reliable, professional, and passionate about giving your ride the care it deserves.	7	200.00	f
+4	I was working as an employee at Llyod AC where i was working as a AC repairer and has been expertise in technological aspects of all types of ACs. So, i have 3+ years of experience and looking forward to serve you.	3	500.00	f
+5	I am Washing Machine Repairer and a cleaner, my shop name is "Ashu Washing Machine Services" in Varachha, Surat , we provide all types of services related to the washing machine. All technical and manufacturing errors can be solved.	4	350.00	f
+11	I am Rohan Desai, i own a garage named "Rohan Bike and Car Garage" , we provide all kind of services related to bike and car. Let it be oil, horn, engine, spare parts- we take care of everything.	2	600.00	f
+13	I am Purvi Panchal, provide house cleaning services to households. I provide services like brooming, cleaning utensils, washing clothes and all other types of house cleaning.	6	800.00	f
+14	My Name is Jay, I lived in surat, and I provide service of bike and car cleaning!	5	250.00	f
+18	My Name is Rupesh	4	200.00	f
 \.
 
 
@@ -2901,8 +2986,22 @@ COPY public.worker_profiles (user_id, bio, experience_years, hourly_rate, is_ver
 --
 
 COPY public.worker_services (user_id, sub_service_id) FROM stdin;
+4	10
+4	9
+5	16
+5	15
+11	5
+11	6
+11	7
+11	8
+13	1
 3	5
 3	7
+3	2
+14	5
+14	7
+18	1
+18	2
 \.
 
 
@@ -3070,7 +3169,7 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 1, false);
+SELECT pg_catalog.setval('public.bookings_id_seq', 10, true);
 
 
 --
@@ -3098,7 +3197,14 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 20, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+SELECT pg_catalog.setval('public.users_id_seq', 18, true);
+
+
+--
+-- Name: worker_keys_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.worker_keys_id_seq', 2, true);
 
 
 --
@@ -3370,6 +3476,22 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: worker_keys worker_keys_access_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_keys
+    ADD CONSTRAINT worker_keys_access_key_key UNIQUE (access_key);
+
+
+--
+-- Name: worker_keys worker_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_keys
+    ADD CONSTRAINT worker_keys_pkey PRIMARY KEY (id);
 
 
 --
@@ -3692,6 +3814,13 @@ CREATE UNIQUE INDEX sso_providers_resource_id_idx ON auth.sso_providers USING bt
 
 
 --
+-- Name: sso_providers_resource_id_pattern_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX sso_providers_resource_id_pattern_idx ON auth.sso_providers USING btree (resource_id text_pattern_ops);
+
+
+--
 -- Name: unique_phone_factor_per_user; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -3913,6 +4042,14 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.worker_services
     ADD CONSTRAINT fk_sub_service FOREIGN KEY (sub_service_id) REFERENCES public.sub_services(id) ON DELETE CASCADE;
+
+
+--
+-- Name: worker_keys fk_used_by_worker; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_keys
+    ADD CONSTRAINT fk_used_by_worker FOREIGN KEY (used_by_worker_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -5146,6 +5283,24 @@ GRANT ALL ON TABLE public.users TO service_role;
 GRANT ALL ON SEQUENCE public.users_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.users_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.users_id_seq TO service_role;
+
+
+--
+-- Name: TABLE worker_keys; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.worker_keys TO anon;
+GRANT ALL ON TABLE public.worker_keys TO authenticated;
+GRANT ALL ON TABLE public.worker_keys TO service_role;
+
+
+--
+-- Name: SEQUENCE worker_keys_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.worker_keys_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.worker_keys_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.worker_keys_id_seq TO service_role;
 
 
 --

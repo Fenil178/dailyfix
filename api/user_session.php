@@ -1,4 +1,7 @@
 <?php
+// SET THE DEFAULT TIMEZONE FOR THE ENTIRE WEBSITE
+date_default_timezone_set('Asia/Kolkata');
+
 include_once __DIR__ . "/encryption.php";
 
 $role = null;
@@ -21,7 +24,8 @@ if (isset($_COOKIE['encrypted_profile_image'])) {
 }
 
 // If the role or user ID can't be verified, redirect to the login page
-if (!$role || !$userId) {
+$currentPage = basename($_SERVER['PHP_SELF']);
+if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'signup.php') {
     header("Location: /dailyfix/login.php");
     exit;
 }

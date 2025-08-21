@@ -1,3 +1,55 @@
+/* General Step Styling */
+.step { display: none; animation: fadeIn 0.5s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Role Selection Cards */
+.role-selection {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+@media (min-width: 576px) { .role-selection { grid-template-columns: 1fr 1fr; } }
+
+.role-card {
+    padding: 1.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.role-card:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+.role-card i {
+    font-size: 2.5rem;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+}
+.role-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+.role-card p { font-size: 0.9rem; color: #6c757d; margin: 0; }
+
+/* Back Button */
+.back-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.back-btn:hover { color: #343a40; }
+
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.98) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
