@@ -210,6 +210,18 @@ CREATE TYPE auth.factor_type AS ENUM (
 ALTER TYPE auth.factor_type OWNER TO supabase_auth_admin;
 
 --
+-- Name: oauth_registration_type; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TYPE auth.oauth_registration_type AS ENUM (
+    'dynamic',
+    'manual'
+);
+
+
+ALTER TYPE auth.oauth_registration_type OWNER TO supabase_auth_admin;
+
+--
 -- Name: one_time_token_type; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -258,7 +270,8 @@ ALTER TYPE public.booking_status OWNER TO postgres;
 
 CREATE TYPE public.user_role AS ENUM (
     'customer',
-    'worker'
+    'worker',
+    'admin'
 );
 
 
@@ -1940,6 +1953,31 @@ COMMENT ON TABLE auth.mfa_factors IS 'auth: stores metadata about factors';
 
 
 --
+-- Name: oauth_clients; Type: TABLE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TABLE auth.oauth_clients (
+    id uuid NOT NULL,
+    client_id text NOT NULL,
+    client_secret_hash text NOT NULL,
+    registration_type auth.oauth_registration_type NOT NULL,
+    redirect_uris text NOT NULL,
+    grant_types text NOT NULL,
+    client_name text,
+    client_uri text,
+    logo_uri text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT oauth_clients_client_name_length CHECK ((char_length(client_name) <= 1024)),
+    CONSTRAINT oauth_clients_client_uri_length CHECK ((char_length(client_uri) <= 2048)),
+    CONSTRAINT oauth_clients_logo_uri_length CHECK ((char_length(logo_uri) <= 2048))
+);
+
+
+ALTER TABLE auth.oauth_clients OWNER TO supabase_auth_admin;
+
+--
 -- Name: one_time_tokens; Type: TABLE; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -2409,6 +2447,43 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: worker_availability; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.worker_availability (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    date date NOT NULL,
+    time_slot time without time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.worker_availability OWNER TO postgres;
+
+--
+-- Name: worker_availability_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.worker_availability_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.worker_availability_id_seq OWNER TO postgres;
+
+--
+-- Name: worker_availability_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.worker_availability_id_seq OWNED BY public.worker_availability.id;
+
+
+--
 -- Name: worker_keys; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -2667,6 +2742,13 @@ ALTER TABLE ONLY auth.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('auth.r
 
 
 --
+-- Name: worker_availability id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_availability ALTER COLUMN id SET DEFAULT nextval('public.worker_availability_id_seq'::regclass);
+
+
+--
 -- Name: worker_keys id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -2726,6 +2808,14 @@ COPY auth.mfa_challenges (id, factor_id, created_at, verified_at, ip_address, ot
 --
 
 COPY auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at, secret, phone, last_challenged_at, web_authn_credential, web_authn_aaguid) FROM stdin;
+\.
+
+
+--
+-- Data for Name: oauth_clients; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+
+COPY auth.oauth_clients (id, client_id, client_secret_hash, registration_type, redirect_uris, grant_types, client_name, client_uri, logo_uri, created_at, updated_at, deleted_at) FROM stdin;
 \.
 
 
@@ -2828,6 +2918,7 @@ COPY auth.schema_migrations (version) FROM stdin;
 20240806073726
 20241009103726
 20250717082212
+20250731150234
 \.
 
 
@@ -2952,7 +3043,37 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 13	Purvi Panchal 	purvi@gmail.com	$2y$10$zPrZvJJATh7yNwJg5Z2pD.tpusOEa3rnDin/8G2MjS8oU7ysY8ufa	8520014563	worker	/dailyfix/worker/uploads/68a06aed05d049.49404600.jpg	active	2025-08-16 11:26:33.93526+00
 14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00
 17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00
+20	Admin	admin@dailyfix.com	$2y$10$sHEndDmdaGv.t91JXbOz0OVqOO24gpLrzxeBLSa.6DkKaPyVMKDCa	\N	admin	\N	active	2025-09-20 09:59:34.499611+00
 18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00
+\.
+
+
+--
+-- Data for Name: worker_availability; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM stdin;
+150	4	2025-09-24	09:00:00	2025-09-20 12:34:36.774442+00
+151	4	2025-09-24	10:00:00	2025-09-20 12:34:36.774442+00
+152	4	2025-09-24	11:00:00	2025-09-20 12:34:36.774442+00
+153	4	2025-09-25	09:00:00	2025-09-20 12:34:36.803045+00
+154	4	2025-09-20	09:00:00	2025-09-20 12:34:36.809386+00
+155	4	2025-09-23	09:00:00	2025-09-20 12:34:36.82439+00
+156	4	2025-09-25	10:00:00	2025-09-20 12:34:36.803045+00
+157	4	2025-09-20	10:00:00	2025-09-20 12:34:36.809386+00
+158	4	2025-09-20	11:00:00	2025-09-20 12:34:36.809386+00
+159	4	2025-09-23	10:00:00	2025-09-20 12:34:36.82439+00
+161	4	2025-09-25	11:00:00	2025-09-20 12:34:36.803045+00
+160	4	2025-09-22	09:00:00	2025-09-20 12:34:36.833706+00
+162	4	2025-09-21	09:00:00	2025-09-20 12:34:36.833719+00
+163	4	2025-09-23	11:00:00	2025-09-20 12:34:36.82439+00
+164	4	2025-09-22	10:00:00	2025-09-20 12:34:36.833706+00
+165	4	2025-09-21	10:00:00	2025-09-20 12:34:36.833719+00
+166	4	2025-09-22	11:00:00	2025-09-20 12:34:36.833706+00
+167	4	2025-09-21	11:00:00	2025-09-20 12:34:36.833719+00
+168	4	2025-09-26	09:00:00	2025-09-20 12:34:37.140077+00
+169	4	2025-09-26	10:00:00	2025-09-20 12:34:37.140077+00
+170	4	2025-09-26	11:00:00	2025-09-20 12:34:37.140077+00
 \.
 
 
@@ -3197,7 +3318,14 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 20, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 18, true);
+SELECT pg_catalog.setval('public.users_id_seq', 20, true);
+
+
+--
+-- Name: worker_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.worker_availability_id_seq', 170, true);
 
 
 --
@@ -3292,6 +3420,22 @@ ALTER TABLE ONLY auth.mfa_factors
 
 ALTER TABLE ONLY auth.mfa_factors
     ADD CONSTRAINT mfa_factors_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth_clients oauth_clients_client_id_key; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_clients
+    ADD CONSTRAINT oauth_clients_client_id_key UNIQUE (client_id);
+
+
+--
+-- Name: oauth_clients oauth_clients_pkey; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_clients
+    ADD CONSTRAINT oauth_clients_pkey PRIMARY KEY (id);
 
 
 --
@@ -3476,6 +3620,22 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: worker_availability worker_availability_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_availability
+    ADD CONSTRAINT worker_availability_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: worker_availability worker_availability_user_id_date_time_slot_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_availability
+    ADD CONSTRAINT worker_availability_user_id_date_time_slot_key UNIQUE (user_id, date, time_slot);
 
 
 --
@@ -3678,6 +3838,20 @@ CREATE UNIQUE INDEX mfa_factors_user_friendly_name_unique ON auth.mfa_factors US
 --
 
 CREATE INDEX mfa_factors_user_id_idx ON auth.mfa_factors USING btree (user_id);
+
+
+--
+-- Name: oauth_clients_client_id_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX oauth_clients_client_id_idx ON auth.oauth_clients USING btree (client_id);
+
+
+--
+-- Name: oauth_clients_deleted_at_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX oauth_clients_deleted_at_idx ON auth.oauth_clients USING btree (deleted_at);
 
 
 --
@@ -4093,6 +4267,14 @@ ALTER TABLE ONLY public.sub_services
 
 
 --
+-- Name: worker_availability worker_availability_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_availability
+    ADD CONSTRAINT worker_availability_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: worker_profiles worker_profiles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4227,6 +4409,60 @@ ALTER TABLE auth.sso_providers ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: bookings; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: reviews; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: services; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: sub_services; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.sub_services ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: users; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: worker_availability; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.worker_availability ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: worker_keys; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.worker_keys ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: worker_profiles; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.worker_profiles ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: worker_services; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.worker_services ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: messages; Type: ROW SECURITY; Schema: realtime; Owner: supabase_realtime_admin
@@ -5091,6 +5327,14 @@ GRANT ALL ON TABLE auth.mfa_factors TO dashboard_user;
 
 
 --
+-- Name: TABLE oauth_clients; Type: ACL; Schema: auth; Owner: supabase_auth_admin
+--
+
+GRANT ALL ON TABLE auth.oauth_clients TO postgres;
+GRANT ALL ON TABLE auth.oauth_clients TO dashboard_user;
+
+
+--
 -- Name: TABLE one_time_tokens; Type: ACL; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -5132,13 +5376,6 @@ GRANT ALL ON TABLE auth.saml_providers TO dashboard_user;
 GRANT INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE auth.saml_relay_states TO postgres;
 GRANT SELECT ON TABLE auth.saml_relay_states TO postgres WITH GRANT OPTION;
 GRANT ALL ON TABLE auth.saml_relay_states TO dashboard_user;
-
-
---
--- Name: TABLE schema_migrations; Type: ACL; Schema: auth; Owner: supabase_auth_admin
---
-
-GRANT SELECT ON TABLE auth.schema_migrations TO postgres WITH GRANT OPTION;
 
 
 --
@@ -5283,6 +5520,24 @@ GRANT ALL ON TABLE public.users TO service_role;
 GRANT ALL ON SEQUENCE public.users_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.users_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.users_id_seq TO service_role;
+
+
+--
+-- Name: TABLE worker_availability; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.worker_availability TO anon;
+GRANT ALL ON TABLE public.worker_availability TO authenticated;
+GRANT ALL ON TABLE public.worker_availability TO service_role;
+
+
+--
+-- Name: SEQUENCE worker_availability_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.worker_availability_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.worker_availability_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.worker_availability_id_seq TO service_role;
 
 
 --

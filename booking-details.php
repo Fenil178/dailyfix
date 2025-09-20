@@ -83,7 +83,7 @@ if (!$booking) {
                             <div class="timeline-icon"><i class="fas fa-rupee-sign"></i></div>
                             <div class="timeline-content">
                                 <div class="label">Final Cost</div>
-                                <div class="value">₹<?php echo number_format($booking['final_cost'], 2); ?></div>
+                                <div class="value"><i class="fa-solid fa-indian-rupee-sign"></i><?php echo number_format($booking['final_cost'], 2); ?></div>
                             </div>
                         </li>
                         <?php endif; ?>

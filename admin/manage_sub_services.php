@@ -1,0 +1,125 @@
+<?php
+include_once __DIR__ . '/includes/header.php';
+include_once __DIR__ . '/../api/connect.php';
+
+$error = null;
+$success = null;
+$parent_services = [];
+
+// Fetch parent services for the dropdown
+try {
+    $stmt = $conn->prepare("SELECT id, name FROM public.services ORDER BY name ASC");
+    $stmt->execute();
+    $parent_services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $error = "Could not load parent service categories.";
+    error_log("Sub-service Parent Fetch Error: " . $e->getMessage());
+}
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_sub_service'])) {
+    $service_id = $_POST['service_id'];
+    $name = trim($_POST['name']);
+    $icon = trim($_POST['icon']);
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+
+    if (empty($service_id) || empty($name) || empty($icon)) {
+        $error = "All fields are required.";
+    } else {
+        try {
+            $stmt = $conn->prepare("INSERT INTO public.sub_services (service_id, name, icon, slug) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$service_id, $name, $icon, $slug]);
+            $success = "Sub-service '{$name}' created successfully!";
+        } catch (PDOException $e) {
+            $error = "Database error. The sub-service might already exist under this category.";
+            error_log("Sub-Service Creation Error: " . $e->getMessage());
+        }
+    }
+}
+
+// Fetch all sub-services with their parent category name
+$sub_services = [];
+try {
+    $stmt = $conn->prepare("
+        SELECT ss.id, ss.name, ss.icon, ss.slug, s.name as parent_name
+        FROM public.sub_services ss
+        JOIN public.services s ON ss.service_id = s.id
+        ORDER BY s.name, ss.name ASC
+    ");
+    $stmt->execute();
+    $sub_services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $error = "Could not fetch sub-services data.";
+    error_log("Manage Sub-Services Error: " . $e->getMessage());
+}
+?>
+
+<div class="page-header section-fly-in">
+    <h1><i class="fas fa-plus-circle"></i> Sub-Service Management</h1>
+    <p>Add specific services (e.g., 'Plumber') and assign them to a parent category.</p>
+</div>
+
+<div class="management-grid section-fly-in">
+    <div class="form-card">
+        <h2><i class="fas fa-plus"></i> Add New Sub-Service</h2>
+        
+        <?php if ($error): ?><div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+        <?php if ($success): ?><div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+
+        <form method="POST" action="manage_sub_services.php" novalidate>
+            <div class="form-group">
+                <label for="service_id">Parent Service Category</label>
+                <select id="service_id" name="service_id" required>
+                    <option value="">-- Select a Category --</option>
+                    <?php foreach ($parent_services as $parent): ?>
+                        <option value="<?php echo $parent['id']; ?>"><?php echo htmlspecialchars($parent['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="name">Sub-Service Name</label>
+                <input type="text" id="name" name="name" placeholder="e.g., Plumber" required>
+            </div>
+            <div class="form-group">
+                <label for="icon">Font Awesome Icon Class</label>
+                <input type="text" id="icon" name="icon" placeholder="e.g., fas fa-faucet" required>
+            </div>
+            <button type="submit" name="add_sub_service" class="btn btn-primary">Add Sub-Service</button>
+        </form>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="fas fa-stream"></i> Existing Sub-Services</h2>
+        </div>
+        <div class="card-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Parent Category</th>
+                        <th>Sub-Service Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($sub_services)): ?>
+                        <tr><td colspan="3" style="text-align: center;">No sub-services found.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($sub_services as $sub): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($sub['parent_name']); ?></td>
+                                <td><i class="<?php echo htmlspecialchars($sub['icon']); ?>"></i> <?php echo htmlspecialchars($sub['name']); ?></td>
+                                <td class="action-buttons">
+                                    <a href="#" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" title="Delete"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include_once __DIR__ . '/includes/footer.php'; ?>

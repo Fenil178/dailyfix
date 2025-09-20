@@ -77,30 +77,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const customModal = document.getElementById('custom-logout-modal');
   const confirmBtn = document.getElementById('confirm-logout-btn');
   const cancelBtn = document.getElementById('cancel-logout-btn');
-  const closeBtn = document.querySelector('.close-button');
+  const closeBtn = customModal ? customModal.querySelector('.close-button') : null;
 
-  if (logoutLink && customModal) {
+
+  if (logoutLink && customModal && confirmBtn && cancelBtn && closeBtn) {
       logoutLink.addEventListener('click', function(event) {
           event.preventDefault();
           customModal.style.display = 'block';
       });
 
-      // Handle the "Yes, Log Out" button click
+      // ** THIS IS THE UPDATED LOGIC **
+      // It checks if you are in the admin panel and redirects you correctly.
       confirmBtn.addEventListener('click', function() {
-          window.location.href = "/dailyfix/logout.php";
+          if (window.location.pathname.includes('/admin/')) {
+              window.location.href = "/dailyfix/admin/logout.php";
+          } else {
+              window.location.href = "/dailyfix/logout.php";
+          }
       });
 
-      // Handle the "Cancel" button click
       cancelBtn.addEventListener('click', function() {
           customModal.style.display = 'none';
       });
 
-      // Handle the modal's close button click
       closeBtn.addEventListener('click', function() {
           customModal.style.display = 'none';
       });
 
-      // Close modal if user clicks outside of it
       window.addEventListener('click', function(event) {
           if (event.target === customModal) {
               customModal.style.display = 'none';

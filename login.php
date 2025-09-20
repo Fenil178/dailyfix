@@ -5,17 +5,15 @@ error_reporting(E_ALL);
 include_once __DIR__ . "/api/connect.php";
 include_once __DIR__ . "/api/encryption.php";
 
-// This block of PHP for user authentication is preserved
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_POST['password'])) {
     header('Content-Type: application/json');
     $response = [];
 
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
-    
-    // Check for missing '@' in the email format
+
     if (strpos($email, '@') === false) {
-        $response = ['status' => 'error', 'message' => 'Missing "@" in email address.'];
+        $response = ['status' => 'error', 'message' => 'Invalid email format.'];
         echo json_encode($response);
         exit();
     }
@@ -27,7 +25,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
 
         if ($user) {
             if (password_verify($password, $user['password'])) {
-                if ($user['account_status'] === 'suspended') {
+                // ** THIS IS THE NEW SECURITY CHECK **
+                if ($user['role'] === 'admin') {
+                    $response = ['status' => 'error', 'message' => 'Admin accounts must use the admin login page.'];
+                } elseif ($user['account_status'] === 'suspended') {
                     $response = ['status' => 'error', 'message' => 'Your account has been suspended.'];
                 } else {
                     // Set cookies for the session
