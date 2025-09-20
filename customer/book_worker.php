@@ -51,6 +51,7 @@ if (!$worker) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
+    <script defer src="/dailyfix/assets/js/book_worker_availability.js"></script>
 
 </head>
 <body>
@@ -72,9 +73,10 @@ if (!$worker) {
 
             <div class="booking-form-panel">
                 <h2>Book This Worker</h2>
-                <form id="booking-form" action="/dailyfix/api/create_booking.php" method="POST">
+                <form id="booking-form" action="/dailyfix/api/create_booking.php" method="POST" data-worker-id="<?php echo $worker['id']; ?>">
                     <input type="hidden" name="worker_id" value="<?php echo $worker['id']; ?>">
                     <input type="hidden" name="customer_id" value="<?php echo $userId; ?>">
+                    <input type="hidden" id="booking_date" name="booking_date">
                     <input type="hidden" id="booking_time_combined" name="booking_time">
 
                     <div class="form-group">
@@ -83,37 +85,22 @@ if (!$worker) {
                     </div>
                     
                     <div class="form-group">
-                        <label for="booking_date">Preferred Date</label>
-                        <input type="date" id="booking_date" name="booking_date" required>
+                        <label>Select a Date</label>
+                        <div id="calendar-container">
+                            <div id="calendar-days" class="calendar-grid"></div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Preferred Time</label>
-                        <div class="time-picker-group">
-                            <select id="booking_hour" required>
-                                <?php for ($i = 1; $i <= 12; $i++): ?>
-                                    <option value="<?php echo str_pad($i, 2, '0', STR_PAD_LEFT); ?>"><?php echo str_pad($i, 2, '0', STR_PAD_LEFT); ?></option>
-                                <?php endfor; ?>
-                            </select>
-                            <span class="time-separator">:</span>
-                            <select id="booking_minute" required>
-                                <option value="00">00</option>
-                                <option value="15">15</option>
-                                <option value="30">30</option>
-                                <option value="45">45</option>
-                            </select>
-                            <select id="booking_ampm" required>
-                                <option value="AM">AM</option>
-                                <option value="PM">PM</option>
-                            </select>
-                        </div>
+                    <div class="form-group" id="time-slot-container" style="display: none;">
+                        <label>Select a Time for <span id="selected-date-text"></span></label>
+                        <div id="slots-grid" class="slots-grid"></div>
                     </div>
                     
                     <div class="form-group">
                         <label for="address">Your Address</label>
                         <input type="text" id="address" name="address" required>
                     </div>
-                    <button type="submit" class="submit-btn">Send Booking Request</button>
+                    <button type="submit" class="submit-btn" id="submit-booking-btn">Send Booking Request</button>
                 </form>
             </div>
 
@@ -122,37 +109,5 @@ if (!$worker) {
 
     <?php include_once __DIR__ . "/../api/footer.php"; ?>
 
-    <script>
-        // This script combines the custom time fields before submitting the form
-        const bookingForm = document.getElementById('booking-form');
-        const hourSelect = document.getElementById('booking_hour');
-        const minuteSelect = document.getElementById('booking_minute');
-        const ampmSelect = document.getElementById('booking_ampm');
-        const hiddenTimeInput = document.getElementById('booking_time_combined');
-
-        function updateHiddenTime() {
-            let hour = parseInt(hourSelect.value, 10);
-            const minute = minuteSelect.value;
-            const ampm = ampmSelect.value;
-
-            if (ampm === 'PM' && hour !== 12) {
-                hour += 12;
-            } else if (ampm === 'AM' && hour === 12) {
-                hour = 0; // Midnight case
-            }
-            
-            // Format to HH:MM for the backend
-            const time24hr = `${String(hour).padStart(2, '0')}:${minute}`;
-            hiddenTimeInput.value = time24hr;
-        }
-
-        // Update the hidden field whenever a time dropdown is changed
-        hourSelect.addEventListener('change', updateHiddenTime);
-        minuteSelect.addEventListener('change', updateHiddenTime);
-        ampmSelect.addEventListener('change', updateHiddenTime);
-
-        // Set the initial value when the page loads
-        updateHiddenTime();
-    </script>
 </body>
 </html>

@@ -46,7 +46,7 @@
 .tab-nav {
     display: flex;
     border-bottom: 1px solid #ddd;
-    margin-bottom: 2rem;
+    margin-bottom: 0; /* Updated: Removed margin here to prevent jump */
 }
 body.dark-mode .tab-nav { border-color: #333; }
 
@@ -73,6 +73,7 @@ body.dark-mode .tab-nav { border-color: #333; }
     padding: 2rem;
     border-radius: 12px;
     box-shadow: var(--box-shadow);
+    margin-top: 2rem; /* Updated: Added margin to the content instead */
 }
 .tab-content.active {
     display: block;
@@ -188,4 +189,135 @@ body.dark-mode .checkbox-item input[type="checkbox"]:checked + label {
     .form-grid {
         grid-template-columns: 1fr;
     }
+}
+/* Availability Tab Styles */
+.calendar-week-days,
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    text-align: center;
+}
+.calendar-week-days span {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+.calendar-day {
+    padding: 1rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.calendar-day.disabled {
+    background-color: var(--background-color-light);
+    color: var(--text-color-light);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.calendar-day:not(.disabled):hover {
+    background-color: var(--hover-color);
+}
+.calendar-day.selected {
+    background-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+    border-color: var(--primary-color);
+}
+.calendar-day .date-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+}
+.time-slot {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.time-slot.available {
+    background-color: var(--background-color-card);
+}
+.time-slot.selected {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+.time-slot.unavailable {
+    background-color: var(--hover-color);
+    color: var(--text-color-light);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+body.dark-mode .time-slot.unavailable {
+    background-color: #333;
+}
+
+/* New Toggle Switch Styles */
+.toggle-control-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.toggle-label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color-dark);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #71dd68; /* Orange color */
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #28a745; /* Green color */
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(26px);
 }
