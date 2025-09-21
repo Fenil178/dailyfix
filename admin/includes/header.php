@@ -33,6 +33,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <li><a href="index.php" class="<?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>"><i class="fas fa-chart-dashboard"></i> Dashboard</a></li>
                 <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>"><i class="fas fa-users"></i> Users</a></li>
                 <li><a href="view_bookings.php" class="<?php echo ($currentPage == 'view_bookings.php') ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+                <li class="nav-item-dropdown">
+                    <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">
+                        <i class="fas fa-layer-group"></i> Services <i class="fas fa-caret-down dropdown-arrow"></i>
+                    </a>
+                    <ul class="dropdown-nav-menu">
+                        <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
+                        <li><a href="manage_sub_services.php" class="<?php echo ($currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">Manage Sub-Services</a></li>
+                    </ul>
+                </li>
                 <li><a href="manage_admins.php" class="<?php echo ($currentPage == 'manage_admins.php') ? 'active' : ''; ?>"><i class="fas fa-user-shield"></i> Admins</a></li>
             </ul>
             
@@ -58,5 +67,28 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </div>
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Logic for the new Services dropdown
+        const servicesDropdown = document.querySelector('.nav-item-dropdown');
+        if (servicesDropdown) {
+            const dropdownToggle = servicesDropdown.querySelector('.nav-link-dropdown-toggle');
+            
+            dropdownToggle.addEventListener('click', function(event) {
+                // Prevent the link from navigating, as it's just a toggle
+                event.preventDefault();
+                servicesDropdown.classList.toggle('open');
+            });
+        }
+
+        // Close the dropdown if the user clicks outside of it
+        document.addEventListener('click', function(event) {
+            if (servicesDropdown && !servicesDropdown.contains(event.target)) {
+                servicesDropdown.classList.remove('open');
+            }
+        });
+    });
+    </script>
 
     <main class="page-content" id="main-content">

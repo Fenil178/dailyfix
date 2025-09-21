@@ -65,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/login.css">
+    <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 </head>
 
 <body>
@@ -92,13 +93,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
                             <input type="password" class="form-control form-control-custom" name="password" id="password" placeholder="Password" required>
                             <i class="fas fa-eye password-toggle" id="togglePassword"></i>
                         </div>
-                         <div class="text-end mb-4">
-                            <a href="/dailyfix/forgot_password_page.php" class="forgot-password-link">Forgot Password?</a>
-                        </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-custom-login">Log In</button>
                         </div>
-                        <div class="text-center mt-4">
+                        <div class="text-center mt-0">
+                            <a href="/dailyfix/forgot_password_page.php" class="forgot-password-link">Forgot Password?</a>
+                        </div>
+                        <div class="text-center mt-3">
                             <p>Don't have an account? <a class="signup-link" href="/dailyfix/signup.php">Sign Up</a></p>
                         </div>
                     </form>

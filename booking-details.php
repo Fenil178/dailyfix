@@ -45,6 +45,7 @@ if (!$booking) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Booking #<?php echo htmlspecialchars($booking['id']); ?> - DailyFix</title>
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/management.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/booking-details.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>

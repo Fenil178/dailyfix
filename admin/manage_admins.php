@@ -65,6 +65,8 @@ try {
 }
 ?>
 
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-user-shield"></i> Administrator Management</h1>
     <p>Create new admin accounts and view existing ones.</p>

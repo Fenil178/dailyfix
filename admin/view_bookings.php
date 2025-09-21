@@ -35,6 +35,8 @@ try {
 }
 ?>
 
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-calendar-check"></i> Booking Overview</h1>
     <p>A complete log of all bookings made on the platform.</p>

@@ -46,6 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/login.css">
+    <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 </head>
 <body>
     <div class="login-wrapper">
@@ -73,15 +74,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         <div class="form-group">
                             <i class="fas fa-lock form-icon"></i>
-                            <input type="password" class="form-control form-control-custom" name="password" placeholder="Password" required>
+                            <input type="password" class="form-control form-control-custom" name="password" id="password" placeholder="Password" required>
+                            <i class="fas fa-eye password-toggle" id="togglePassword"></i>
                         </div>
+
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-custom-login">Log In</button>
+                        </div>
+
+                        <div class="text-center mt-1">
+                            <a href="/dailyfix/forgot_password_page.php" class="forgot-password-link">Forgot Password?</a>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        // Password visibility toggle
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        if (togglePassword && password) {
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+    </script>
 </body>
 </html>

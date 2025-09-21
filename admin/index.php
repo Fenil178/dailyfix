@@ -59,6 +59,8 @@ try {
 }
 ?>
 
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+
 <div class="page-header section-fly-in">
     <div>
         <h1>Welcome back, <?php echo htmlspecialchars($adminName); ?>!</h1>
@@ -86,7 +88,7 @@ try {
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+        <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
         <div class="stat-content">
             <h3>Total Revenue</h3>
             <p class="stat-number" data-target="<?php echo $stats['total_revenue']; ?>">0</p>
@@ -156,7 +158,7 @@ try {
         <div class="card-content">
             <div class="quick-actions-list">
                 <a href="manage_services.php" class="quick-action-item">
-                    <div class="action-icon"><i class="fas fa-concierge-bell"></i></div>
+                    <div class="action-icon"><i class="fas fa-toolbox"></i></div>
                     <div class="action-text">
                         <strong>Manage Services</strong>
                         <span>Add or edit main categories</span>

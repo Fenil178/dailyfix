@@ -2,6 +2,22 @@
 include_once __DIR__ . '/includes/header.php';
 include_once __DIR__ . '/../api/connect.php';
 
+// Handle status messages from action scripts
+$status_msg = '';
+if (isset($_GET['status'])) {
+    switch ($_GET['status']) {
+        case 'deleted':
+            $status_msg = '<div class="alert alert-success">Sub-service successfully deleted.</div>';
+            break;
+        case 'updated':
+            $status_msg = '<div class="alert alert-success">Sub-service successfully updated.</div>';
+            break;
+        case 'error':
+            $status_msg = '<div class="alert alert-danger">An error occurred. Please try again.</div>';
+            break;
+    }
+}
+
 $error = null;
 $success = null;
 $parent_services = [];
@@ -49,15 +65,19 @@ try {
     $stmt->execute();
     $sub_services = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $error = "Could not fetch sub-services data.";
+    $page_error = "Could not fetch sub-services data.";
     error_log("Manage Sub-Services Error: " . $e->getMessage());
 }
 ?>
+
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-plus-circle"></i> Sub-Service Management</h1>
     <p>Add specific services (e.g., 'Plumber') and assign them to a parent category.</p>
 </div>
+
+<?php echo $status_msg; ?>
 
 <div class="management-grid section-fly-in">
     <div class="form-card">
@@ -93,6 +113,7 @@ try {
             <h2><i class="fas fa-stream"></i> Existing Sub-Services</h2>
         </div>
         <div class="card-content">
+            <?php if (isset($page_error)): ?><div class="alert alert-danger"><?php echo htmlspecialchars($page_error); ?></div><?php endif; ?>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -110,14 +131,34 @@ try {
                                 <td><?php echo htmlspecialchars($sub['parent_name']); ?></td>
                                 <td><i class="<?php echo htmlspecialchars($sub['icon']); ?>"></i> <?php echo htmlspecialchars($sub['name']); ?></td>
                                 <td class="action-buttons">
-                                    <a href="#" title="Edit"><i class="fas fa-edit"></i></a>
-                                    <a href="#" title="Delete"><i class="fas fa-trash"></i></a>
+                                    <a href="edit_sub_service.php?id=<?php echo $sub['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="actions/sub_service_actions.php?action=delete&id=<?php echo $sub['id']; ?>"
+                                       class="action-trigger"
+                                       data-modal-title="Confirm Deletion"
+                                       data-modal-description="Are you sure you want to delete this sub-service? This action is permanent."
+                                       data-modal-icon="fas fa-trash"
+                                       data-modal-theme="modal-danger"
+                                       data-modal-confirm-text="Yes, Delete"
+                                       title="Delete"><i class="fas fa-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<div id="confirmation-modal" class="modal confirmation-modal" role="dialog" aria-hidden="true">
+    <div class="modal-content">
+        <button class="close-button" aria-label="Close modal"><i class="fas fa-times"></i></button>
+        <div class="modal-icon"><i class=""></i></div>
+        <h2 id="modal-title">Confirmation</h2>
+        <p id="modal-description">Are you sure?</p>
+        <div class="modal-buttons">
+            <button id="confirm-action-btn" class="btn btn-confirm" type="button">Confirm</button>
+            <button id="cancel-action-btn" class="btn btn-secondary" type="button">Cancel</button>
         </div>
     </div>
 </div>

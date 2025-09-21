@@ -1016,3 +1016,80 @@ main.page-content {
     padding-top: 0;
     border-top: none;
 }
+
+/* --- Dropdown Menu for Main Navigation (REVISED & POLISHED) --- */
+
+/* Parent container for the dropdown */
+.nav-links .nav-item-dropdown {
+    position: relative;
+}
+
+/* Arrow icon inside the dropdown toggle button */
+.nav-links .nav-link-dropdown-toggle .dropdown-arrow {
+    margin-left: 8px;
+    font-size: 0.8em;
+    transition: transform 0.3s ease;
+}
+
+/* The dropdown menu container itself */
+.nav-links .dropdown-nav-menu {
+    /* Base styles - initially hidden for animation */
+    display: none;
+    opacity: 0;
+    transform: translateY(10px) translateX(-50%); /* Starts lower and centered */
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+
+    /* Positioning - This is the alignment fix */
+    position: absolute;
+    top: calc(100% + 12px); /* Increases the gap from the main menu */
+    left: 50%; /* Aligns the center of the dropdown with the center of the parent */
+    z-index: 1000;
+
+    /* Appearance */
+    min-width: 220px;
+    background-color: #1F2334;
+    border-radius: 8px;
+    padding: 8px; /* Provides a nice inner margin */
+    list-style: none;
+    border: 1px solid #3a3f51;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); /* Softer, deeper shadow */
+}
+
+/* This class is toggled by JavaScript to show the menu */
+.nav-links .nav-item-dropdown.open .dropdown-nav-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0) translateX(-50%); /* Animates to its final position */
+}
+
+/* Rotate the arrow when the dropdown is open */
+.nav-links .nav-item-dropdown.open .nav-link-dropdown-toggle .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Links inside the dropdown */
+.dropdown-nav-menu li a {
+    color: #d0d2d6;
+    background-color: transparent;
+    text-decoration: none;
+    display: block;
+    font-size: 15px;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    padding: 10px 16px;
+    border-radius: 6px; /* Rounded corners for the links themselves */
+    margin: 2px 0;
+}
+
+/* Hover state for links */
+.dropdown-nav-menu li a:hover {
+    background-color: #3a3f51;
+    color: #ffffff;
+}
+
+/* REFINED Active state for the link within the dropdown */
+.dropdown-nav-menu li a.active {
+    background-color: transparent; /* No more solid background */
+    color: #8384f5; /* Use the theme's primary color for the text */
+    font-weight: 600; /* Make the active link text bold */
+}

@@ -32,6 +32,8 @@ try {
 }
 ?>
 
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-users"></i> User Management</h1>
     <p>View, search, and manage all registered customers and workers.</p>

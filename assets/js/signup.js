@@ -56,6 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (nextBtnElement) {
                     nextBtnElement.textContent = "Create Account";
                 }
+                // --- FIX ADDED HERE ---
+                if (registerBackBtn) {
+                    registerBackBtn.dataset.target = 'step-role';
+                }
                 showStep('step-register-part1');
             } else { // worker
                 if (nextBtnElement) {
@@ -118,6 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.status === 'success') {
                     workerKeyHiddenInput.value = keyInput.value;
+                    if (registerBackBtn) {
+                        registerBackBtn.dataset.target = 'step-key';
+                    }
                     showStep('step-register-part1');
                 } else {
                     showAlert(data.message);

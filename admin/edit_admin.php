@@ -74,6 +74,8 @@ if ($admin_id > 0) {
 }
 ?>
 
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-user-edit"></i> Edit Administrator</h1>
     <p>Modify the details for the selected admin account.</p>

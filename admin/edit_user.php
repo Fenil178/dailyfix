@@ -47,6 +47,8 @@ if ($user_id > 0) {
 }
 ?>
 
+<link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-user-edit"></i> Edit User</h1>
     <p>Modify the details for <?php if ($user) echo '<strong>' . htmlspecialchars($user['full_name']) . '</strong>'; ?>.</p>
