@@ -31,8 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
 // Fetch current user data to display
 if ($user_id > 0) {
     try {
-        // UPDATED QUERY: Fetch more fields for the summary view
-        $stmt = $conn->prepare("SELECT full_name, email, role, profile_image, account_status, created_at FROM public.users WHERE id = ? AND role != 'admin'");
+        $stmt = $conn->prepare("SELECT full_name, email, role, profile_image, account_status, created_at, address_line1, address_line2, city, state, pincode, latitude, longitude FROM public.users WHERE id = ? AND role != 'admin'");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$user) {
@@ -48,6 +47,8 @@ if ($user_id > 0) {
 ?>
 
 <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-user-edit"></i> Edit User</h1>
@@ -63,7 +64,6 @@ if ($user_id > 0) {
             <div class="edit-user-layout">
                 <div class="user-profile-summary">
                     <?php 
-                        // Use a default avatar if no profile image is set
                         $avatar_path = !empty($user['profile_image']) ? '/dailyfix/' . ltrim($user['profile_image'], '/') : '/dailyfix/assets/images/default_avatar.png';
                     ?>
                     <img src="<?php echo htmlspecialchars($avatar_path); ?>" alt="Profile Avatar" class="profile-avatar">
@@ -100,6 +100,22 @@ if ($user_id > 0) {
                             <a href="manage_users.php" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
+
+                    <div class="location-details-admin">
+                        <h4><i class="fas fa-map-marked-alt"></i> User Location</h4>
+                        <?php if ($user['address_line1']): ?>
+                            <div class="address-block">
+                                <p><?php echo htmlspecialchars($user['address_line1']); ?></p>
+                                <?php if ($user['address_line2']): ?>
+                                    <p><?php echo htmlspecialchars($user['address_line2']); ?></p>
+                                <?php endif; ?>
+                                <p><?php echo htmlspecialchars($user['city'] . ', ' . $user['state'] . ' - ' . $user['pincode']); ?></p>
+                            </div>
+                            <div id="map"></div>
+                        <?php else: ?>
+                            <p>No location data provided by the user.</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         <?php else: ?>
@@ -108,5 +124,17 @@ if ($user_id > 0) {
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if ($user && $user['latitude'] && $user['longitude']): ?>
+        var map = L.map('map').setView([<?php echo $user['latitude']; ?>, <?php echo $user['longitude']; ?>], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([<?php echo $user['latitude']; ?>, <?php echo $user['longitude']; ?>]).addTo(map);
+        <?php endif; ?>
+    });
+</script>
 
 <?php include_once __DIR__ . '/includes/footer.php'; ?>

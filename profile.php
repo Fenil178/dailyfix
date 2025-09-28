@@ -10,7 +10,7 @@ $workerServiceIds = [];
 
 try {
     // Fetch basic user data
-    $stmt = $conn->prepare("SELECT full_name, email, phone, profile_image FROM public.users WHERE id = ?");
+    $stmt = $conn->prepare("SELECT full_name, email, phone, profile_image, address_line1, address_line2, city, pincode, state, latitude, longitude FROM public.users WHERE id = ?");
     $stmt->execute([$userId]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -31,6 +31,47 @@ try {
     error_log("Profile page error: " . $e->getMessage());
 }
 
+// Data for State and City Dropdowns
+$indian_states_cities = [
+    "Andaman and Nicobar Islands" => ["Port Blair"],
+    "Andhra Pradesh" => ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
+    "Arunachal Pradesh" => ["Itanagar", "Tawang"],
+    "Assam" => ["Guwahati", "Dibrugarh", "Silchar"],
+    "Bihar" => ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur"],
+    "Chandigarh" => ["Chandigarh"],
+    "Chhattisgarh" => ["Raipur", "Bhilai", "Bilaspur"],
+    "Dadra and Nagar Haveli and Daman and Diu" => ["Daman", "Silvassa"],
+    "Delhi" => ["New Delhi", "North Delhi", "South Delhi", "West Delhi", "East Delhi"],
+    "Goa" => ["Panaji", "Margao", "Vasco da Gama"],
+    "Gujarat" => ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar"],
+    "Haryana" => ["Faridabad", "Gurugram", "Panipat", "Ambala"],
+    "Himachal Pradesh" => ["Shimla", "Manali", "Dharamshala"],
+    "Jammu and Kashmir" => ["Srinagar", "Jammu", "Anantnag"],
+    "Jharkhand" => ["Ranchi", "Jamshedpur", "Dhanbad"],
+    "Karnataka" => ["Bengaluru", "Mysuru", "Hubballi-Dharwad", "Mangaluru"],
+    "Kerala" => ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur"],
+    "Ladakh" => ["Leh", "Kargil"],
+    "Lakshadweep" => ["Kavaratti"],
+    "Madhya Pradesh" => ["Indore", "Bhopal", "Jabalpur", "Gwalior"],
+    "Maharashtra" => ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik"],
+    "Manipur" => ["Imphal"],
+    "Meghalaya" => ["Shillong"],
+    "Mizoram" => ["Aizawl"],
+    "Nagaland" => ["Kohima", "Dimapur"],
+    "Odisha" => ["Bhubaneswar", "Cuttack", "Rourkela"],
+    "Puducherry" => ["Puducherry"],
+    "Punjab" => ["Ludhiana", "Amritsar", "Jalandhar"],
+    "Rajasthan" => ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner"],
+    "Sikkim" => ["Gangtok"],
+    "Tamil Nadu" => ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli"],
+    "Telangana" => ["Hyderabad", "Warangal", "Nizamabad"],
+    "Tripura" => ["Agartala"],
+    "Uttar Pradesh" => ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi"],
+    "Uttarakhand" => ["Dehradun", "Haridwar", "Roorkee"],
+    "West Bengal" => ["Kolkata", "Asansol", "Siliguri", "Durgapur"]
+];
+$states = array_keys($indian_states_cities);
+sort($states);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,13 +80,14 @@ try {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Profile - DailyFix</title>
-
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/profile.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/profile_location.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/worker_availability.js"></script>
 </head>
@@ -69,6 +111,7 @@ try {
                 <?php else: // Customer ?>
                 <button class="tab-link" data-tab="history">Booking History</button>
                 <?php endif; ?>
+                <button class="tab-link" data-tab="location">Location</button>
             </div>
 
             <div id="details" class="tab-content active">
@@ -182,26 +225,125 @@ try {
                 </div>
             </div>
             <?php endif; ?>
+
+            <div id="location" class="tab-content">
+                <div class="form-section">
+                    <h3>My Location</h3>
+                    <form action="/dailyfix/api/update_location.php" method="POST">
+                        <div id="map"></div>
+                        <input type="hidden" name="latitude" id="latitude" value="<?php echo htmlspecialchars($userData['latitude']); ?>">
+                        <input type="hidden" name="longitude" id="longitude" value="<?php echo htmlspecialchars($userData['longitude']); ?>">
+
+                        <div class="address-fields-container">
+                            <div class="form-group">
+                                <label for="address_line1">Address Line 1</label>
+                                <input type="text" id="address_line1" name="address_line1" value="<?php echo htmlspecialchars($userData['address_line1']); ?>" placeholder="House No. & Building Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="address_line2">Address Line 2</label>
+                                <input type="text" id="address_line2" name="address_line2" value="<?php echo htmlspecialchars($userData['address_line2']); ?>" placeholder="Road, Area, Colony">
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="state">State</label>
+                                    <select id="state" name="state">
+                                        <option value="">Select State</option>
+                                        <?php foreach ($states as $state): ?>
+                                            <option value="<?php echo htmlspecialchars($state); ?>" <?php if ($userData['state'] === $state) echo 'selected'; ?>><?php echo htmlspecialchars($state); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <select id="city" name="city">
+                                        <option value="">Select City</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="pincode">Pincode</label>
+                                <input type="text" id="pincode" name="pincode" value="<?php echo htmlspecialchars($userData['pincode']); ?>">
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Save Location</button>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </main>
-
     <script>
-    // Simple script for tab functionality
-    const tabLinks = document.querySelectorAll('.tab-link');
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            const tabId = link.getAttribute('data-tab');
+        const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
+        const userData = <?php echo json_encode($userData); ?>;
 
-            tabLinks.forEach(l => l.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const stateDropdown = document.getElementById('state');
+            const cityDropdown = document.getElementById('city');
+            let map, marker;
 
-            link.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            function initializeMap() {
+                const lat = parseFloat(userData.latitude) || 21.1702;
+                const lon = parseFloat(userData.longitude) || 72.8311;
+
+                map = L.map('map').setView([lat, lon], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+                marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+
+                marker.on('dragend', function (event) {
+                    const position = marker.getLatLng();
+                    document.getElementById('latitude').value = position.lat;
+                    document.getElementById('longitude').value = position.lng;
+                });
+
+                map.on('click', function(e) {
+                    marker.setLatLng(e.latlng);
+                    const position = marker.getLatLng();
+                    document.getElementById('latitude').value = position.lat;
+                    document.getElementById('longitude').value = position.lng;
+                });
+            }
+
+            function updateCities() {
+                const selectedState = stateDropdown.value;
+                cityDropdown.innerHTML = '<option value="">Select City</option>';
+                if (selectedState && citiesByState[selectedState]) {
+                    citiesByState[selectedState].forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        if (userData.city === city) {
+                            option.selected = true;
+                        }
+                        cityDropdown.appendChild(option);
+                    });
+                }
+            }
+
+            tabLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const tabId = link.getAttribute('data-tab');
+                    tabLinks.forEach(l => l.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    link.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+
+                    if (tabId === 'location' && !map) {
+                        initializeMap();
+                        setTimeout(() => map.invalidateSize(), 10);
+                    }
+                });
+            });
+
+            stateDropdown.addEventListener('change', updateCities);
+
+            // Initial population of cities
+            updateCities();
         });
-    });
     </script>
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>
-
 </html>

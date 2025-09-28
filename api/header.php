@@ -1,14 +1,13 @@
 <?php
 // This block is now in header.php and handles all session-related logic.
-
-// THIS IS THE PERMANENT FIX:
-// This stable path works correctly from any directory.
 include_once __DIR__ . "/encryption.php";
 
 $role = null;
 $userId = null;
 $userName = 'Guest';
 $profile_imagePath = null;
+$userCity = null;
+$userState = null;
 
 // Decrypt user data from cookies to establish the session.
 if (isset($_COOKIE['encrypted_user_role'])) {
@@ -32,6 +31,22 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
     header("Location: /dailyfix/login.php");
     exit;
 }
+
+// Fetch user's location
+if ($userId) {
+    try {
+        $stmt = $conn->prepare("SELECT city, state FROM public.users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $locationData = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($locationData) {
+            $userCity = $locationData['city'];
+            $userState = $locationData['state'];
+        }
+    } catch (PDOException $e) {
+        error_log("Header location fetch error: " . $e->getMessage());
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,6 +64,17 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         <a href="/dailyfix/index.php">
             <img src="/dailyfix/assets/images/logo.png" style="width: 50px" alt="DailyFix Logo" />
         </a>
+    </div>
+
+    <div class="location-display">
+        <i class="fas fa-map-marker-alt"></i>
+        <div>
+            <?php if ($userCity && $userState): ?>
+                <span><?php echo htmlspecialchars($userCity); ?>, <?php echo htmlspecialchars($userState); ?></span>
+            <?php else: ?>
+                <a href="/dailyfix/profile.php#location">Set Your Location</a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <ul class="nav-links" id="navLinks">

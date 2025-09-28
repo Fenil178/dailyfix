@@ -139,7 +139,7 @@ body {
 /* Custom form styles from login.css */
 .form-group {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-icon {
@@ -156,7 +156,7 @@ body {
   display: block;
   width: 100%;
   border-radius: 0.5rem;
-  padding: 0.9rem 1rem 0.9rem 2.5rem; /* Left padding for icon */
+  padding: 0.9rem 1rem; /* Removed icon padding for address fields */
   border: 1px solid #ced4da;
   background-color: #fff;
   background-clip: padding-box;
@@ -169,6 +169,11 @@ body {
   -moz-appearance: none;
   appearance: none;
 }
+/* Re-add left padding for fields with icons */
+#step-register-part1 .form-control-custom, #step-key .form-control-custom {
+    padding-left: 2.5rem;
+}
+
 
 .form-control-custom:focus {
   border-color: #a6c1ee;
@@ -295,39 +300,34 @@ select.form-control-custom {
   }
 }
 
-/* Styles for the two-step form layout */
-[data-step] {
-    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
-}
-
-[data-step="1"].fade-out,
-[data-step="2"].fade-out {
-    opacity: 0;
-    transform: translateY(-20px);
-    pointer-events: none; /* Disables clicks during transition */
-}
-
 /* Styles for the worker details section inputs */
-#step-2 .form-group label {
+#step-register-part2 .form-group label {
     display: block;
     margin-bottom: 0.25rem;
     font-size: 0.9rem;
     color: #6c757d;
 }
 
-#step-2 .form-group .form-icon {
+#step-register-part2 .form-group .form-icon {
     top: 3.5rem; /* Adjusts icon position for stacked label/input */
 }
 
-#step-2 .form-group input,
-#step-2 .form-group textarea {
-    padding-left: 2.5rem;
+#step-register-part2 .form-group input,
+#step-register-part2 .form-group textarea {
+    padding-left: 1rem;
 }
 
 /* New styles for the categorized services section */
 .services-category-list {
     display: grid;
-    gap: 1.5rem; /* Space between categories */
+    gap: 1rem;
+    grid-template-columns: 1fr; /* Default to single column */
+}
+
+@media (min-width: 576px) {
+    .services-category-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .service-category-group {
@@ -335,6 +335,7 @@ select.form-control-custom {
     padding: 1rem;
     border-radius: 0.5rem;
     border: 1px solid #e9ecef;
+    margin-bottom: 1rem;
 }
 
 .service-category-group h4 {
@@ -354,7 +355,7 @@ select.form-control-custom {
 
 .services-checkbox-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 0.75rem;
 }
 
@@ -392,4 +393,105 @@ select.form-control-custom {
 
 .checkbox-item input[type="checkbox"]:hover + label {
     background-color: #e9ecef;
+}
+
+/* --- NEW: Professional Step Indicator Styles --- */
+.step-indicator-wrapper {
+    margin-bottom: 2.2rem;
+}
+
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    padding: 0;
+    position: relative;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    background-color: #e9ecef;
+    z-index: 1;
+}
+
+.step-indicator::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 16px;
+    height: 2px;
+    background-color: #0d6efd;
+    z-index: 2;
+    width: 0;
+    transition: width 0.4s ease-in-out;
+}
+
+.step-indicator-item {
+    text-align: center;
+    flex: 1;
+    padding: 0 5px;
+    color: #6c757d;
+    font-size: 0.6rem;
+    position: relative;
+    z-index: 3;
+    line-height: 1.3;
+}
+
+.step-indicator-item span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #e9ecef;
+    margin: 0 auto 0.5rem auto;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.step-indicator-item.completed span {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+.step-indicator-item.completed span::before {
+    content: '\2713';
+    font-size: 1rem;
+}
+
+.step-indicator-item.active {
+    font-weight: 700;
+    color: #0d6efd;
+}
+.step-indicator-item.active span {
+    border-color: #0d6efd;
+}
+
+/* Progress line width classes for Worker */
+#worker-indicator .progress-step-1 { width: 0%; }
+#worker-indicator .progress-step-2 { width: 20%; }
+#worker-indicator .progress-step-3 { width: 40%; }
+#worker-indicator .progress-step-4 { width: 60%; }
+#worker-indicator .progress-step-5 { width: 80%; }
+#worker-indicator .progress-step-6 { width: 100%; }
+
+/* Progress line width classes for Customer */
+#customer-indicator .progress-step-1 { width: 0%; }
+#customer-indicator .progress-step-2 { width: 100%; }
+
+/* --- NEW: Map Container Styling --- */
+#map {
+    height: 250px;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    margin-bottom: 1rem;
+    z-index: 5;
 }

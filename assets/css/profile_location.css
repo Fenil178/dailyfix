@@ -1,0 +1,50 @@
+#location .form-section {
+    display: flex;
+    flex-direction: column;
+}
+
+#map {
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    z-index: 1;
+}
+
+.address-fields-container {
+    display: flex;
+    flex-direction: column;
+}
+
+#location .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+#location .form-group {
+    margin-bottom: 1rem;
+}
+
+#location .form-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+#location .form-group input,
+#location .form-group select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+#location .submit-btn {
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    #location .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

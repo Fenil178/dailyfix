@@ -24,7 +24,7 @@ if (isset($_GET['status'])) {
 
 $users = [];
 try {
-    $stmt = $conn->prepare("SELECT id, full_name, email, role, account_status, created_at FROM public.users WHERE role != 'admin' ORDER BY created_at DESC");
+    $stmt = $conn->prepare("SELECT id, full_name, email, role, account_status, created_at, city, state FROM public.users WHERE role != 'admin' ORDER BY created_at DESC");
     $stmt->execute();
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -53,13 +53,14 @@ try {
                     <th>Email</th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th>Location</th>
                     <th>Registered On</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($users)): ?>
-                    <tr><td colspan="6" style="text-align: center;">No users found.</td></tr>
+                    <tr><td colspan="7" style="text-align: center;">No users found.</td></tr>
                 <?php else: ?>
                     <?php foreach ($users as $user): ?>
                         <tr>
@@ -67,6 +68,7 @@ try {
                             <td><?php echo htmlspecialchars($user['email']); ?></td>
                             <td><span class="role-badge role-<?php echo strtolower($user['role']); ?>"><?php echo htmlspecialchars($user['role']); ?></span></td>
                             <td><span class="status-badge-table status-<?php echo strtolower($user['account_status']); ?>"><?php echo htmlspecialchars($user['account_status']); ?></span></td>
+                            <td><?php echo htmlspecialchars($user['city'] . ', ' . $user['state']); ?></td>
                             <td><?php echo date("M d, Y", strtotime($user['created_at'])); ?></td>
                             <td class="action-buttons">
                                 <a href="edit_user.php?id=<?php echo $user['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>

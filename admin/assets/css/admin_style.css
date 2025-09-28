@@ -1093,3 +1093,39 @@ main.page-content {
     color: #8384f5; /* Use the theme's primary color for the text */
     font-weight: 600; /* Make the active link text bold */
 }
+
+.location-details-admin {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.location-details-admin h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.location-details-admin .address-block {
+    background-color: var(--background-secondary);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.location-details-admin .address-block p {
+    margin: 0;
+}
+
+.location-details-admin #map {
+    height: 250px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    z-index: 1;
+}
