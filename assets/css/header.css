@@ -337,30 +337,3 @@ body:not(.dark-mode) .navbar .nav-links a.active {
     color: var(--primary-color); /* Blue text on hover/active */
 }
 
-/* Location Display in Header */
-.location-display {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-color);
-  font-size: 0.9rem;
-  margin-left: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
-}
-
-.location-display i {
-  color: var(--primary-color);
-}
-
-.location-display a {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.location-display a:hover {
-  text-decoration: underline;
-}

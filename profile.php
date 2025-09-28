@@ -117,7 +117,7 @@ sort($states);
                 <img src="<?php echo htmlspecialchars($userData['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>"
                     alt="Profile Avatar" class="profile-header-avatar">
                 <h1><?php echo htmlspecialchars($userData['full_name']); ?></h1>
-                <p><?php echo htmlspecialchars($role); ?></p>
+                <p><?php echo htmlspecialchars(ucfirst($role)); ?></p>
             </div>
 
             <div class="tab-nav">
@@ -298,17 +298,28 @@ sort($states);
         const userData = <?php echo json_encode($userData); ?>;
 
         document.addEventListener('DOMContentLoaded', function () {
-    const tabLinks = document.querySelectorAll('.tab-link');
-    const tabContents = document.querySelectorAll('.tab-content');
+            // Element selections
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
             const stateDropdown = document.getElementById('state');
             const cityDropdown = document.getElementById('city');
+            const address1Input = document.getElementById('address_line1');
+            const address2Input = document.getElementById('address_line2');
+            const pincodeInput = document.getElementById('pincode');
+            const latInput = document.getElementById('latitude');
+            const lonInput = document.getElementById('longitude');
+
+            // Map variables
             let map, marker;
+            let geocodeTimeout;
+
+            // --- FUNCTION DEFINITIONS ---
 
             function initializeMap() {
-                const lat = parseFloat(userData.latitude) || 21.1702;
+                const lat = parseFloat(userData.latitude) || 21.1702; // Default to Surat
                 const lon = parseFloat(userData.longitude) || 72.8311;
 
-                map = L.map('map').setView([lat, lon], 13);
+                map = L.map('map').setView([lat, lon], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(map);
@@ -316,27 +327,29 @@ sort($states);
 
                 marker.on('dragend', function (event) {
                     const position = marker.getLatLng();
-                    document.getElementById('latitude').value = position.lat;
-                    document.getElementById('longitude').value = position.lng;
+                    latInput.value = position.lat;
+                    lonInput.value = position.lng;
                 });
 
                 map.on('click', function(e) {
                     marker.setLatLng(e.latlng);
                     const position = marker.getLatLng();
-                    document.getElementById('latitude').value = position.lat;
-                    document.getElementById('longitude').value = position.lng;
+                    latInput.value = position.lat;
+                    lonInput.value = position.lng;
                 });
             }
 
             function updateCities() {
                 const selectedState = stateDropdown.value;
+                const selectedCity = userData.city; // Store current city before clearing
                 cityDropdown.innerHTML = '<option value="">Select City</option>';
                 if (selectedState && citiesByState[selectedState]) {
                     citiesByState[selectedState].forEach(city => {
                         const option = document.createElement('option');
                         option.value = city;
                         option.textContent = city;
-                        if (userData.city === city) {
+                        // Reselect the user's city if it exists in the new state list
+                        if (selectedCity === city) {
                             option.selected = true;
                         }
                         cityDropdown.appendChild(option);
@@ -344,28 +357,93 @@ sort($states);
                 }
             }
 
-    tabLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            const tabId = link.getAttribute('data-tab');
+            async function geocodeAddress() {
+                const address = `${address1Input.value}, ${address2Input.value}, ${cityDropdown.value}, ${stateDropdown.value}, ${pincodeInput.value}`;
+                if (address.trim().length < 10) return;
 
-            tabLinks.forEach(l => l.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
+                const query = encodeURIComponent(address);
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=in`;
+                
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+                        
+                        latInput.value = lat;
+                        lonInput.value = lon;
+                        
+                        if (map && marker) {
+                            const newLatLng = new L.LatLng(lat, lon);
+                            map.setView(newLatLng, 15);
+                            marker.setLatLng(newLatLng);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Geocoding error:", error);
+                }
+            }
 
-            link.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            // --- NEW: Reusable function to activate a specific tab ---
+            function activateTab(tabId) {
+                // Deactivate all tab links and content panes
+                tabLinks.forEach(l => l.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
 
+                // Activate the specific tab link and content pane
+                const linkToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+                const contentToActivate = document.getElementById(tabId);
+
+                if (linkToActivate && contentToActivate) {
+                    linkToActivate.classList.add('active');
+                    contentToActivate.classList.add('active');
+
+                    // If the location tab is being activated and the map hasn't been created yet, initialize it.
                     if (tabId === 'location' && !map) {
                         initializeMap();
+                        // Fix for map tiles not loading correctly in a hidden tab
                         setTimeout(() => map.invalidateSize(), 10);
                     }
+                }
+            }
+
+            // --- EVENT LISTENERS ---
+
+            // Handle manual tab clicking
+            tabLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const tabId = link.getAttribute('data-tab');
+                    activateTab(tabId);
+                    // Update the URL hash for a better user experience, without reloading the page
+                    history.pushState(null, null, `#${tabId}`);
                 });
             });
 
-            stateDropdown.addEventListener('change', updateCities);
+            // Handle geocoding when address fields change
+            [address1Input, address2Input, cityDropdown, stateDropdown, pincodeInput].forEach(el => {
+                el.addEventListener('change', () => {
+                    clearTimeout(geocodeTimeout);
+                    geocodeTimeout = setTimeout(geocodeAddress, 1000);
+                });
+            });
 
-            // Initial population of cities
-            updateCities();
-    });
+            // Handle state and city dropdown logic
+            stateDropdown.addEventListener('change', updateCities);
+            updateCities(); // Initial population of city dropdown
+
+            // --- INITIALIZATION ---
+
+            // Check for a hash in the URL on page load and activate the corresponding tab
+            const currentHash = window.location.hash.substring(1); // Remove the '#'
+            if (currentHash) {
+                activateTab(currentHash);
+            } else {
+                // If no hash, the 'details' tab is active by default in the HTML,
+                // but we call the function anyway for consistency.
+                activateTab('details');
+            }
+        });
     </script>
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>
