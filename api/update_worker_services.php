@@ -54,7 +54,7 @@ try {
     $conn->commit();
 
     // Redirect back to the profile page with a success message.
-    header("Location: /dailyfix/worker/profile.php?success=services_updated");
+    header("Location: /dailyfix/profile.php?success=services_updated");
     exit;
 
 } catch (PDOException $e) {

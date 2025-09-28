@@ -34,14 +34,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>"><i class="fas fa-users"></i> Users</a></li>
                 <li><a href="view_bookings.php" class="<?php echo ($currentPage == 'view_bookings.php') ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
                 <li class="nav-item-dropdown">
-                    <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">
-                        <i class="fas fa-layer-group"></i> Services <i class="fas fa-caret-down dropdown-arrow"></i>
-                    </a>
-                    <ul class="dropdown-nav-menu">
-                        <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
-                        <li><a href="manage_sub_services.php" class="<?php echo ($currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">Manage Sub-Services</a></li>
-                    </ul>
-                </li>
+    <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php' || $currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">
+        <i class="fas fa-layer-group"></i> Services <i class="fas fa-caret-down dropdown-arrow"></i>
+    </a>
+    <ul class="dropdown-nav-menu">
+        <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
+        <li><a href="manage_sub_services.php" class="<?php echo ($currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">Manage Sub-Services</a></li>
+        <li><a href="manage_sub_service_items.php" class="<?php echo ($currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">Manage Service Items</a></li>
+    </ul>
+</li>
                 <li><a href="manage_admins.php" class="<?php echo ($currentPage == 'manage_admins.php') ? 'active' : ''; ?>"><i class="fas fa-user-shield"></i> Admins</a></li>
             </ul>
             
