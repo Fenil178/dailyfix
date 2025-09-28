@@ -29,7 +29,7 @@ try {
     // Fetch new job requests (status = 'pending')
     // IMPORTANT: Fetched `created_at` for the "Requested" time
     $stmt = $conn->prepare("
-        SELECT b.id, b.service_details, b.booking_time, b.created_at, u.full_name as customer_name, u.profile_image as customer_avatar
+        SELECT b.id, b.service_details, b.booking_time, b.created_at, u.full_name as customer_name, u.profile_image as customer_avatar, u.address_line1, u.address_line2, u.city, u.state, u.pincode
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
         WHERE b.worker_id = ? AND b.status = 'pending'
@@ -40,7 +40,7 @@ try {
 
     // Fetch upcoming jobs (status = 'confirmed' or 'in_progress')
     $stmt = $conn->prepare("
-        SELECT b.*, u.full_name as customer_name, u.profile_image as customer_avatar
+        SELECT b.*, u.full_name as customer_name, u.profile_image as customer_avatar, u.address_line1, u.address_line2, u.city, u.state, u.pincode
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
         WHERE b.worker_id = ? AND b.status IN ('confirmed', 'in_progress')
@@ -90,6 +90,7 @@ try {
                                 <div class="job-card-body">
                                     <p><strong>Appointment:</strong> <?php echo date("D, M j, Y, g:i A", strtotime($job['booking_time'])); ?></p>
                                     <p><strong>Details:</strong> <?php echo htmlspecialchars($job['service_details']); ?></p>
+                                    <p><strong>Location:</strong> <?php echo htmlspecialchars($job['address_line1'] . ', ' . $job['address_line2'] . ', ' . $job['city'] . ', ' . $job['state'] . ' - ' . $job['pincode']); ?></p>
                                 </div>
                                 <div class="job-card-actions">
                                     <button onclick="handleJobAction(<?php echo $job['id']; ?>, 'confirmed', this)" class="btn accept">Accept</button>
@@ -121,6 +122,7 @@ try {
                                 </div>
                                 <div class="job-card-body">
                                     <p><strong>Details:</strong> <?php echo htmlspecialchars($job['service_details']); ?></p>
+                                    <p><strong>Location:</strong> <?php echo htmlspecialchars($job['address_line1'] . ', ' . $job['address_line2'] . ', ' . $job['city'] . ', ' . $job['state'] . ' - ' . $job['pincode']); ?></p>
                                     <p><strong>Status:</strong> <span class="item-status <?php echo htmlspecialchars($job['status']); ?>"><?php echo str_replace('_', ' ', htmlspecialchars($job['status'])); ?></span></p>
                                 </div>
                             </div>

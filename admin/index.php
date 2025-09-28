@@ -14,6 +14,7 @@ $stats = [
 $recent_bookings = [];
 $chart_data = ['labels' => [], 'data' => []];
 $error_message = '';
+$users_locations = [];
 
 try {
     // Fetch main stat cards
@@ -52,6 +53,14 @@ try {
         $chart_data['labels'][] = date("M d", strtotime($row['booking_date']));
         $chart_data['data'][] = $row['booking_count'];
     }
+
+    // Fetch user locations for the map
+    $users_locations_stmt = $conn->query("
+        SELECT full_name, latitude, longitude, role
+        FROM public.users
+        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+    ");
+    $users_locations = $users_locations_stmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch (PDOException $e) {
     error_log("Admin Dashboard Error: " . $e->getMessage());
@@ -60,6 +69,8 @@ try {
 ?>
 
 <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <div class="page-header section-fly-in">
     <div>
@@ -104,6 +115,15 @@ try {
 </div>
 
 <div class="dashboard-grid section-fly-in">
+    <div class="dashboard-card chart-card">
+        <div class="card-header">
+            <h2><i class="fas fa-map-marked-alt"></i> User Locations</h2>
+        </div>
+        <div class="card-content">
+            <div id="user-map" style="height: 400px;"></div>
+        </div>
+    </div>
+    
     <div class="dashboard-card chart-card">
         <div class="card-header">
             <h2><i class="fas fa-chart-bar"></i> Weekly Bookings</h2>
@@ -215,6 +235,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
+        });
+    }
+
+    const userMap = document.getElementById('user-map');
+    if (userMap) {
+        const map = L.map('user-map').setView([21.1702, 72.8311], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const users = <?php echo json_encode($users_locations); ?>;
+        users.forEach(user => {
+            const marker = L.marker([user.latitude, user.longitude]).addTo(map);
+            marker.bindPopup(`<b>${user.full_name}</b><br>${user.role}`);
         });
     }
 });

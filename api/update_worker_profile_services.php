@@ -67,7 +67,7 @@ try {
     $conn->commit();
 
     // Redirect back to the profile page with a success message.
-    header("Location: /dailyfix/profile.php?success=services_updated");
+    header("Location: /dailyfix/profile.php?success=services_updated#services");
     exit;
 
 } catch (PDOException $e) {
@@ -78,6 +78,6 @@ try {
     error_log("Worker profile services update failed: " . $e->getMessage());
     
     // Redirect back with a user-friendly error message.
-    header("Location: /dailyfix/profile.php?error=update_failed");
+        header("Location: /dailyfix/profile.php?error=update_failed#services");
     exit;
 }
