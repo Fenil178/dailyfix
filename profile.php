@@ -5,8 +5,11 @@ include_once __DIR__ . "/api/header.php";
 // Fetch user data based on role
 $userData = null;
 $workerProfile = null;
-$allSubServices = [];
+$services = [];
+$subServices = [];
+$subServiceItems = [];
 $workerServiceIds = [];
+$workerSubServiceItemIds = [];
 
 try {
     // Handle form submissions
@@ -37,11 +40,23 @@ try {
         $stmt->execute([$userId]);
         $workerProfile = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $allSubServices = $conn->query("SELECT id, name FROM public.sub_services ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+        // Fetch all services
+        $services = $conn->query("SELECT id, name, icon FROM public.services ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
 
+        // Fetch all sub-services
+        $subServices = $conn->query("SELECT id, service_id, name, icon FROM public.sub_services ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fetch all sub-service items
+        $subServiceItems = $conn->query("SELECT id, sub_service_id, name FROM public.sub_service_items ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fetch worker's selected sub-services and items
         $stmt = $conn->prepare("SELECT sub_service_id FROM public.worker_services WHERE user_id = ?");
         $stmt->execute([$userId]);
         $workerServiceIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $stmt = $conn->prepare("SELECT sub_service_item_id FROM public.worker_sub_service_items WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $workerSubServiceItemIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
 } catch (PDOException $e) {
@@ -108,6 +123,58 @@ sort($states);
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/worker_availability.js"></script>
+    <style>
+        /* Additional CSS for the multi-step service form */
+        .step { display: none; }
+        .step.active { display: block; }
+        .services-category-group { margin-bottom: 1.5rem; }
+        .service-category-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .sub-service-group { margin-left: 1.5rem; }
+        .sub-service-items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        .form-actions .btn {
+            width: 48%;
+        }
+        .services-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        /* Improved Button Styles */
+        .btn-primary.disabled,
+        .btn-primary:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+            color: #e0e0e0;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-primary.disabled:hover,
+        .btn-primary:disabled:hover {
+            background-color: #a0a0a0;
+            color: #e0e0e0;
+        }
+    </style>
 </head>
 
 <body>
@@ -216,20 +283,38 @@ sort($states);
             <div id="services" class="tab-content">
                 <div class="form-section">
                     <h3>My Services</h3>
-                    <form action="/dailyfix/api/update_worker_services.php" method="POST">
-                        <div class="services-checkbox-grid">
-                            <?php foreach ($allSubServices as $sub): ?>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="service-<?php echo $sub['id']; ?>" name="services[]"
-                                    value="<?php echo $sub['id']; ?>"
-                                    <?php echo in_array($sub['id'], $workerServiceIds) ? 'checked' : ''; ?>>
-                                <label
-                                    for="service-<?php echo $sub['id']; ?>"><?php echo htmlspecialchars($sub['name']); ?></label>
+                    <form id="service-selection-form" action="/dailyfix/api/update_worker_profile_services.php" method="POST">
+                        
+                        <div id="service-step-1" class="step active">
+                            <h4>1. Main Services</h4>
+                            <p>Select the main categories you specialize in.</p>
+                            <div id="main-services-container" class="services-checkbox-grid">
                             </div>
-                            <?php endforeach; ?>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary back-btn disabled" disabled>Back</button>
+                                <button type="button" class="btn btn-primary next-btn disabled" disabled data-next-step="service-step-2">Next</button>
+                            </div>
                         </div>
-                        <button type="submit" class="submit-btn" style="margin-top: 2rem;">Save Service
-                            Selections</button>
+
+                        <div id="service-step-2" class="step">
+                            <h4>2. Sub-services</h4>
+                            <p>Select the sub-services you offer within your chosen categories.</p>
+                            <div id="sub-services-container" class="services-list-container"></div>
+                             <div class="form-actions">
+                                <button type="button" class="btn btn-secondary back-btn" data-prev-step="service-step-1">Back</button>
+                                <button type="button" class="btn btn-primary next-btn disabled" disabled data-next-step="service-step-3">Next</button>
+                            </div>
+                        </div>
+
+                        <div id="service-step-3" class="step">
+                            <h4>3. Service Items</h4>
+                            <p>Select the specific tasks you can perform.</p>
+                            <div id="sub-service-items-container" class="services-list-container"></div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary back-btn" data-prev-step="service-step-2">Back</button>
+                                <button type="submit" class="btn btn-primary">Save Selections</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -297,6 +382,14 @@ sort($states);
         const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
         const userData = <?php echo json_encode($userData); ?>;
 
+        // PHP data for services
+        const allServices = <?php echo json_encode($services); ?>;
+        const allSubServices = <?php echo json_encode($subServices); ?>;
+        const allSubServiceItems = <?php echo json_encode($subServiceItems); ?>;
+        const workerServiceIds = <?php echo json_encode($workerServiceIds); ?>.map(id => parseInt(id));
+        const workerSubServiceItemIds = <?php echo json_encode($workerSubServiceItemIds); ?>.map(id => parseInt(id));
+
+
         document.addEventListener('DOMContentLoaded', function () {
             // Element selections
             const tabLinks = document.querySelectorAll('.tab-link');
@@ -308,13 +401,133 @@ sort($states);
             const pincodeInput = document.getElementById('pincode');
             const latInput = document.getElementById('latitude');
             const lonInput = document.getElementById('longitude');
+            const servicesTab = document.getElementById('services');
+            
+            // Service Step elements
+            const serviceStep1 = document.getElementById('service-step-1');
+            const serviceStep2 = document.getElementById('service-step-2');
+            const serviceStep3 = document.getElementById('service-step-3');
+            const nextBtns = servicesTab ? servicesTab.querySelectorAll('.next-btn') : [];
+            const backBtns = servicesTab ? servicesTab.querySelectorAll('.back-btn') : [];
+            const mainServicesContainer = servicesTab ? document.getElementById('main-services-container') : null;
 
             // Map variables
             let map, marker;
             let geocodeTimeout;
 
             // --- FUNCTION DEFINITIONS ---
+            
+            function showServiceStep(stepElement) {
+                const steps = servicesTab.querySelectorAll('.step');
+                steps.forEach(step => step.classList.remove('active'));
+                stepElement.classList.add('active');
+            }
 
+            function populateMainServices() {
+                if (!mainServicesContainer) return;
+                mainServicesContainer.innerHTML = '';
+                
+                // Get the main service IDs corresponding to the worker's selected sub-services
+                const workerMainServiceIds = [...new Set(allSubServices
+                    .filter(sub => workerServiceIds.includes(sub.id))
+                    .map(sub => sub.service_id))];
+
+                allServices.forEach(service => {
+                    const isChecked = workerMainServiceIds.includes(service.id) ? 'checked' : '';
+                    const serviceHtml = `
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="main-service-${service.id}" name="main_services[]" value="${service.id}" ${isChecked}>
+                            <label for="main-service-${service.id}"><i class="${service.icon}"></i> ${service.name}</label>
+                        </div>
+                    `;
+                    mainServicesContainer.innerHTML += serviceHtml;
+                });
+                
+                // Attach event listener and update button state
+                const checkboxes = mainServicesContainer.querySelectorAll('input[type="checkbox"]');
+                const nextBtn = serviceStep1.querySelector('.next-btn');
+                const updateButtonState = () => {
+                    const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    nextBtn.disabled = !isAnyChecked;
+                    nextBtn.classList.toggle('disabled', !isAnyChecked);
+                };
+                checkboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
+                updateButtonState();
+            }
+
+            function populateSubServices() {
+                const selectedServiceIds = Array.from(serviceStep1.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+                const subServicesContainer = document.getElementById('sub-services-container');
+                subServicesContainer.innerHTML = '';
+
+                let content = '';
+                allServices.forEach(service => {
+                    if (selectedServiceIds.includes(service.id)) {
+                        const relatedSubServices = allSubServices.filter(sub => sub.service_id === service.id);
+                        if (relatedSubServices.length > 0) {
+                            content += `
+                                <div class="services-category-group">
+                                    <h4 class="service-category-title"><i class="${service.icon}"></i> ${service.name}</h4>
+                                    <div class="services-checkbox-grid">
+                            `;
+                            relatedSubServices.forEach(sub => {
+                                const isChecked = workerServiceIds.includes(sub.id) ? 'checked' : '';
+                                content += `
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="sub-service-${sub.id}" name="services[]" value="${sub.id}" ${isChecked}>
+                                        <label for="sub-service-${sub.id}"><i class="${sub.icon}"></i> ${sub.name}</label>
+                                    </div>
+                                `;
+                            });
+                            content += `</div></div>`;
+                        }
+                    }
+                });
+                subServicesContainer.innerHTML = content || '<p>No sub-services found for selected categories.</p>';
+                 
+                // Update button state for step 2
+                const checkboxes = subServicesContainer.querySelectorAll('input[type="checkbox"]');
+                const nextBtn = serviceStep2.querySelector('.next-btn');
+                const updateButtonState = () => {
+                    const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    nextBtn.disabled = !isAnyChecked;
+                    nextBtn.classList.toggle('disabled', !isAnyChecked);
+                };
+                checkboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
+                updateButtonState();
+            }
+
+            function populateSubServiceItems() {
+                const selectedSubServiceIds = Array.from(serviceStep2.querySelectorAll('input[name="services[]"]:checked')).map(cb => parseInt(cb.value));
+                const subServiceItemsContainer = document.getElementById('sub-service-items-container');
+                subServiceItemsContainer.innerHTML = '';
+                
+                let content = '';
+                allSubServices.forEach(subService => {
+                    if (selectedSubServiceIds.includes(subService.id)) {
+                        const relatedItems = allSubServiceItems.filter(item => item.sub_service_id === subService.id);
+                        if (relatedItems.length > 0) {
+                             content += `
+                                <div class="services-category-group">
+                                    <h4 class="service-category-title"><i class="${subService.icon}"></i> ${subService.name}</h4>
+                                    <div class="sub-service-items-grid">
+                            `;
+                            relatedItems.forEach(item => {
+                                const isChecked = workerSubServiceItemIds.includes(item.id) ? 'checked' : '';
+                                content += `
+                                     <div class="checkbox-item">
+                                        <input type="checkbox" id="item-${item.id}" name="sub_service_items[]" value="${item.id}" ${isChecked}>
+                                        <label for="item-${item.id}">${item.name}</label>
+                                    </div>
+                                `;
+                            });
+                            content += `</div></div>`;
+                        }
+                    }
+                });
+                subServiceItemsContainer.innerHTML = content || '<p>No service items found for selected sub-services.</p>';
+            }
+            
             function initializeMap() {
                 const lat = parseFloat(userData.latitude) || 21.1702; // Default to Surat
                 const lon = parseFloat(userData.longitude) || 72.8311;
@@ -384,30 +597,7 @@ sort($states);
                     console.error("Geocoding error:", error);
                 }
             }
-
-            // --- NEW: Reusable function to activate a specific tab ---
-            function activateTab(tabId) {
-                // Deactivate all tab links and content panes
-                tabLinks.forEach(l => l.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-
-                // Activate the specific tab link and content pane
-                const linkToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
-                const contentToActivate = document.getElementById(tabId);
-
-                if (linkToActivate && contentToActivate) {
-                    linkToActivate.classList.add('active');
-                    contentToActivate.classList.add('active');
-
-                    // If the location tab is being activated and the map hasn't been created yet, initialize it.
-                    if (tabId === 'location' && !map) {
-                        initializeMap();
-                        // Fix for map tiles not loading correctly in a hidden tab
-                        setTimeout(() => map.invalidateSize(), 10);
-                    }
-                }
-            }
-
+            
             // --- EVENT LISTENERS ---
 
             // Handle manual tab clicking
@@ -419,6 +609,43 @@ sort($states);
                     history.pushState(null, null, `#${tabId}`);
                 });
             });
+
+            // Handle navigation between service steps
+            if (servicesTab) {
+                nextBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const nextStepId = btn.dataset.nextStep;
+                        if (nextStepId === 'service-step-2') {
+                            populateSubServices();
+                        } else if (nextStepId === 'service-step-3') {
+                            populateSubServiceItems();
+                        }
+                        showServiceStep(document.getElementById(nextStepId));
+                    });
+                });
+                
+                backBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const prevStepId = btn.dataset.prevStep;
+                        showServiceStep(document.getElementById(prevStepId));
+                    });
+                });
+            }
+
+
+            // Handle initial state of "Next" button on step 1
+            if (serviceStep1) {
+                const checkboxes = serviceStep1.querySelectorAll('input[type="checkbox"]');
+                const nextBtn = serviceStep1.querySelector('.next-btn');
+                const updateButtonState = () => {
+                    const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                    nextBtn.disabled = !isAnyChecked;
+                    nextBtn.classList.toggle('disabled', !isAnyChecked);
+                };
+                checkboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
+                updateButtonState(); // Set initial state
+            }
+
 
             // Handle geocoding when address fields change
             [address1Input, address2Input, cityDropdown, stateDropdown, pincodeInput].forEach(el => {
@@ -433,15 +660,37 @@ sort($states);
             updateCities(); // Initial population of city dropdown
 
             // --- INITIALIZATION ---
+            function activateTab(tabId) {
+    tabLinks.forEach(l => l.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+
+    const linkToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+    const contentToActivate = document.getElementById(tabId);
+
+    if (linkToActivate && contentToActivate) {
+        linkToActivate.classList.add('active');
+        contentToActivate.classList.add('active');
+
+        if (tabId === 'location' && !map) {
+            initializeMap();
+            setTimeout(() => map.invalidateSize(), 10);
+        } else if (tabId === 'services') { // Add this new condition
+            populateMainServices();
+        }
+    }
+}
 
             // Check for a hash in the URL on page load and activate the corresponding tab
             const currentHash = window.location.hash.substring(1); // Remove the '#'
             if (currentHash) {
                 activateTab(currentHash);
             } else {
-                // If no hash, the 'details' tab is active by default in the HTML,
-                // but we call the function anyway for consistency.
                 activateTab('details');
+            }
+            
+            // Initial population of main services when the page loads
+            if (servicesTab && servicesTab.classList.contains('active')) {
+                 populateMainServices();
             }
         });
     </script>

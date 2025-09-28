@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewContainer = document.getElementById('filePreviewContainer');
     
     const subServicesContainer = document.getElementById('sub-services-container');
+    const subServiceItemsContainer = document.getElementById('sub-service-items-container');
     const accountDetailsNextBtn = document.getElementById('account-details-next-btn');
 
     // --- Location-related elements ---
@@ -187,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 accountDetailsNextBtn.dataset.target = 'step-register-part2';
                 registerBackBtn.dataset.target = 'step-key';
-                locationBackBtn.dataset.target = 'step-sub-services';
+                locationBackBtn.dataset.target = 'step-sub-service-items';
                 showStep('step-key');
             }
         });
@@ -198,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
     nextBtns.forEach(btn => btn.addEventListener('click', () => {
         const targetStep = btn.dataset.target;
         if (targetStep === 'step-sub-services') populateSubServices();
+        if (targetStep === 'step-sub-service-items') populateSubServiceItems();
         showStep(targetStep);
     }));
     
@@ -228,6 +230,40 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         subServicesContainer.innerHTML = content || '<p>Please go back and select a main service category first.</p>';
+    }
+
+    // --- Populating Sub-Service Items ---
+    function populateSubServiceItems() {
+        subServiceItemsContainer.innerHTML = '';
+        const selectedSubServices = Array.from(document.querySelectorAll('#sub-services-container input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+    
+        if (selectedSubServices.length === 0) {
+            subServiceItemsContainer.innerHTML = '<p>Please go back and select at least one sub-service.</p>';
+            return;
+        }
+    
+        let content = '';
+        selectedSubServices.forEach(subServiceId => {
+            const items = subServiceItems[subServiceId];
+            if (items && items.length > 0) {
+                const subService = Object.values(groupedSubServices).flat().find(s => s.id === subServiceId);
+                let categoryHtml = `
+                    <div class="service-category-group">
+                        <h4><i class="${subService.icon}"></i> ${subService.name}</h4>
+                        <div class="services-checkbox-grid">`;
+                items.forEach(item => {
+                    categoryHtml += `
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="item-${item.id}" name="sub_service_items[]" value="${item.id}">
+                            <label for="item-${item.id}">${item.name}</label>
+                        </div>`;
+                });
+                categoryHtml += `</div></div>`;
+                content += categoryHtml;
+            }
+        });
+    
+        subServiceItemsContainer.innerHTML = content || '<p>No service items found for the selected sub-services.</p>';
     }
 
     // --- KEY VERIFICATION ---

@@ -326,3 +326,68 @@ input:checked + .toggle-slider {
 input:checked + .toggle-slider:before {
     transform: translateX(26px);
 }
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.form-actions .btn {
+    width: 48%;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Primary "Next" button style */
+.form-actions .btn-primary {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+}
+
+/* Hover effect for primary button */
+.form-actions .btn-primary:not(.disabled):hover {
+    background-color: var(--secondary-color);
+    color: #111;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Disabled state for primary button */
+.form-actions .btn-primary.disabled,
+.form-actions .btn-primary:disabled {
+    background-color: #e0e0e0;
+    color: #a0a0a0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Secondary "Back" button style */
+.form-actions .btn-secondary {
+    background-color: transparent;
+    color: var(--text-color-dark);
+    border: 1px solid #ccc;
+}
+
+/* Hover effect for secondary button */
+.form-actions .btn-secondary:not(.disabled):hover {
+    background-color: #f0f0f0;
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Disabled state for secondary button */
+.form-actions .btn-secondary.disabled,
+.form-actions .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}

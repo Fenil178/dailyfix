@@ -25,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $experience_years = $_POST['experience_years'] ?? null;
     $hourly_rate = $_POST['hourly_rate'] ?? null;
     $selected_services = $_POST['services'] ?? [];
+    $selected_sub_service_items = $_POST['sub_service_items'] ?? [];
 
     // --- Location Fields ---
     $latitude = $_POST['latitude'] ?? null;
@@ -106,6 +107,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $stmt_services->execute([$new_user_id, $service_id]);
                 }
             }
+            
+            // Link sub-service items to worker (if any)
+            if (!empty($selected_sub_service_items)) {
+                $sql_worker_items = "INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id) VALUES (?, ?)";
+                $stmt_items = $conn->prepare($sql_worker_items);
+                foreach ($selected_sub_service_items as $item_id) {
+                    $stmt_items->execute([$new_user_id, $item_id]);
+                }
+            }
         }
         
         $conn->commit();
@@ -171,10 +181,10 @@ $indian_states_cities = [
 $states = array_keys($indian_states_cities);
 sort($states);
 
-
 // PHP to fetch services for the form
 $mainServices = [];
 $groupedSubServices = [];
+$subServiceItems = [];
 try {
     // Fetch main services
     $stmt = $conn->query("SELECT id, name, icon FROM public.services ORDER BY name");
@@ -185,6 +195,13 @@ try {
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($results as $row) {
         $groupedSubServices[$row['service_name']][] = ['id' => $row['id'], 'name' => $row['sub_service_name'], 'icon' => $row['icon'], 'main_service_id' => $row['main_service_id']];
+    }
+    
+    // Fetch sub-service items
+    $stmt = $conn->query("SELECT ssi.sub_service_id, ssi.id, ssi.name, ssi.icon FROM public.sub_service_items ssi JOIN public.sub_services ss ON ssi.sub_service_id = ss.id ORDER BY ss.name, ssi.name");
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($results as $row) {
+        $subServiceItems[$row['sub_service_id']][] = ['id' => $row['id'], 'name' => $row['name'], 'icon' => $row['icon']];
     }
 } catch (PDOException $e) {
     error_log("Failed to fetch sub-services for setup page: " . $e->getMessage());
@@ -225,7 +242,8 @@ try {
                             <li class="step-indicator-item" data-step-target="step-register-part2"><span>3</span>Details</li>
                             <li class="step-indicator-item" data-step-target="step-main-services"><span>4</span>Services</li>
                             <li class="step-indicator-item" data-step-target="step-sub-services"><span>5</span>Sub-Services</li>
-                            <li class="step-indicator-item" data-step-target="step-location"><span>6</span>Location</li>
+                            <li class="step-indicator-item" data-step-target="step-sub-service-items"><span>6</span>Sub-Items</li>
+                            <li class="step-indicator-item" data-step-target="step-location"><span>7</span>Location</li>
                         </ul>
                     </div>
                     
@@ -264,7 +282,7 @@ try {
                         <div id="keyForm">
                             <div class="form-group">
                                 <i class="fas fa-key form-icon"></i>
-                                <input type="text" class="form-control-custom" id="worker_key_input" name="worker_key_verify" placeholder="e.g., S9M1-17FR" required>
+                                <input type="text" class="form-control-custom" name="worker_key_verify" id="worker_key_input" placeholder="e.g., S9M1-17FR" required>
                             </div>
                             <div class="d-grid">
                                 <button type="button" class="btn btn-signup" id="verifyKeyBtn">Verify Key</button>
@@ -318,19 +336,19 @@ try {
                         
                         <div class="form-group">
                             <label for="bio">Professional Bio</label>
-                            <textarea class="form-control-custom" id="bio" name="bio" rows="3" placeholder="Describe your skills and services..." required></textarea>
+                            <textarea class="form-control-custom" name="bio" id="bio" rows="3" placeholder="Describe your skills and services..." required></textarea>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="experience_years">Years of Experience</label>
-                                    <input type="number" class="form-control-custom" id="experience_years" name="experience_years" placeholder="e.g., 5" required>
+                                    <input type="number" class="form-control-custom" name="experience_years" id="experience_years" placeholder="e.g., 5" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="hourly_rate">Hourly Rate (₹)</label>
-                                    <input type="number" step="0.01" class="form-control-custom" id="hourly_rate" name="hourly_rate" placeholder="e.g., 25.50" required>
+                                    <input type="number" step="0.01" class="form-control-custom" name="hourly_rate" id="hourly_rate" placeholder="e.g., 25.50" required>
                                 </div>
                             </div>
                         </div>
@@ -362,10 +380,20 @@ try {
                         <p class="subtitle">Select the specific services you offer.</p>
                         <div id="sub-services-container"></div>
                         <div class="d-grid mt-4">
-                             <button type="button" class="btn btn-signup next-btn" data-target="step-location">Next</button>
+                             <button type="button" class="btn btn-signup next-btn" data-target="step-sub-service-items">Next</button>
                         </div>
                     </div>
                     
+                    <div class="step" id="step-sub-service-items">
+                        <button type="button" class="back-btn" data-target="step-sub-services"><i class="fas fa-arrow-left"></i> Back</button>
+                        <h2>Service Items</h2>
+                        <p class="subtitle">Select the specific tasks you are able to perform.</p>
+                        <div id="sub-service-items-container"></div>
+                        <div class="d-grid mt-4">
+                             <button type="button" class="btn btn-signup next-btn" data-target="step-location">Next</button>
+                        </div>
+                    </div>
+
                     <div class="step" id="step-location">
                         <button type="button" class="back-btn" id="location-back-btn"><i class="fas fa-arrow-left"></i> Back</button>
                         <h2>Set Your Location</h2>
@@ -427,6 +455,7 @@ try {
     <script>
         const mainServices = <?php echo json_encode($mainServices); ?>;
         const groupedSubServices = <?php echo json_encode($groupedSubServices); ?>;
+        const subServiceItems = <?php echo json_encode($subServiceItems); ?>;
         const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
