@@ -12,8 +12,19 @@ $totalBookings = 0;
 $pendingJobs = 0;
 $completedJobs = 0;
 $recentActivities = [];
+$userAddress1 = null;
+$userAddress2 = null;
 
 try {
+    // Fetch user's location for dashboard display
+    $locStmt = $conn->prepare("SELECT address_line1, address_line2 FROM public.users WHERE id = ?");
+    $locStmt->execute([$userId]);
+    $location = $locStmt->fetch(PDO::FETCH_ASSOC);
+    if ($location) {
+        $userAddress1 = $location['address_line1'];
+        $userAddress2 = $location['address_line2'];
+    }
+
     // Fetch stat card data based on the user's role
     if ($role === 'customer') {
         // Corrected schema from 'dailyfix.bookings' to 'public.bookings'
@@ -75,6 +86,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - DailyFix</title>
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/dashboard_location.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -90,6 +102,31 @@ try {
             <?php else : ?>
                 <h1>Welcome back, <?php echo htmlspecialchars($userName); ?>!</h1>
             <?php endif; ?>
+
+            <div class="dashboard-location-wrapper">
+                <div class="dashboard-location" id="dashboard-location-toggle">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <?php if ($userAddress1): ?>
+                            <span class="address-line-1"><?php echo htmlspecialchars($userAddress1); ?></span>
+                            <span class="address-line-2"><?php echo htmlspecialchars($userAddress2); ?></span>
+                        <?php else: ?>
+                            <a href="/dailyfix/profile.php#location" style="text-decoration:none; color:inherit;">
+                                <span class="address-line-1">Set Your Location</span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </div>
+
+                <div class="location-dropdown" id="location-dropdown">
+                    <a href="/dailyfix/profile.php#location">
+                        <i class="fas fa-edit"></i>
+                        <span>Update Location</span>
+                    </a>
+                </div>
+            </div>
+
             <p>Here is your <?php echo htmlspecialchars(ucfirst($role)); ?> dashboard overview.</p>
         </div>
 
@@ -173,6 +210,78 @@ try {
             </div>
         </section>
     </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const locationToggle = document.getElementById('dashboard-location-toggle');
+        const locationDropdown = document.getElementById('location-dropdown');
+
+        if (locationToggle && locationDropdown) {
+            // Event listener to toggle the dropdown when the location is clicked
+            locationToggle.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevents the document click from firing immediately
+                locationDropdown.classList.toggle('active');
+                locationToggle.querySelector('.dropdown-arrow').style.transform = 
+                    locationDropdown.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+
+            // Event listener to close the dropdown if clicking anywhere else on the page
+            document.addEventListener('click', (event) => {
+                if (!locationToggle.contains(event.target) && !locationDropdown.contains(event.target)) {
+                    locationDropdown.classList.remove('active');
+                    locationToggle.querySelector('.dropdown-arrow').style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.profile-tabs .tab-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        // Function to activate a specific tab
+        function activateTab(tabId) {
+            // Deactivate all tabs and panes first
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            tabPanes.forEach(pane => {
+                pane.classList.remove('active');
+            });
+
+            // Activate the correct tab and pane
+            const tabToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+            const paneToActivate = document.getElementById(tabId);
+
+            if (tabToActivate && paneToActivate) {
+                tabToActivate.classList.add('active');
+                paneToActivate.classList.add('active');
+            }
+        }
+
+        // 1. Handle clicking on tabs
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(event) {
+                event.preventDefault();
+                const tabId = this.getAttribute('data-tab');
+                activateTab(tabId);
+                // Update URL hash without reloading the page
+                window.history.pushState(null, null, `#${tabId}`);
+            });
+        });
+
+        // 2. Check URL hash on page load and activate the correct tab
+        const currentHash = window.location.hash.substring(1); // Get hash without the '#'
+        if (currentHash) {
+            activateTab(currentHash);
+        } else {
+            // Activate the default tab if no hash is present
+            activateTab('my-details');
+        }
+    });
+    </script>
 
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>
