@@ -9,6 +9,23 @@ $allSubServices = [];
 $workerServiceIds = [];
 
 try {
+    // Handle form submissions
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        if (isset($_POST['update_user_details'])) {
+            // Update personal information
+            $stmt = $conn->prepare("UPDATE public.users SET full_name = ?, phone = ? WHERE id = ?");
+            $stmt->execute([$_POST['full_name'], $_POST['phone'], $userId]);
+            // Optional: add a success message or redirect
+        }
+
+        if (isset($_POST['update_worker_profile'])) {
+            // Update professional profile
+            $stmt = $conn->prepare("UPDATE public.worker_profiles SET bio = ?, experience_years = ?, hourly_rate = ? WHERE user_id = ?");
+            $stmt->execute([$_POST['bio'], $_POST['experience_years'], $_POST['hourly_rate'], $userId]);
+            // Optional: add a success message or redirect
+        }
+    }
+
     // Fetch basic user data
     $stmt = $conn->prepare("SELECT full_name, email, phone, profile_image, address_line1, address_line2, city, pincode, state, latitude, longitude FROM public.users WHERE id = ?");
     $stmt->execute([$userId]);
@@ -80,6 +97,7 @@ sort($states);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Profile - DailyFix</title>
+
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/profile.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/profile_location.css" />
@@ -117,7 +135,8 @@ sort($states);
             <div id="details" class="tab-content active">
                 <div class="form-section">
                     <h3>Personal Information</h3>
-                    <form action="/dailyfix/api/update_user_details.php" method="POST">
+                    <form action="profile.php" method="POST">
+                        <input type="hidden" name="update_user_details" value="1">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="full_name">Full Name</label>
@@ -144,7 +163,8 @@ sort($states);
             <div id="professional" class="tab-content">
                 <div class="form-section">
                     <h3>Professional Profile</h3>
-                    <form action="/dailyfix/api/update_worker_profile.php" method="POST">
+                    <form action="profile.php" method="POST">
+                        <input type="hidden" name="update_worker_profile" value="1">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="experience_years">Years of Experience</label>
@@ -272,6 +292,7 @@ sort($states);
 
         </div>
     </main>
+
     <script>
         const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
         const userData = <?php echo json_encode($userData); ?>;
@@ -426,4 +447,5 @@ sort($states);
     </script>
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>
+
 </html>
