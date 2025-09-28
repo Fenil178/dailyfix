@@ -2,6 +2,34 @@
 include_once __DIR__ . "/api/connect.php";
 include_once __DIR__ . "/api/header.php";
 
+/**
+ * @var string $role The user's role ('customer' or 'worker').
+ * @var int    $userId The ID of the logged-in user.
+ * @var string $userName The full name of the logged-in user.
+ */
+
+// Handle success messages from URL
+$successMessage = '';
+if (isset($_GET['success'])) {
+    switch ($_GET['success']) {
+        case 'details_updated':
+            $successMessage = 'Personal details updated successfully!';
+            break;
+        case 'professional_updated':
+            $successMessage = 'Professional profile updated successfully!';
+            break;
+        case 'location_updated':
+            $successMessage = 'Location updated successfully!';
+            break;
+        case 'services_updated':
+            $successMessage = 'Services updated successfully!';
+            break;
+        case 'availability_updated': // Added this case
+            $successMessage = 'Availability updated successfully!';
+            break;
+    }
+}
+
 // Fetch user data based on role
 $userData = null;
 $workerProfile = null;
@@ -15,14 +43,18 @@ try {
             // Update personal information
             $stmt = $conn->prepare("UPDATE public.users SET full_name = ?, phone = ? WHERE id = ?");
             $stmt->execute([$_POST['full_name'], $_POST['phone'], $userId]);
-            // Optional: add a success message or redirect
+            // Redirect with success message and hash
+            header("Location: profile.php?success=details_updated#details");
+            exit;
         }
 
         if (isset($_POST['update_worker_profile'])) {
             // Update professional profile
             $stmt = $conn->prepare("UPDATE public.worker_profiles SET bio = ?, experience_years = ?, hourly_rate = ? WHERE user_id = ?");
             $stmt->execute([$_POST['bio'], $_POST['experience_years'], $_POST['hourly_rate'], $userId]);
-            // Optional: add a success message or redirect
+            // Redirect with success message and hash
+            header("Location: profile.php?success=professional_updated#professional");
+            exit;
         }
     }
 
@@ -97,7 +129,6 @@ sort($states);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Profile - DailyFix</title>
-
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/profile.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/profile_location.css" />
@@ -134,6 +165,11 @@ sort($states);
 
             <div id="details" class="tab-content active">
                 <div class="form-section">
+                    <?php if ($successMessage && strpos($_GET['success'], 'details') !== false): ?>
+                    <div id="success-alert" class="form-success-message">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                    <?php endif; ?>
                     <h3>Personal Information</h3>
                     <form action="profile.php" method="POST">
                         <input type="hidden" name="update_user_details" value="1">
@@ -162,6 +198,11 @@ sort($states);
             <?php if ($role === 'worker'): ?>
             <div id="professional" class="tab-content">
                 <div class="form-section">
+                    <?php if ($successMessage && strpos($_GET['success'], 'professional') !== false): ?>
+                    <div id="success-alert" class="form-success-message">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                    <?php endif; ?>
                     <h3>Professional Profile</h3>
                     <form action="profile.php" method="POST">
                         <input type="hidden" name="update_worker_profile" value="1">
@@ -189,6 +230,11 @@ sort($states);
 
             <div id="availability" class="tab-content">
                 <div class="form-section">
+                     <?php if ($successMessage && strpos($_GET['success'], 'availability') !== false): ?>
+                    <div id="success-alert" class="form-success-message">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                    <?php endif; ?>
                     <h3>Set My Availability</h3>
                     <p>Click on a date to mark your available time slots.</p>
                     <div id="calendar-container">
@@ -207,7 +253,7 @@ sort($states);
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <button class="submit-btn" id="save-final-btn" style="width: 100%; margin-top: 2rem;">Save
+                        <button class="submit-btn" id="save-final-btn" style="width: 30%; margin-top: 2rem;">Save
                             Availability</button>
                     </div>
                 </div>
@@ -215,6 +261,11 @@ sort($states);
 
             <div id="services" class="tab-content">
                 <div class="form-section">
+                    <?php if ($successMessage && strpos($_GET['success'], 'services') !== false): ?>
+                    <div id="success-alert" class="form-success-message">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                    <?php endif; ?>
                     <h3>My Services</h3>
                     <form action="/dailyfix/api/update_worker_services.php" method="POST">
                         <div class="services-checkbox-grid">
@@ -248,6 +299,11 @@ sort($states);
 
             <div id="location" class="tab-content">
                 <div class="form-section">
+                    <?php if ($successMessage && strpos($_GET['success'], 'location') !== false): ?>
+                    <div id="success-alert" class="form-success-message">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                    <?php endif; ?>
                     <h3>My Location</h3>
                     <form action="/dailyfix/api/update_location.php" method="POST">
                         <div id="map"></div>
@@ -292,63 +348,47 @@ sort($states);
 
         </div>
     </main>
-
     <script>
         const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
         const userData = <?php echo json_encode($userData); ?>;
 
         document.addEventListener('DOMContentLoaded', function () {
-            // Element selections
+            // JavaScript for auto-dismissing the success message
+            const successAlert = document.getElementById('success-alert');
+            if (successAlert) {
+                setTimeout(() => {
+                    successAlert.classList.add('fade-out');
+                    setTimeout(() => {
+                        successAlert.remove();
+                    }, 500); 
+                }, 5000);
+            }
+
             const tabLinks = document.querySelectorAll('.tab-link');
             const tabContents = document.querySelectorAll('.tab-content');
             const stateDropdown = document.getElementById('state');
             const cityDropdown = document.getElementById('city');
-            const address1Input = document.getElementById('address_line1');
-            const address2Input = document.getElementById('address_line2');
-            const pincodeInput = document.getElementById('pincode');
-            const latInput = document.getElementById('latitude');
-            const lonInput = document.getElementById('longitude');
-
-            // Map variables
             let map, marker;
-            let geocodeTimeout;
-
-            // --- FUNCTION DEFINITIONS ---
-
+           
             function initializeMap() {
-                const lat = parseFloat(userData.latitude) || 21.1702; // Default to Surat
+                const lat = parseFloat(userData.latitude) || 21.1702;
                 const lon = parseFloat(userData.longitude) || 72.8311;
-
                 map = L.map('map').setView([lat, lon], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(map);
                 marker = L.marker([lat, lon], { draggable: true }).addTo(map);
-
-                marker.on('dragend', function (event) {
-                    const position = marker.getLatLng();
-                    latInput.value = position.lat;
-                    lonInput.value = position.lng;
-                });
-
-                map.on('click', function(e) {
-                    marker.setLatLng(e.latlng);
-                    const position = marker.getLatLng();
-                    latInput.value = position.lat;
-                    lonInput.value = position.lng;
-                });
             }
 
             function updateCities() {
                 const selectedState = stateDropdown.value;
-                const selectedCity = userData.city; // Store current city before clearing
+                const selectedCity = userData.city;
                 cityDropdown.innerHTML = '<option value="">Select City</option>';
                 if (selectedState && citiesByState[selectedState]) {
                     citiesByState[selectedState].forEach(city => {
                         const option = document.createElement('option');
                         option.value = city;
                         option.textContent = city;
-                        // Reselect the user's city if it exists in the new state list
                         if (selectedCity === city) {
                             option.selected = true;
                         }
@@ -357,41 +397,10 @@ sort($states);
                 }
             }
 
-            async function geocodeAddress() {
-                const address = `${address1Input.value}, ${address2Input.value}, ${cityDropdown.value}, ${stateDropdown.value}, ${pincodeInput.value}`;
-                if (address.trim().length < 10) return;
-
-                const query = encodeURIComponent(address);
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=in`;
-                
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        const lat = parseFloat(data[0].lat);
-                        const lon = parseFloat(data[0].lon);
-                        
-                        latInput.value = lat;
-                        lonInput.value = lon;
-                        
-                        if (map && marker) {
-                            const newLatLng = new L.LatLng(lat, lon);
-                            map.setView(newLatLng, 15);
-                            marker.setLatLng(newLatLng);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Geocoding error:", error);
-                }
-            }
-
-            // --- NEW: Reusable function to activate a specific tab ---
             function activateTab(tabId) {
-                // Deactivate all tab links and content panes
                 tabLinks.forEach(l => l.classList.remove('active'));
                 tabContents.forEach(c => c.classList.remove('active'));
 
-                // Activate the specific tab link and content pane
                 const linkToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
                 const contentToActivate = document.getElementById(tabId);
 
@@ -399,53 +408,32 @@ sort($states);
                     linkToActivate.classList.add('active');
                     contentToActivate.classList.add('active');
 
-                    // If the location tab is being activated and the map hasn't been created yet, initialize it.
                     if (tabId === 'location' && !map) {
                         initializeMap();
-                        // Fix for map tiles not loading correctly in a hidden tab
                         setTimeout(() => map.invalidateSize(), 10);
                     }
                 }
             }
-
-            // --- EVENT LISTENERS ---
-
-            // Handle manual tab clicking
+            
             tabLinks.forEach(link => {
                 link.addEventListener('click', () => {
                     const tabId = link.getAttribute('data-tab');
                     activateTab(tabId);
-                    // Update the URL hash for a better user experience, without reloading the page
-                    history.pushState(null, null, `#${tabId}`);
+                    history.pushState(null, null, `profile.php#${tabId}`);
                 });
             });
 
-            // Handle geocoding when address fields change
-            [address1Input, address2Input, cityDropdown, stateDropdown, pincodeInput].forEach(el => {
-                el.addEventListener('change', () => {
-                    clearTimeout(geocodeTimeout);
-                    geocodeTimeout = setTimeout(geocodeAddress, 1000);
-                });
-            });
-
-            // Handle state and city dropdown logic
             stateDropdown.addEventListener('change', updateCities);
-            updateCities(); // Initial population of city dropdown
+            updateCities(); 
 
-            // --- INITIALIZATION ---
-
-            // Check for a hash in the URL on page load and activate the corresponding tab
-            const currentHash = window.location.hash.substring(1); // Remove the '#'
+            const currentHash = window.location.hash.substring(1);
             if (currentHash) {
                 activateTab(currentHash);
             } else {
-                // If no hash, the 'details' tab is active by default in the HTML,
-                // but we call the function anyway for consistency.
                 activateTab('details');
             }
         });
     </script>
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>
-
 </html>

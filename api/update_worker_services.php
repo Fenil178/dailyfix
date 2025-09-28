@@ -11,7 +11,8 @@ include_once __DIR__ . "/header.php"; // Provides $userId and $role
 
 // Ensure this is a POST request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: /dailyfix/dashboard.php?error=invalid_request");
+    header("HTTP/1.1 405 Method Not Allowed");
+    echo "Error: This endpoint only accepts POST requests.";
     exit;
 }
 
@@ -54,7 +55,7 @@ try {
     $conn->commit();
 
     // Redirect back to the profile page with a success message.
-    header("Location: /dailyfix/profile.php?success=services_updated");
+    header("Location: /dailyfix/profile.php?success=services_updated#services");
     exit;
 
 } catch (PDOException $e) {
@@ -62,9 +63,9 @@ try {
     $conn->rollBack();
 
     // Log the detailed error for the administrator.
-    error_log("Worker services update failed: " . $e->getMessage());
+    error_log("Worker services update failed for user_id {$userId}: " . $e->getMessage());
     
     // Redirect back with a user-friendly error message.
-    header("Location: /dailyfix/worker/profile.php?error=update_failed");
+    header("Location: /dailyfix/profile.php?error=update_failed#services");
     exit;
 }

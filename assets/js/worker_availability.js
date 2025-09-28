@@ -12,38 +12,25 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedDate = null;
     let initialLoadComplete = false;
 
+    // Exit if the necessary elements for this script aren't on the page
     if (!availabilityTabLink || !calendarDaysContainer) {
         return;
     }
-
-    // --- Tab Logic ---
-    const tabLinks = document.querySelectorAll('.tab-link');
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            const tabId = link.getAttribute('data-tab');
-            tabLinks.forEach(l => l.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            link.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
-            if (tabId === 'availability' && !initialLoadComplete) {
-                initializeAvailabilityTab();
-                initialLoadComplete = true;
-            }
-        });
-    });
-
-    // --- Calendar & Time Slot Logic ---
+    
+    // This function will run when the "My Availability" tab is clicked or is active on page load
     function initializeAvailabilityTab() {
+        if (initialLoadComplete) return; // Prevent re-running the setup
+
         generateCalendar();
         
         const firstDay = document.querySelector('.calendar-day');
         if (firstDay) {
             selectedDate = firstDay.dataset.date;
             firstDay.classList.add('selected');
-            selectedDateText.textContent = new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'full' });
+            // Add 'T00:00:00' to prevent timezone shifting the date
+            selectedDateText.textContent = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { dateStyle: 'full' });
             fetchAvailability(selectedDate);
+            initialLoadComplete = true; // Mark as initialized
         }
     }
 
@@ -66,16 +53,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             dayElement.addEventListener('click', () => {
                 selectedDate = dayElement.dataset.date;
-                selectedDateText.textContent = new Date(selectedDate).toLocaleDateString('en-US', { dateStyle: 'full' });
+                // Add 'T00:00:00' to prevent timezone shifting the date
+                selectedDateText.textContent = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { dateStyle: 'full' });
                 document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected'));
                 dayElement.classList.add('selected');
-                
                 fetchAvailability(selectedDate);
             });
         }
     }
 
-    // Fetches saved availability from the new API endpoint
     function fetchAvailability(date) {
         fetch(`/dailyfix/api/get_availability.php?date=${date}`)
             .then(response => response.json())
@@ -83,30 +69,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.status === 'success') {
                     populateTimeSlots(data.slots);
                 } else {
-                    alert('Error fetching availability: ' + data.message);
+                    console.error('Error fetching availability:', data.message);
                     populateTimeSlots([]);
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error);
-                alert('A network error occurred while fetching availability. Please try again.');
+                console.error('Fetch network error:', error);
                 populateTimeSlots([]);
             });
     }
 
-    function populateTimeSlots(slotsToSelect) {
-        const allSlots = generateAllTimeSlots();
+    function populateTimeSlots(savedSlots) {
         slotsGrid.innerHTML = '';
+        const allSlots = generateAllTimeSlots();
 
-        allSlots.forEach(slot => {
-            if (slotsToSelect.includes(slot.dataset.time)) {
-                slot.classList.add('selected');
+        allSlots.forEach(slotElement => {
+            if (savedSlots.includes(slotElement.dataset.time)) {
+                slotElement.classList.add('selected');
             }
-
-            slot.addEventListener('click', () => {
-                slot.classList.toggle('selected');
+            slotElement.addEventListener('click', () => {
+                slotElement.classList.toggle('selected');
             });
-            slotsGrid.appendChild(slot);
+            slotsGrid.appendChild(slotElement);
         });
 
         timeSlotContainer.style.display = 'block';
@@ -114,36 +98,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function generateAllTimeSlots() {
         const slots = [];
-        const startHour = 9;
-        const endHour = 22;
+        const startHour = 9;  // 9 AM
+        const endHour = 22; // 10 PM
 
         for (let hour = startHour; hour <= endHour; hour++) {
-            // FIX: Append seconds to match the database format
             const time24hr = `${String(hour).padStart(2, '0')}:00:00`; 
             const slotElement = document.createElement('div');
-            slotElement.classList.add('time-slot', 'available');
+            slotElement.classList.add('time-slot');
             slotElement.dataset.time = time24hr;
-            slotElement.textContent = formatTime(time24hr);
+            slotElement.textContent = formatTime12hr(time24hr);
             slots.push(slotElement);
         }
         return slots;
     }
-
-    function formatTime(time24hr) {
-        let [hour, minute] = time24hr.split(':');
-        hour = parseInt(hour, 10);
+    
+    function formatTime12hr(time24hr) {
+        const [hourStr, minuteStr] = time24hr.split(':');
+        const hour = parseInt(hourStr, 10);
         const ampm = hour >= 12 ? 'PM' : 'AM';
-        hour = hour % 12 || 12;
-        return `${hour}:${minute} ${ampm}`;
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minuteStr} ${ampm}`;
     }
 
-    // --- Save Logic ---
     saveScopeToggle.addEventListener('change', (event) => {
-        if (event.target.checked) {
-            toggleText.textContent = 'Save for All Upcoming Days';
-        } else {
-            toggleText.textContent = 'Save for this Day';
-        }
+        toggleText.textContent = event.target.checked ? 'Save for All Upcoming Days' : 'Save for this Day';
     });
 
     saveFinalBtn.addEventListener('click', () => {
@@ -152,57 +130,62 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Use the same format for saving
         const selectedSlots = Array.from(document.querySelectorAll('.time-slot.selected')).map(el => el.dataset.time);
         
-        if (selectedSlots.length === 0) {
-            alert('Please select at least one time slot.');
-            return;
-        }
-        
-        const saveForAllDays = saveScopeToggle.checked;
-        const datesToSave = saveForAllDays ?
-            Array.from(document.querySelectorAll('.calendar-day')).map(el => el.dataset.date) :
-            [selectedDate];
-        
+        // This handles the "Save for all" toggle correctly
+        const datesToSave = saveScopeToggle.checked
+            ? Array.from(document.querySelectorAll('.calendar-day')).map(el => el.dataset.date)
+            : [selectedDate];
+
         const savePromises = datesToSave.map(date => {
             const formData = new FormData();
             formData.append('date', date);
+            // Note: If selectedSlots is empty, this will effectively clear the availability for the day(s)
             selectedSlots.forEach(slot => formData.append('time_slots[]', slot));
 
             return fetch('/dailyfix/api/manage_availability.php', {
                 method: 'POST',
                 body: formData
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.status === 'success') {
-                      return { status: 'success', date: date };
-                  } else {
-                      return { status: 'error', date: date, message: data.message };
-                  }
-              });
+            }).then(response => response.json());
         });
 
-        Promise.all(savePromises).then(results => {
-            const errors = results.filter(r => r.status === 'error');
-            if (errors.length > 0) {
-                const errorMessages = errors.map(e => `Error saving for ${new Date(e.date).toLocaleDateString()}: ${e.message}`).join('\n');
-                alert(errorMessages);
-            } else {
-                alert('Availability saved successfully!');
-            }
+        // Disable button while saving
+        saveFinalBtn.disabled = true;
+        saveFinalBtn.textContent = 'Saving...';
 
-            fetchAvailability(selectedDate);
-            
+        Promise.all(savePromises).then(results => {
+            const errors = results.filter(r => r.status !== 'success');
+            if (errors.length > 0) {
+                // If there are any errors, show them in an alert
+                alert('Some availabilities could not be saved. Please try again.');
+                saveFinalBtn.disabled = false;
+                saveFinalBtn.textContent = 'Save Availability';
+            } else {
+                // *** THIS IS THE FIX ***
+                // On success, redirect to the profile page to show the custom message
+                window.location.href = '/dailyfix/profile.php?success=availability_updated#availability';
+            }
         }).catch(error => {
             console.error('Final save error:', error);
-            alert('A network error occurred during the save process. Please try again.');
+            alert('A network error occurred. Please try again.');
+            saveFinalBtn.disabled = false;
+            saveFinalBtn.textContent = 'Save Availability';
         });
     });
 
-    const activeTab = document.querySelector('.tab-link.active');
-    if (activeTab && activeTab.dataset.tab === 'availability') {
+    // --- Tab Initialization Logic ---
+    // This logic ensures the calendar loads if the tab is active on page load OR when you click it.
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.attributeName === 'class' && availabilityTabLink.classList.contains('active')) {
+                initializeAvailabilityTab();
+            }
+        });
+    });
+    observer.observe(availabilityTabLink, { attributes: true });
+
+    // Also check on initial page load
+    if (availabilityTabLink.classList.contains('active')) {
         initializeAvailabilityTab();
-        initialLoadComplete = true;
     }
 });

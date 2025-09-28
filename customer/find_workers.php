@@ -10,6 +10,21 @@ if (!isset($_GET['service'])) {
 $serviceSlug = $_GET['service'];
 $workers = [];
 $serviceName = 'Service';
+$customer_lat = null;
+$customer_lon = null;
+
+// Get customer's location
+try {
+    $stmt = $conn->prepare("SELECT latitude, longitude FROM public.users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $customer_location = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($customer_location) {
+        $customer_lat = $customer_location['latitude'];
+        $customer_lon = $customer_location['longitude'];
+    }
+} catch (PDOException $e) {
+    error_log("Find Workers Error: " . $e->getMessage());
+}
 
 try {
     // 1. Find the sub-service ID from the slug
@@ -21,15 +36,33 @@ try {
         $serviceId = $service['id'];
         $serviceName = $service['name'];
 
-        // 2. Find all workers linked to this sub-service ID
-        $stmt = $conn->prepare("
-            SELECT u.id, u.full_name, u.profile_image, wp.bio, wp.hourly_rate, wp.experience_years
+        // 2. Find all workers linked to this sub-service ID and calculate distance
+        $sql = "
+            SELECT u.id, u.full_name, u.profile_image, u.latitude, u.longitude, wp.bio, wp.hourly_rate, wp.experience_years";
+        
+        if ($customer_lat && $customer_lon) {
+            $sql .= ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance";
+        }
+        
+        $sql .= "
             FROM public.users u
             JOIN public.worker_profiles wp ON u.id = wp.user_id
             JOIN public.worker_services ws ON u.id = ws.user_id
             WHERE ws.sub_service_id = ? AND u.account_status = 'active' AND u.role = 'worker'
-        ");
-        $stmt->execute([$serviceId]);
+        ";
+
+        if ($customer_lat && $customer_lon) {
+            $sql .= " ORDER BY distance ASC";
+        }
+
+        $stmt = $conn->prepare($sql);
+        
+        if ($customer_lat && $customer_lon) {
+            $stmt->execute([$customer_lat, $customer_lon, $customer_lat, $serviceId]);
+        } else {
+            $stmt->execute([$serviceId]);
+        }
+        
         $workers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (PDOException $e) {
@@ -70,6 +103,9 @@ try {
                         <div class="worker-meta">
                             <span><i class="fas fa-star"></i> 4.8 (120 reviews)</span>
                             <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($worker['experience_years']); ?>+ years</span>
+                            <?php if (isset($worker['distance'])): ?>
+                                <span><i class="fas fa-map-marker-alt"></i> <?php echo round($worker['distance'], 2); ?> km away</span>
+                            <?php endif; ?>
                         </div>
                         
                         <a href="/dailyfix/customer/book_worker.php?id=<?php echo $worker['id']; ?>&service=<?php echo urlencode($serviceSlug); ?>" class="view-profile-btn">

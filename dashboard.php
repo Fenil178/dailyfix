@@ -5,7 +5,12 @@ ini_set('display_errors', 1);
 include_once __DIR__ . "/api/connect.php";
 include_once __DIR__ . "/api/header.php";
 
-// All session-related variables ($role, $userId, $userName) are now available from header.php
+/**
+ * @var PDO $conn The database connection object from connect.php.
+ * @var string $role The user's role from header.php.
+ * @var int    $userId The user's ID from header.php.
+ * @var string $userName The user's name from header.php.
+ */
 
 // Initialize variables for dashboard data
 $totalBookings = 0;
