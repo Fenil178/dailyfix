@@ -1,4 +1,4 @@
-/* Dashboard Location Display */
+/* Professional Dashboard Location Display */
 .dashboard-location-wrapper {
     position: relative;
     display: inline-block;
@@ -11,44 +11,69 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border-radius: 8px;
-    background-color: var(--background-color-card);
-    border: 1px solid var(--border-color);
+    background-color: #ffffff;
+    border: 1px solid #e1e5e9;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 300px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .dashboard-location:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.995);
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.08);
 }
 
 .dashboard-location i.fa-map-marker-alt {
-    color: var(--primary-color);
-    font-size: 1.2rem;
+    color: #007bff;
+    font-size: 1.1rem;
+    width: 16px;
+    text-align: center;
+}
+
+.dashboard-location div {
+    flex: 1;
+    min-width: 0;
 }
 
 .dashboard-location .address-line-1 {
-    font-weight: 600;
-    color: var(--text-color-dark);
+    font-weight: 500;
+    color: #2c3e50;
     display: block;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dashboard-location .address-line-2 {
-    font-size: 0.85rem;
-    color: var(--text-color-light);
+    font-size: 0.82rem;
+    color: #6c757d;
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dashboard-location .dropdown-arrow {
-    margin-left: 1rem;
-    color: var(--text-color-light);
-    transition: transform 0.3s ease;
+    margin-left: 0.5rem;
+    color: #adb5bd;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
-.location-dropdown.active + .dashboard-location .dropdown-arrow {
+.dashboard-location:hover .dropdown-arrow {
+    color: #007bff;
+}
+
+.location-dropdown.active + .dashboard-location .dropdown-arrow,
+.dashboard-location:has(+ .location-dropdown.active) .dropdown-arrow {
     transform: rotate(180deg);
+    color: #007bff;
 }
 
 .location-dropdown {
@@ -56,18 +81,30 @@
     position: absolute;
     top: 100%;
     left: 0;
-    width: 100%;
-    background-color: var(--background-color-card);
-    border: 1px solid var(--border-color);
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #e1e5e9;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     z-index: 10;
-    margin-top: 0.5rem;
+    margin-top: 4px;
     overflow: hidden;
 }
 
 .location-dropdown.active {
     display: block;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .location-dropdown a {
@@ -76,16 +113,80 @@
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     text-decoration: none;
-    color: var(--text-color-dark);
+    color: #495057;
     font-size: 0.9rem;
+    font-weight: 400;
+    transition: all 0.15s ease;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.location-dropdown a:last-child {
+    border-bottom: none;
 }
 
 .location-dropdown a:hover {
-    background-color: var(--hover-color);
-    color: var(--primary-color);
+    background-color: #f8f9fa;
+    color: #007bff;
 }
 
 .location-dropdown a i {
-    width: 20px;
+    width: 16px;
     text-align: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.location-dropdown a:hover i {
+    color: #007bff;
+}
+
+/* Clean styling for "Set Your Location" state */
+.dashboard-location.no-location {
+    border-style: dashed;
+    border-color: #ced4da;
+    background-color: #f8f9fa;
+}
+
+.dashboard-location.no-location:hover {
+    border-color: #007bff;
+    background-color: #ffffff;
+}
+
+.dashboard-location.no-location i.fa-map-marker-alt {
+    color: #6c757d;
+}
+
+.dashboard-location.no-location:hover i.fa-map-marker-alt {
+    color: #007bff;
+}
+
+.dashboard-location.no-location .address-line-1 {
+    color: #6c757d;
+    font-weight: 400;
+}
+
+.dashboard-location.no-location:hover .address-line-1 {
+    color: #007bff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-location {
+        min-width: 280px;
+    }
+    
+    .dashboard-location .address-line-1 {
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-location .address-line-2 {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-location {
+        min-width: 100%;
+        max-width: 100%;
+    }
 }
