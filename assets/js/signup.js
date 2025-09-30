@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const registerBackBtn = document.getElementById('register-back-btn');
     const locationBackBtn = document.getElementById('location-back-btn');
 
-    const keyForm = document.getElementById('keyForm');
     const verifyKeyBtn = document.getElementById('verifyKeyBtn');
     const signupForm = document.getElementById('signupForm');
     const alertPlaceholder = document.getElementById('signup-alert-placeholder');
@@ -47,64 +46,87 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // --- HELPER FUNCTIONS ---
     function showStep(stepId) {
-        steps.forEach(step => {
-            step.classList.remove('active');
-        });
+        steps.forEach(step => step.classList.remove('active'));
         const activeStep = document.getElementById(stepId);
-        if (activeStep) {
-            activeStep.classList.add('active');
-        }
+        if (activeStep) activeStep.classList.add('active');
         
-        // --- FIX APPLIED HERE ---
-        // This logic now controls the visibility of the indicators for EVERY step change.
         if (stepId === 'step-role') {
-            // Hide both indicators on the first step
             workerIndicator.style.display = 'none';
             customerIndicator.style.display = 'none';
         } else {
-            // For all other steps, show the correct indicator based on the selected role
             const role = roleHiddenInput.value;
-            workerIndicator.style.display = role === 'worker' ? 'block' : 'none';
-            customerIndicator.style.display = role === 'customer' ? 'block' : 'none';
+            workerIndicator.style.display = role === 'worker' ? 'flex' : 'none';
+            customerIndicator.style.display = role === 'customer' ? 'flex' : 'none';
         }
-        // --- END FIX ---
         
-        if (stepId === 'step-location' && !map) {
-            initializeMap();
-        }
+        if (stepId === 'step-location' && !map) initializeMap();
 
         updateStepIndicator(stepId);
+        window.scrollTo(0, 0); 
+    }
+    
+    function validateStep(stepId) {
+        const step = document.getElementById(stepId);
+        if (!step) return false;
+
+        const inputs = step.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
+        
+        for (const input of inputs) {
+            if (!input.value.trim()) {
+                isValid = false;
+                break;
+            }
+            if (input.type === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(input.value)) {
+                    isValid = false;
+                    break;
+                }
+            }
+        }
+        if (!isValid) {
+            showAlert('Please fill out all required fields in this step before proceeding.');
+        }
+        return isValid;
     }
 
+    // --- FIX APPLIED FOR CHECKMARK BUG ---
     function updateStepIndicator(currentStepId) {
         const role = roleHiddenInput.value;
         const indicatorWrapper = role === 'worker' ? workerIndicator : customerIndicator;
-        if (!indicatorWrapper || indicatorWrapper.style.display === 'none') return; // Don't update if not visible
+        if (!indicatorWrapper || indicatorWrapper.style.display === 'none') return;
 
-        const indicator = indicatorWrapper.querySelector('.step-indicator');
-        const indicatorItems = indicator.querySelectorAll('.step-indicator-item');
+        const indicatorItems = indicatorWrapper.querySelectorAll('.step-indicator-item');
         let currentStepIndex = -1;
 
         indicatorItems.forEach((item, index) => {
-            const target = item.getAttribute('data-step-target');
-            item.classList.remove('active', 'completed');
-            if (target === currentStepId) {
+            if (item.getAttribute('data-step-target') === currentStepId) {
                 currentStepIndex = index;
             }
         });
 
         if (currentStepIndex !== -1) {
-            for (let i = 0; i < currentStepIndex; i++) {
-                indicatorItems[i].classList.add('completed');
-                const span = indicatorItems[i].querySelector('span');
-                if (span) span.innerHTML = ''; // Clear number for checkmark
-            }
-            indicatorItems[currentStepIndex].classList.add('active');
-            
-            for (let i = currentStepIndex; i < indicatorItems.length; i++) {
-                 const span = indicatorItems[i].querySelector('span');
-                 if(span) span.textContent = i + 1;
-            }
+            indicatorItems.forEach((item, index) => {
+                const span = item.querySelector('span');
+                if (!span) return;
+
+                if (index < currentStepIndex) {
+                    // Completed Step
+                    item.classList.add('completed');
+                    item.classList.remove('active');
+                    span.innerHTML = '&#x2713;'; // Directly set checkmark HTML entity
+                } else if (index === currentStepIndex) {
+                    // Active Step
+                    item.classList.add('active');
+                    item.classList.remove('completed');
+                    span.textContent = index + 1;
+                } else {
+                    // Future Step
+                    item.classList.remove('active', 'completed');
+                    span.textContent = index + 1;
+                }
+            });
         }
     }
 
@@ -115,7 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                       </div>`;
     }
     
-    // --- REVERSE GEOCODING FUNCTION ---
     async function reverseGeocode(lat, lng) {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
@@ -124,21 +145,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (data && data.address) {
                 const addr = data.address;
-                
                 addressLine1Input.value = addr.house_number || '';
                 addressLine2Input.value = [addr.road, addr.neighbourhood, addr.suburb].filter(Boolean).join(', ');
                 pincodeInput.value = addr.postcode || '';
-
                 if (addr.state) {
                     stateDropdown.value = addr.state;
                     stateDropdown.dispatchEvent(new Event('change'));
                 }
-                
                 setTimeout(() => {
                     const city = addr.city || addr.town || addr.village || addr.city_district;
-                    if (city) {
-                        cityDropdown.value = city;
-                    }
+                    if (city) cityDropdown.value = city;
                 }, 100);
             }
         } catch (error) {
@@ -146,9 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- MAP INITIALIZATION ---
     function initializeMap() {
-        const initialCoords = [21.1702, 72.8311]; 
+        const initialCoords = [22.3039, 70.8022]; // Default to Gujarat
         map = L.map(mapContainer).setView(initialCoords, 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -156,30 +171,24 @@ document.addEventListener('DOMContentLoaded', function() {
         marker = L.marker(initialCoords, { draggable: true }).addTo(map);
         latitudeInput.value = initialCoords[0];
         longitudeInput.value = initialCoords[1];
-
         const updateMarkerAndAddress = (latlng) => {
             latitudeInput.value = latlng.lat.toFixed(8);
             longitudeInput.value = latlng.lng.toFixed(8);
             reverseGeocode(latlng.lat, latlng.lng);
         };
-
         marker.on('dragend', (event) => updateMarkerAndAddress(marker.getLatLng()));
         map.on('click', (e) => {
             marker.setLatLng(e.latlng);
             updateMarkerAndAddress(e.latlng);
         });
-
         setTimeout(() => map.invalidateSize(), 200);
     }
 
-
-    // --- STEP 1: ROLE SELECTION ---
     roleCards.forEach(card => {
         card.addEventListener('click', () => {
             const role = card.dataset.role;
             roleHiddenInput.value = role;
             roleTitle.textContent = role.charAt(0).toUpperCase() + role.slice(1);
-
             if (role === 'customer') {
                 accountDetailsNextBtn.dataset.target = 'step-location';
                 registerBackBtn.dataset.target = 'step-role';
@@ -194,36 +203,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- BUTTONS ---
     backBtns.forEach(btn => btn.addEventListener('click', () => showStep(btn.dataset.target)));
+    
     nextBtns.forEach(btn => btn.addEventListener('click', () => {
+        const currentStep = btn.closest('.step').id;
+        if (!validateStep(currentStep)) return;
         const targetStep = btn.dataset.target;
         if (targetStep === 'step-sub-services') populateSubServices();
         if (targetStep === 'step-sub-service-items') populateSubServiceItems();
         showStep(targetStep);
     }));
     
-    // --- Populating Sub-Services ---
      function populateSubServices() {
         subServicesContainer.innerHTML = '';
         const selectedMainServices = Array.from(document.querySelectorAll('input[name="main_services[]"]:checked')).map(cb => cb.value);
-        
         let content = '';
         for (const serviceName in groupedSubServices) {
             const subServices = groupedSubServices[serviceName];
             const mainServiceId = subServices[0].main_service_id;
-
             if (selectedMainServices.includes(String(mainServiceId))) {
-                let categoryHtml = `
-                    <div class="service-category-group">
-                        <h4><i class="fas fa-tools"></i> ${serviceName}</h4>
-                        <div class="services-checkbox-grid">`;
+                let categoryHtml = `<div class="service-category-group"><h4><i class="fas fa-tools"></i> ${serviceName}</h4><div class="services-checkbox-grid">`;
                 subServices.forEach(service => {
-                    categoryHtml += `
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="service-${service.id}" name="services[]" value="${service.id}">
-                            <label for="service-${service.id}">${service.name}</label>
-                        </div>`;
+                    categoryHtml += `<div class="checkbox-item"><input type="checkbox" id="service-${service.id}" name="services[]" value="${service.id}"><label for="service-${service.id}">${service.name}</label></div>`;
                 });
                 categoryHtml += `</div></div>`;
                 content += categoryHtml;
@@ -232,49 +233,35 @@ document.addEventListener('DOMContentLoaded', function() {
         subServicesContainer.innerHTML = content || '<p>Please go back and select a main service category first.</p>';
     }
 
-    // --- Populating Sub-Service Items ---
     function populateSubServiceItems() {
         subServiceItemsContainer.innerHTML = '';
         const selectedSubServices = Array.from(document.querySelectorAll('#sub-services-container input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
-    
         if (selectedSubServices.length === 0) {
             subServiceItemsContainer.innerHTML = '<p>Please go back and select at least one sub-service.</p>';
             return;
         }
-    
         let content = '';
         selectedSubServices.forEach(subServiceId => {
             const items = subServiceItems[subServiceId];
             if (items && items.length > 0) {
                 const subService = Object.values(groupedSubServices).flat().find(s => s.id === subServiceId);
-                let categoryHtml = `
-                    <div class="service-category-group">
-                        <h4><i class="${subService.icon}"></i> ${subService.name}</h4>
-                        <div class="services-checkbox-grid">`;
+                let categoryHtml = `<div class="service-category-group"><h4><i class="${subService.icon}"></i> ${subService.name}</h4><div class="services-checkbox-grid">`;
                 items.forEach(item => {
-                    categoryHtml += `
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="item-${item.id}" name="sub_service_items[]" value="${item.id}">
-                            <label for="item-${item.id}">${item.name}</label>
-                        </div>`;
+                    categoryHtml += `<div class="checkbox-item"><input type="checkbox" id="item-${item.id}" name="sub_service_items[]" value="${item.id}"><label for="item-${item.id}">${item.name}</label></div>`;
                 });
                 categoryHtml += `</div></div>`;
                 content += categoryHtml;
             }
         });
-    
         subServiceItemsContainer.innerHTML = content || '<p>No service items found for the selected sub-services.</p>';
     }
 
-    // --- KEY VERIFICATION ---
     if (verifyKeyBtn) {
         verifyKeyBtn.addEventListener('click', function() {
             const keyInput = document.getElementById('worker_key_input');
             const originalText = this.innerHTML;
-            
             this.disabled = true;
             this.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Verifying...`;
-
             fetch('/dailyfix/api/verify_worker_key.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -283,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    workerKeyHiddenInput.value = keyInput.value;
+                    workerKeyHiddenInput.value = keyInput.value.trim().toUpperCase().replace(/-/g, '');
                     showStep('step-register-part1');
                 } else {
                     showAlert(data.message);
@@ -297,12 +284,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- STATE/CITY DROPDOWN LOGIC ---
     if (stateDropdown && cityDropdown) {
         stateDropdown.addEventListener('change', function() {
             const selectedState = this.value;
             cityDropdown.innerHTML = '<option value="" disabled selected>Select City</option>';
-            
             if (selectedState && citiesByState[selectedState]) {
                 cityDropdown.disabled = false;
                 citiesByState[selectedState].forEach(city => {
@@ -318,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- PINCODE LOOKUP LOGIC ---
     let pincodeTimeout;
     if (pincodeInput) {
         pincodeInput.addEventListener('keyup', function() {
@@ -334,13 +318,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const postOffice = data[0].PostOffice[0];
                                 const state = postOffice.State;
                                 const city = postOffice.District;
-
                                 stateDropdown.value = state;
                                 stateDropdown.dispatchEvent(new Event('change'));
-                                
                                 setTimeout(() => { cityDropdown.value = city; }, 100);
-                            } else {
-                                console.log('Invalid pincode');
                             }
                         })
                         .catch(error => console.error('Pincode API error:', error))
@@ -350,17 +330,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- FINAL SUBMISSION ---
     if (signupForm) {
         signupForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            if (!validateStep('step-location')) return;
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Creating Account...`;
-            
             fetch('/dailyfix/signup.php', {
                 method: 'POST',
                 body: formData
@@ -372,6 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     setTimeout(() => { window.location.href = data.redirect; }, 1500);
                 } else {
                     showAlert(data.message || 'An unknown error occurred.');
+                    window.scrollTo(0, 0);
                 }
             })
             .catch(error => {
@@ -385,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- UTILITIES ---
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
