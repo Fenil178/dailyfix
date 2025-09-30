@@ -340,3 +340,77 @@ body.dark-mode select:-webkit-autofill {
   body.dark-mode .no-slots-message {
     color: #888;
   }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.service-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-color: var(--hover-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.service-option:hover {
+    background-color: #e9ecef;
+    border-color: var(--primary-color);
+}
+
+.service-option.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.service-option.selected i,
+.service-option.selected span {
+    color: white;
+}
+
+.service-option i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.service-option span {
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+    color: var(--text-color-dark);
+}
+
+/* Dark mode overrides */
+body.dark-mode .service-option {
+    background-color: #2c2c2c;
+    border-color: #444;
+}
+
+body.dark-mode .service-option:hover {
+    background-color: #3a3a3a;
+    border-color: #ffc107;
+}
+
+body.dark-mode .service-option.selected {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #000;
+}
+
+body.dark-mode .service-option i {
+    color: #ffc107;
+}
+
+body.dark-mode .service-option.selected i {
+    color: #000;
+}

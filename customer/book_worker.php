@@ -13,27 +13,27 @@ if (!empty($serviceSlug)) {
 include_once __DIR__ . "/../api/connect.php";
 include_once __DIR__ . "/../api/header.php";
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['sub_service_id']) || !is_numeric($_GET['sub_service_id'])) {
     header("Location: /dailyfix/dashboard.php");
     exit;
 }
 
 $workerId = $_GET['id'];
+$subServiceId = $_GET['sub_service_id'];
+
 $worker = null;
 $customer_lat = null;
 $customer_lon = null;
-$customer_address_string = ''; // NEW: Variable for customer's full address
+$customer_address_string = '';
 
 // Get customer's location and full address
 try {
-    // NEW: Fetch all address fields for the customer
     $stmt = $conn->prepare("SELECT latitude, longitude, address_line1, address_line2, city, state, pincode FROM public.users WHERE id = ?");
     $stmt->execute([$userId]);
     $customer_location = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($customer_location) {
         $customer_lat = $customer_location['latitude'];
         $customer_lon = $customer_location['longitude'];
-        // NEW: Construct the full address string for auto-filling the form
         $customer_address_string = htmlspecialchars(implode(', ', array_filter([
             $customer_location['address_line1'],
             $customer_location['address_line2'],
@@ -47,7 +47,6 @@ try {
 }
 
 try {
-    // NEW: Fetch all address fields for the worker to display them
     $sql = "
         SELECT u.id, u.full_name, u.profile_image, u.latitude, u.longitude, 
                u.address_line1, u.address_line2, u.city, u.state, u.pincode,
@@ -80,6 +79,30 @@ if (!$worker) {
     echo "Worker not found.";
     exit;
 }
+
+// NEW: Fetch sub-service and its items provided by the worker
+$subServiceItems = [];
+$subServiceName = '';
+
+try {
+    // 1. Get the sub-service name
+    $stmt = $conn->prepare("SELECT name FROM public.sub_services WHERE id = ?");
+    $stmt->execute([$subServiceId]);
+    $subServiceName = $stmt->fetchColumn();
+
+    // 2. Fetch the specific sub-service items for this worker and this sub-service
+    $stmt = $conn->prepare("
+        SELECT ssi.id, ssi.name, ssi.icon
+        FROM public.worker_sub_service_items wssi
+        JOIN public.sub_service_items ssi ON wssi.sub_service_item_id = ssi.id
+        WHERE wssi.user_id = ? AND ssi.sub_service_id = ?
+        ORDER BY ssi.name
+    ");
+    $stmt->execute([$workerId, $subServiceId]);
+    $subServiceItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Failed to fetch sub-service items: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +120,80 @@ if (!$worker) {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/book_worker_availability.js"></script>
+    <style>
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .service-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            background-color: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .service-option:hover {
+            background-color: #e9ecef;
+            border-color: var(--primary-color);
+        }
+
+        .service-option.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .service-option.selected i,
+        .service-option.selected span {
+            color: white;
+        }
+
+        .service-option i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .service-option span {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            color: var(--text-color-dark);
+        }
+
+        body.dark-mode .service-option {
+            background-color: #2c2c2c;
+            border-color: #444;
+        }
+
+        body.dark-mode .service-option:hover {
+            background-color: #3a3a3a;
+            border-color: #ffc107;
+        }
+
+        body.dark-mode .service-option.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #000;
+        }
+
+        body.dark-mode .service-option i {
+            color: #ffc107;
+        }
+
+        body.dark-mode .service-option.selected i {
+            color: #000;
+        }
+    </style>
 
 </head>
 <body>
@@ -140,12 +237,25 @@ if (!$worker) {
                 <form id="booking-form" action="/dailyfix/api/create_booking.php" method="POST" data-worker-id="<?php echo $worker['id']; ?>">
                     <input type="hidden" name="worker_id" value="<?php echo $worker['id']; ?>">
                     <input type="hidden" name="customer_id" value="<?php echo $userId; ?>">
+                    <input type="hidden" name="sub_service_name" value="<?php echo htmlspecialchars($subServiceName); ?>">
                     <input type="hidden" id="booking_date" name="booking_date">
                     <input type="hidden" id="booking_time_combined" name="booking_time">
+                    <input type="hidden" id="service_item_name" name="service_item_name">
 
                     <div class="form-group">
-                        <label for="service_details">Describe the work needed</label>
-                        <textarea id="service_details" name="service_details" rows="4" required></textarea>
+                        <label>Services for "<?php echo htmlspecialchars($subServiceName); ?>"</label>
+                        <div id="service-selection-grid" class="services-grid">
+                            <?php if (!empty($subServiceItems)): ?>
+                                <?php foreach ($subServiceItems as $item): ?>
+                                    <div class="service-option" data-item-name="<?php echo htmlspecialchars($item['name']); ?>">
+                                        <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
+                                        <span><?php echo htmlspecialchars($item['name']); ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p>This worker has not listed any items for this service.</p>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -199,5 +309,34 @@ if (!$worker) {
         });
     </script>
     <?php endif; ?>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const serviceSelectionGrid = document.getElementById('service-selection-grid');
+            const hiddenServiceItemInput = document.getElementById('service_item_name');
+            const submitButton = document.getElementById('submit-booking-btn');
+            
+            if (serviceSelectionGrid) {
+                serviceSelectionGrid.addEventListener('click', function(e) {
+                    const clickedService = e.target.closest('.service-option');
+                    if (!clickedService) return;
+
+                    document.querySelectorAll('.service-option').forEach(option => {
+                        option.classList.remove('selected');
+                    });
+
+                    clickedService.classList.add('selected');
+                    hiddenServiceItemInput.value = clickedService.dataset.itemName;
+                });
+            }
+
+            submitButton.addEventListener('click', function(e) {
+                if (!hiddenServiceItemInput.value) {
+                    e.preventDefault();
+                    alert('Please select a service item before sending the booking request.');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

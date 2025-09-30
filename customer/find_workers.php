@@ -108,7 +108,7 @@ try {
                             <?php endif; ?>
                         </div>
                         
-                        <a href="/dailyfix/customer/book_worker.php?id=<?php echo $worker['id']; ?>&service=<?php echo urlencode($serviceSlug); ?>" class="view-profile-btn">
+                        <a href="/dailyfix/customer/book_worker.php?id=<?php echo $worker['id']; ?>&sub_service_id=<?php echo $service['id']; ?>" class="view-profile-btn">
                             View Profile & Book
                         </a>
                     </div>

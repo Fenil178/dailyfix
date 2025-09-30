@@ -229,12 +229,12 @@ body.dark-mode .item-list .list-item { border-color: #333; }
 .item-status.pending { background-color: #ffc107; color: #333; }
 .item-status.completed { background-color: #28a745; color: #fff; }
 .item-status.confirmed { background-color: #17a2b8; color: #fff; }
-.item-status.cancelled { background-color: #6c757d; color: #fff; }
+.item-status.cancelled { background-color: #dc3545; color: #fff; }
 .item-status.in_progress { background-color: #007bff; color: #fff; }
 
 
 /* --- Empty State --- */
-.empty-state {
+.empty-state {  
     text-align: center;
     padding: 4rem 2rem;
     background-color: var(--background-color-card);

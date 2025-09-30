@@ -17,6 +17,10 @@ if (!isset($userId) || $role !== 'worker') {
     exit;
 }
 
+// THIS IS THE FIX: Release the session lock immediately.
+// This allows concurrent requests to proceed without blocking.
+session_write_close();
+
 // 2. Check for required parameters
 if (!isset($_GET['id']) || !isset($_GET['status'])) {
     http_response_code(400); // Bad Request
@@ -27,6 +31,17 @@ if (!isset($_GET['id']) || !isset($_GET['status'])) {
 $booking_id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
 $new_status = $_GET['status'];
 
+// Get the booking time if a status update to 'confirmed' is requested
+$booking_time = null;
+if ($new_status === 'confirmed') {
+    if (!isset($_GET['booking_time'])) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Missing booking time for confirmation.']);
+        exit;
+    }
+    $booking_time = $_GET['booking_time'];
+}
+
 // 3. Validate the status value
 $allowed_statuses = ['confirmed', 'cancelled'];
 if (!$booking_id || !in_array($new_status, $allowed_statuses)) {
@@ -36,8 +51,26 @@ if (!$booking_id || !in_array($new_status, $allowed_statuses)) {
 }
 
 // --- Database Operation ---
-
 try {
+    // START NEW CONFLICT CHECK LOGIC
+    if ($new_status === 'confirmed') {
+        $stmt_check = $conn->prepare("
+            SELECT COUNT(*) FROM public.bookings
+            WHERE worker_id = ?
+            AND booking_time = ?
+            AND status IN ('confirmed', 'in_progress')
+        ");
+        $stmt_check->execute([$userId, $booking_time]);
+        $conflict_count = $stmt_check->fetchColumn();
+
+        if ($conflict_count > 0) {
+            http_response_code(409); // Conflict
+            echo json_encode(['status' => 'conflict', 'message' => 'A confirmed job already exists for this time slot.']);
+            exit;
+        }
+    }
+    // END NEW CONFLICT CHECK LOGIC
+
     $stmt = $conn->prepare(
         "UPDATE public.bookings 
          SET status = ? 
@@ -60,4 +93,3 @@ try {
     http_response_code(500); // Internal Server Error
     echo json_encode(['status' => 'error', 'message' => 'A database error occurred.']);
 }
-?>

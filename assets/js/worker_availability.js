@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
             firstDay.classList.add('selected');
             // Add 'T00:00:00' to prevent timezone shifting the date
             selectedDateText.textContent = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { dateStyle: 'full' });
-            fetchAvailability(selectedDate);
+            fetchAndPopulateAvailability(selectedDate);
             initialLoadComplete = true; // Mark as initialized
         }
     }
@@ -57,25 +57,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedDateText.textContent = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { dateStyle: 'full' });
                 document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected'));
                 dayElement.classList.add('selected');
-                fetchAvailability(selectedDate);
+                fetchAndPopulateAvailability(selectedDate);
             });
         }
     }
 
+    /**
+     * Fetches availability for a given date, and if none exists,
+     * fetches from the previous day to "stick" the schedule.
+     * @param {string} date - The date in 'YYYY-MM-DD' format.
+     */
+    function fetchAndPopulateAvailability(date) {
+        // First, try to fetch availability for the selected date
+        fetchAvailability(date).then(slots => {
+            if (slots.length > 0) {
+                populateTimeSlots(slots);
+            } else {
+                // If no slots exist for the current day, fetch from the previous day
+                const selectedDay = new Date(date + 'T00:00:00');
+                const previousDay = new Date(selectedDay);
+                previousDay.setDate(selectedDay.getDate() - 1);
+                const previousDateString = previousDay.toISOString().split('T')[0];
+
+                // Only fetch from previous day if it's not before the calendar's start date
+                const firstCalendarDay = document.querySelector('.calendar-day').dataset.date;
+                if (previousDateString >= firstCalendarDay) {
+                     fetchAvailability(previousDateString).then(prevSlots => {
+                        populateTimeSlots(prevSlots);
+                    });
+                } else {
+                    populateTimeSlots([]); 
+                }
+            }
+        });
+    }
+
+    /**
+     * Handles the actual fetch request to the backend API.
+     * @param {string} date - The date in 'YYYY-MM-DD' format.
+     * @returns {Promise<string[]>} - A promise that resolves with an array of time slots.
+     */
     function fetchAvailability(date) {
-        fetch(`/dailyfix/api/get_availability.php?date=${date}`)
+        return fetch(`/dailyfix/api/get_availability.php?date=${date}`)
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    populateTimeSlots(data.slots);
+                    // Filter out booked slots, but also handle the booked array being empty
+                    const bookedSet = new Set(data.booked || []);
+                    return (data.slots || []).filter(slot => !bookedSet.has(slot));
                 } else {
                     console.error('Error fetching availability:', data.message);
-                    populateTimeSlots([]);
+                    return [];
                 }
             })
             .catch(error => {
                 console.error('Fetch network error:', error);
-                populateTimeSlots([]);
+                return [];
             });
     }
 
@@ -161,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveFinalBtn.disabled = false;
                 saveFinalBtn.textContent = 'Save Availability';
             } else {
-                // *** THIS IS THE FIX ***
                 // On success, redirect to the profile page to show the custom message
                 window.location.href = '/dailyfix/profile.php?success=availability_updated#availability';
             }
@@ -173,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- Tab Initialization Logic ---
     // This logic ensures the calendar loads if the tab is active on page load OR when you click it.
     const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {

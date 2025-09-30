@@ -20,7 +20,6 @@ if (isset($_GET['status'])) {
 
 $bookings = [];
 try {
-    // The query remains the same
     $stmt = $conn->prepare("
         SELECT b.id, c.full_name as customer_name, w.full_name as worker_name, b.booking_time, b.status
         FROM public.bookings b
@@ -69,7 +68,14 @@ try {
                             <td>#<?php echo htmlspecialchars($booking['id']); ?></td>
                             <td><?php echo htmlspecialchars($booking['customer_name']); ?></td>
                             <td><?php echo htmlspecialchars($booking['worker_name']); ?></td>
-                            <td><?php echo date("D, M d, Y - g:i A", strtotime($booking['booking_time'])); ?></td>
+                            <td>
+                                <?php 
+                                    // FIXED: Create DateTime object with UTC timezone and then set it to IST for display
+                                    $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
+                                    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                    echo htmlspecialchars($bookingTime->format("D, M d, Y - g:i A")); 
+                                ?>
+                            </td>
                             <td>
                                 <?php $status_class = strtolower(str_replace(' ', '_', $booking['status'])); ?>
                                 <span class="status-badge status-<?php echo $status_class; ?>"><?php echo htmlspecialchars($booking['status']); ?></span>

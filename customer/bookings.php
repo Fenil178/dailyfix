@@ -47,7 +47,11 @@ try {
                         <div class="list-item">
                             <div class="item-details">
                                 <p><strong>Booking with <?php echo htmlspecialchars($booking['worker_name']); ?></strong></p>
-                                <small>Scheduled for <?php echo date("D, M d, Y g:i A", strtotime($booking['booking_time'])); ?></small>
+<small>Scheduled for <?php 
+    $bookingTime = new DateTime($booking['booking_time']);
+    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+    echo htmlspecialchars($bookingTime->format("D, M d, Y g:i A")); 
+?></small>
                             </div>
                             <div class="item-status <?php echo htmlspecialchars($booking['status']); ?>">
                                 <?php echo str_replace('_', ' ', htmlspecialchars($booking['status'])); ?>

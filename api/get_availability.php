@@ -43,9 +43,11 @@ try {
     $stmt_booked->execute([$target_worker_id, $date]);
     $booked_slots_raw = $stmt_booked->fetchAll(PDO::FETCH_COLUMN, 0);
     
-    // Format booked times to HH:MM:SS for comparison with availability data
+    // FIXED: Convert UTC booked times to the local timezone (Asia/Kolkata)
     $booked_slots = array_map(function($time) {
-        return (new DateTime($time))->format('H:i:s');
+        $utc_time = new DateTime($time, new DateTimeZone('UTC'));
+        $utc_time->setTimezone(new DateTimeZone('Asia/Kolkata'));
+        return $utc_time->format('H:i:s');
     }, $booked_slots_raw);
 
     http_response_code(200);

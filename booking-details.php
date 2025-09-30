@@ -69,7 +69,11 @@ if (!$booking) {
                             <div class="timeline-icon"><i class="fas fa-calendar-alt"></i></div>
                             <div class="timeline-content">
                                 <div class="label">Scheduled Time</div>
-                                <div class="value"><?php echo date("D, M d, Y - g:i A", strtotime($booking['booking_time'])); ?></div>
+                                <div class="value"><?php 
+                                    $bookingTime = new DateTime($booking['booking_time']);
+                                    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                    echo htmlspecialchars($bookingTime->format("D, M d, Y - g:i A")); 
+                                ?></div>
                             </div>
                         </li>
                         <li class="timeline-item">
