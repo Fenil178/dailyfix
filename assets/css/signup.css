@@ -1,497 +1,344 @@
-/* General Step Styling */
-.step { display: none; animation: fadeIn 0.5s ease; }
-.step.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Role Selection Cards */
-.role-selection {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-@media (min-width: 576px) { .role-selection { grid-template-columns: 1fr 1fr; } }
-
-.role-card {
-    padding: 1.5rem;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-.role-card:hover {
-    border-color: #0d6efd;
-    background-color: #f8f9fa;
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-.role-card i {
-    font-size: 2.5rem;
-    color: #0d6efd;
-    margin-bottom: 1rem;
-}
-.role-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-.role-card p { font-size: 0.9rem; color: #6c757d; margin: 0; }
-
-/* Back Button */
-.back-btn {
-    background: none;
-    border: none;
-    color: #6c757d;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    margin-bottom: 1.5rem;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.back-btn:hover { color: #343a40; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+/* --- BASE STYLES FROM LOGIN.CSS --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background: radial-gradient(circle, #a6c1ee, #f5d087);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  background: #1F2334;
   min-height: 100vh;
-  padding: 2rem;
-}
-
-/* Style for the logo image */
-.branding-logo {
-  max-width: 120px; /* Adjust the size as needed */
-  height: auto;
-  margin-bottom: 1.5rem; /* Adds space between the logo and the heading */
-}
-
-/* Update the branding panel to properly align all content */
-.login-branding-panel {
-  display: flex;
-  flex-direction: column; /* Stacks content vertically */
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background-color: #f8f9fa;
-  padding: 3rem;
-}
-
-.login-wrapper {
-  max-width: 950px;
-  width: 100%;
-  background-color: #ffffff;
-  border-radius: 1rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  animation: fadeIn 0.6s ease-out;
-}
-
-.login-branding-panel {
-  background-color: #f8f9fa;
-  padding: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-}
-
-.branding-content h1 {
-  font-weight: 600;
-  color: #343a40;
-}
-
-.branding-content p {
-  color: #6c757d;
-  font-size: 1.1rem;
-}
-
-.login-form-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 3rem;
-  overflow-y: auto;
-}
-
-.login-form-container {
-  width: 100%;
-  max-width: 450px;
-}
-
-.login-form-container h2 {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.login-form-container .subtitle {
-  color: #6c757d;
-  margin-bottom: 2rem;
-}
-
-/* Custom form styles from login.css */
-.form-group {
+  padding: 20px;
   position: relative;
-  margin-bottom: 1rem;
+  overflow-x: hidden;
 }
 
-.form-icon {
+body::before {
+  content: '';
   position: absolute;
-  left: 15px;
+  width: 400px;
+  height: 400px;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 50%;
+  top: -200px;
+  left: -200px;
+  animation: float 6s ease-in-out infinite;
+}
+
+body::after {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 50%;
+  bottom: -150px;
+  right: -150px;
+  animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(20px); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-container {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+  animation: slideIn 0.6s ease-out;
+}
+
+.login-card {
+  background: rgba(244, 241, 241, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 40px 35px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  border-radius: 16px;
+  padding: 2px;
+  display: inline-block;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4);
+}
+
+.logo-inner {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-inner img {
+  width: 50px;
+  height: auto;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.login-subtitle {
+  font-size: 15px;
+  color: #718096;
+  margin-bottom: 0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #adb5bd;
-  z-index: 2; /* Ensure icon is above the select arrow */
+  color: #a0aec0;
+  font-size: 16px;
+  transition: color 0.3s;
 }
 
-/* Style for text inputs and select dropdowns */
-.form-control-custom {
-  display: block;
+.form-control {
   width: 100%;
-  border-radius: 0.5rem;
-  padding: 0.9rem 1rem; /* Removed icon padding for address fields */
-  border: 1px solid #ced4da;
-  background-color: #fff;
-  background-clip: padding-box;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: #212529;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  padding: 14px 16px 14px 16px;
+  font-size: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f7fafc;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.input-wrapper .form-control {
+    padding-left: 48px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-control:focus ~ .input-icon {
+  color: #3b82f6;
+}
+
+select.form-control {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-}
-/* Re-add left padding for fields with icons */
-#step-register-part1 .form-control-custom, #step-key .form-control-custom {
-    padding-left: 2.5rem;
-}
-
-
-.form-control-custom:focus {
-  border-color: #a6c1ee;
-  box-shadow: 0 0 0 0.25rem rgba(166, 193, 238, 0.4);
-  outline: 0;
-}
-
-select.form-control-custom {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px 12px;
+  padding-right: 2.5rem;
 }
 
 .password-toggle {
   position: absolute;
-  right: 15px;
+  right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #adb5bd;
+  color: #a0aec0;
   cursor: pointer;
+  font-size: 16px;
+  transition: color 0.3s;
   z-index: 2;
 }
 
-/* Signup-specific styles for file drop area */
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: #333;
+.password-toggle:hover {
+  color: #3b82f6;
 }
 
-.file-drop-area {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    border: 2px dashed #1064d4;
-    border-radius: 0.5rem;
-    background-color: #f8f9fa;
-    color: #6c757d;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
 }
 
-.file-drop-area.is-active {
-    background-color: #e9ecef;
-    border-color: #0056b3;
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 58, 138, 0.5);
 }
 
-.file-drop-area .file-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    color: #1064d4;
-}
-.file-drop-area .file-msg {
-    font-size: 0.9rem;
+.btn-login:active {
+  transform: translateY(0);
 }
 
-.file-input {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
-    cursor: pointer;
-    opacity: 0;
+.btn-login:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.file-preview-container {
-    margin: 1rem auto 0;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
-    display: none;
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 32px 0;
 }
 
-.file-preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #94a3b8;
 }
 
-/* Custom button for signup */
-.btn-signup {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(90deg, #1064d4, #4a90e2);
-    color: #fff;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-signup:hover {
-    transform: translateY(-2px);
-    color: white;
-}
-
-.signup-link {
-  color: #0d6efd;
-  text-decoration: none;
+.divider span {
+  padding: 0 20px;
+  color: #94a3b8;
+  font-size: 14px;
   font-weight: 500;
 }
 
-.signup-link:hover {
-  text-decoration: underline;
+.signup-text {
+  text-align: center;
+  font-size: 15px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 991.98px) {
-  .login-wrapper {
-    max-width: 500px;
-  }
-  .login-form-panel {
-    padding: 2rem;
-  }
+.signup-text a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* Styles for the worker details section inputs */
-#step-register-part2 .form-group label {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.9rem;
-    color: #6c757d;
+.signup-text a:hover {
+  color: #1e40af;
 }
 
-#step-register-part2 .form-group .form-icon {
-    top: 3.5rem; /* Adjusts icon position for stacked label/input */
+.alert {
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-#step-register-part2 .form-group input,
-#step-register-part2 .form-group textarea {
-    padding-left: 1rem;
-}
+.alert-success { background: #d4edda; color: #155724; }
+.alert-danger { background: #f8d7da; color: #721c24; }
+.alert i { font-size: 16px; }
+.btn-close { margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.5; transition: opacity 0.3s; }
+.btn-close:hover { opacity: 1; }
+.spinner-border-sm { width: 16px; height: 16px; border-width: 2px; }
 
-/* New styles for the categorized services section */
-.services-category-list {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: 1fr; /* Default to single column */
-}
+/* --- SIGNUP-SPECIFIC STYLES --- */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.step { display: none; animation: fadeIn 0.5s ease; }
+.step.active { display: block; }
 
-@media (min-width: 576px) {
-    .services-category-list {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+.step-title { text-align: center; font-size: 24px; font-weight: 700; color: #1a202c; margin-bottom: 8px; }
+.step-subtitle { text-align: center; font-size: 15px; color: #718096; margin-bottom: 24px; }
 
-.service-category-group {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
-    margin-bottom: 1rem;
-}
+.back-btn { background: none; border: none; color: #718096; font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 24px; padding: 0; display: flex; align-items: center; gap: 8px; }
+.back-btn:hover { color: #1a202c; }
 
-.service-category-group h4 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-}
+/* Role Selection */
+.role-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+.role-card { padding: 1.5rem 1rem; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+.role-card:hover { border-color: #3b82f6; background-color: #f7fafc; transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+.role-card i { font-size: 2rem; color: #3b82f6; margin-bottom: 1rem; }
+.role-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;}
+.role-card p { font-size: 0.85rem; color: #718096; margin: 0; }
 
-.service-category-group h4 i {
-    font-size: 1.25rem;
-    color: #1064d4;
-    margin-right: 0.75rem;
-}
+/* File Upload */
+.file-drop-area { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 2px dashed #3b82f6; border-radius: 12px; background-color: #f7fafc; color: #718096; cursor: pointer; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; }
+.file-drop-area.is-active { background-color: #e9ecef; border-color: #1e40af; }
+.file-drop-area .file-icon { font-size: 1.5rem; margin-bottom: 0.5rem; color: #3b82f6; }
+.file-drop-area .file-msg { font-size: 0.9rem; }
+.file-input { position: absolute; left: 0; top: 0; height: 100%; width: 100%; cursor: pointer; opacity: 0; }
+.file-preview-container { margin: 1rem auto 0; width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; display: none; }
+.file-preview { width: 100%; height: 100%; object-fit: cover; }
 
-.services-checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.75rem;
-}
+/* Service Selection */
+.services-category-list { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
+.service-category-group { background-color: #f8f9fa; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
+.service-category-group h4 { font-size: 1rem; font-weight: 600; color: #2d3748; margin-bottom: 1rem; display: flex; align-items: center; }
+.service-category-group h4 i { font-size: 1.1rem; color: #3b82f6; margin-right: 0.75rem; }
+.services-checkbox-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.checkbox-item { position: relative; }
+.checkbox-item input[type="checkbox"] { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+.checkbox-item label { display: block; cursor: pointer; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 12px; background-color: #fff; transition: all 0.2s ease; text-align: center; font-size: 0.9rem; font-weight: 500; }
+.checkbox-item input[type="checkbox"]:checked + label { background-color: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+.checkbox-item input[type="checkbox"]:hover:not(:checked) + label { border-color: #a0aec0; }
 
-.checkbox-item {
-    position: relative;
-}
+/* Step Indicator */
+.step-indicator-wrapper { margin-bottom: 2rem; }
+.step-indicator { display: flex; justify-content: space-between; list-style: none; padding: 0; position: relative; }
+.step-indicator::before { content: ''; position: absolute; top: 12px; left: 16px; right: 16px; height: 2px; background-color: #e2e8f0; z-index: 1; }
+.step-indicator-item { text-align: center; flex: 1; padding: 0 5px; color: #a0aec0; font-size: 0.7rem; font-weight: 600; position: relative; z-index: 3; line-height: 1.3; }
+.step-indicator-item span { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background-color: #fff; border: 2px solid #e2e8f0; margin: 0 auto 0.5rem auto; font-weight: 700; transition: all 0.3s ease; color: #a0aec0; }
+.step-indicator-item.completed span { background-color: #3b82f6; border-color: #3b82f6; color: #fff; font-size: 1rem; }
+/* --- FIX: REMOVED the ::before rule as it's now handled by JS --- */
+.step-indicator-item.active { color: #3b82f6; }
+.step-indicator-item.active span { border-color: #3b82f6; color: #3b82f6; }
 
-.checkbox-item input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
+/* Map */
+#map { height: 200px; width: 100%; border-radius: 12px; border: 2px solid #e2e8f0; margin-bottom: 1rem; z-index: 5; }
 
-.checkbox-item label {
-    display: block;
-    cursor: pointer;
-    padding: 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.5rem;
-    background-color: #fff;
-    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    text-align: center;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.checkbox-item input[type="checkbox"]:checked + label {
-    background-color: #1064d4;
-    color: #fff;
-    border-color: #1064d4;
-    box-shadow: 0 0 0 0.25rem rgba(16, 100, 212, 0.25);
-}
-
-.checkbox-item input[type="checkbox"]:hover + label {
-    background-color: #e9ecef;
-}
-
-/* --- NEW: Professional Step Indicator Styles --- */
-.step-indicator-wrapper {
-    margin-bottom: 2.2rem;
-}
-
-.step-indicator {
-    display: flex;
-    justify-content: space-between;
-    list-style: none;
-    padding: 0;
-    position: relative;
-}
-
-.step-indicator::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 16px;
-    right: 16px;
-    height: 2px;
-    background-color: #e9ecef;
-    z-index: 1;
-}
-
-.step-indicator::after {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 16px;
-    height: 2px;
-    background-color: #0d6efd;
-    z-index: 2;
-    width: 0;
-    transition: width 0.4s ease-in-out;
-}
-
-.step-indicator-item {
-    text-align: center;
-    flex: 1;
-    padding: 0 5px;
-    color: #6c757d;
-    font-size: 0.6rem;
-    position: relative;
-    z-index: 3;
-    line-height: 1.3;
-}
-
-.step-indicator-item span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: #fff;
-    border: 2px solid #e9ecef;
-    margin: 0 auto 0.5rem auto;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.step-indicator-item.completed span {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    color: #fff;
-}
-.step-indicator-item.completed span::before {
-    content: '\2713';
-    font-size: 1rem;
-}
-
-.step-indicator-item.active {
-    font-weight: 700;
-    color: #0d6efd;
-}
-.step-indicator-item.active span {
-    border-color: #0d6efd;
-}
-
-/* Progress line width classes for Worker */
-#worker-indicator .progress-step-1 { width: 0%; }
-#worker-indicator .progress-step-2 { width: 20%; }
-#worker-indicator .progress-step-3 { width: 40%; }
-#worker-indicator .progress-step-4 { width: 60%; }
-#worker-indicator .progress-step-5 { width: 80%; }
-#worker-indicator .progress-step-6 { width: 100%; }
-
-/* Progress line width classes for Customer */
-#customer-indicator .progress-step-1 { width: 0%; }
-#customer-indicator .progress-step-2 { width: 100%; }
-
-/* --- NEW: Map Container Styling --- */
-#map {
-    height: 250px;
-    width: 100%;
-    border-radius: 0.5rem;
-    border: 1px solid #ced4da;
-    margin-bottom: 1rem;
-    z-index: 5;
+/* Responsive */
+@media (max-width: 576px) {
+  .login-card { padding: 36px 28px; }
+  .login-title { font-size: 24px; }
+  .logo { width: 70px; height: 70px; }
+  .role-selection { grid-template-columns: 1fr; }
+  .services-category-list { grid-template-columns: 1fr; }
 }

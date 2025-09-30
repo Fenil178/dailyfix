@@ -62,49 +62,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>DailyFix - Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/login.css">
+    <link href="/dailyfix/assets/css/login.css" rel="stylesheet">
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 </head>
-
 <body>
-    <div class="login-wrapper">
-        <div class="row g-0">
-            <div class="col-lg-5 d-none d-lg-flex login-branding-panel">
-            <div class="branding-content">
-                <img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo" class="branding-logo">
-                <h1>Welcome Back!</h1>
-                <p>Log in to access your dashboard and manage your services.</p>
-            </div>
-            </div>
-            <div class="col-12 col-lg-7 login-form-panel">
-                <div class="login-form-container">
-                    <h2>Login</h2>
-                    <p class="subtitle">Enter your credentials to continue.</p>
-                    <div id="login-alert-placeholder"></div>
-                    <form id="loginForm" method="POST" action="login.php" novalidate>
-                        <div class="form-group">
-                            <i class="fas fa-envelope form-icon"></i>
-                            <input type="email" class="form-control form-control-custom" name="email" placeholder="Email Address" required>
-                        </div>
-                        <div class="form-group">
-                            <i class="fas fa-lock form-icon"></i>
-                            <input type="password" class="form-control form-control-custom" name="password" id="password" placeholder="Password" required>
-                            <i class="fas fa-eye password-toggle" id="togglePassword"></i>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-custom-login">Log In</button>
-                        </div>
-                        <div class="text-center mt-0">
-                            <a href="/dailyfix/forgot_password_page.php" class="forgot-password-link">Forgot Password?</a>
-                        </div>
-                        <div class="text-center mt-3">
-                            <p>Don't have an account? <a class="signup-link" href="/dailyfix/signup.php">Sign Up</a></p>
-                        </div>
-                    </form>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo-container">
+                <div class="logo">
+                    <div class="logo-inner">
+                        <img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo">
+                    </div>
                 </div>
+                <h1 class="login-title">Welcome Back</h1>
+                <p class="login-subtitle">Sign in to continue to DailyFix</p>
             </div>
+
+            <div id="login-alert-placeholder"></div>
+
+            <form id="loginForm" method="POST" action="login.php" novalidate>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" class="form-control" name="email" placeholder="you@gmail.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" class="form-control" name="password" id="password" placeholder="••••••••" required>
+                        <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <div class="forgot-password">
+                    <a href="forgot_password.php?from=user">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-login">Sign In</button>
+
+                <div class="divider">
+                    <span>New to DailyFix?</span>
+                </div>
+
+                <div class="signup-text">
+                    <a href="/dailyfix/signup.php">Create an Account →</a>
+                </div>
+            </form>
         </div>
     </div>
 

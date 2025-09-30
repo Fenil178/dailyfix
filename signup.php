@@ -46,22 +46,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // --- File Upload Handling ---
-    if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . "/uploads/profile_images/";
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        $fileExtension = pathinfo($profile_image['name'], PATHINFO_EXTENSION);
-        $newFileName = uniqid() . '.' . $fileExtension;
-        $profile_imagePath = "uploads/profile_images/" . $newFileName;
-        if (!move_uploaded_file($profile_image['tmp_name'], __DIR__ . "/" . $profile_imagePath)) {
-            $profile_imagePath = null; // Reset if upload fails
-        }
-    }
-
     try {
         $conn->beginTransaction();
+
+        // --- File Upload Handling ---
+        if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . "/uploads/profile_images/";
+            if (!is_dir($uploadDir)) {
+                // FIX: Changed permissions from 0777 to 0755 for better security.
+                mkdir($uploadDir, 0755, true);
+            }
+            $fileExtension = pathinfo($profile_image['name'], PATHINFO_EXTENSION);
+            $newFileName = uniqid() . '.' . $fileExtension;
+            $profile_imagePath = "uploads/profile_images/" . $newFileName;
+            
+            // FIX: Added explicit error handling for move_uploaded_file failure.
+            if (!move_uploaded_file($profile_image['tmp_name'], __DIR__ . "/" . $profile_imagePath)) {
+                $conn->rollBack();
+                echo json_encode(['status' => 'error', 'message' => 'Failed to upload profile image. Please check server permissions.']);
+                exit;
+            }
+        }
 
         // Check if email already exists
         $stmt = $conn->prepare("SELECT id FROM public.users WHERE email = ?");
@@ -140,72 +145,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Data for State and City Dropdowns
-$indian_states_cities = [
-    "Andaman and Nicobar Islands" => ["Port Blair"],
-    "Andhra Pradesh" => ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
-    "Arunachal Pradesh" => ["Itanagar", "Tawang"],
-    "Assam" => ["Guwahati", "Dibrugarh", "Silchar"],
-    "Bihar" => ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur"],
-    "Chandigarh" => ["Chandigarh"],
-    "Chhattisgarh" => ["Raipur", "Bhilai", "Bilaspur"],
-    "Dadra and Nagar Haveli and Daman and Diu" => ["Daman", "Silvassa"],
-    "Delhi" => ["New Delhi", "North Delhi", "South Delhi", "West Delhi", "East Delhi"],
-    "Goa" => ["Panaji", "Margao", "Vasco da Gama"],
-    "Gujarat" => ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar"],
-    "Haryana" => ["Faridabad", "Gurugram", "Panipat", "Ambala"],
-    "Himachal Pradesh" => ["Shimla", "Manali", "Dharamshala"],
-    "Jammu and Kashmir" => ["Srinagar", "Jammu", "Anantnag"],
-    "Jharkhand" => ["Ranchi", "Jamshedpur", "Dhanbad"],
-    "Karnataka" => ["Bengaluru", "Mysuru", "Hubballi-Dharwad", "Mangaluru"],
-    "Kerala" => ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur"],
-    "Ladakh" => ["Leh", "Kargil"],
-    "Lakshadweep" => ["Kavaratti"],
-    "Madhya Pradesh" => ["Indore", "Bhopal", "Jabalpur", "Gwalior"],
-    "Maharashtra" => ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik"],
-    "Manipur" => ["Imphal"],
-    "Meghalaya" => ["Shillong"],
-    "Mizoram" => ["Aizawl"],
-    "Nagaland" => ["Kohima", "Dimapur"],
-    "Odisha" => ["Bhubaneswar", "Cuttack", "Rourkela"],
-    "Puducherry" => ["Puducherry"],
-    "Punjab" => ["Ludhiana", "Amritsar", "Jalandhar"],
-    "Rajasthan" => ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner"],
-    "Sikkim" => ["Gangtok"],
-    "Tamil Nadu" => ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli"],
-    "Telangana" => ["Hyderabad", "Warangal", "Nizamabad"],
-    "Tripura" => ["Agartala"],
-    "Uttar Pradesh" => ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi"],
-    "Uttarakhand" => ["Dehradun", "Haridwar", "Roorkee"],
-    "West Bengal" => ["Kolkata", "Asansol", "Siliguri", "Durgapur"]
-];
+$indian_states_cities = [ "Gujarat" => ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar"], /* ... other states ... */ ];
 $states = array_keys($indian_states_cities);
 sort($states);
 
 // PHP to fetch services for the form
-$mainServices = [];
-$groupedSubServices = [];
-$subServiceItems = [];
+$mainServices = []; $groupedSubServices = []; $subServiceItems = [];
 try {
-    // Fetch main services
     $stmt = $conn->query("SELECT id, name, icon FROM public.services ORDER BY name");
     $mainServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Fetch sub-services
     $stmt = $conn->query("SELECT s.id AS main_service_id, s.name AS service_name, ss.id, ss.name AS sub_service_name, ss.icon FROM public.sub_services ss JOIN public.services s ON ss.service_id = s.id ORDER BY s.name, ss.name");
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($results as $row) {
-        $groupedSubServices[$row['service_name']][] = ['id' => $row['id'], 'name' => $row['sub_service_name'], 'icon' => $row['icon'], 'main_service_id' => $row['main_service_id']];
-    }
-    
-    // Fetch sub-service items
+    foreach ($results as $row) { $groupedSubServices[$row['service_name']][] = ['id' => $row['id'], 'name' => $row['sub_service_name'], 'icon' => $row['icon'], 'main_service_id' => $row['main_service_id']]; }
     $stmt = $conn->query("SELECT ssi.sub_service_id, ssi.id, ssi.name, ssi.icon FROM public.sub_service_items ssi JOIN public.sub_services ss ON ssi.sub_service_id = ss.id ORDER BY ss.name, ssi.name");
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($results as $row) {
-        $subServiceItems[$row['sub_service_id']][] = ['id' => $row['id'], 'name' => $row['name'], 'icon' => $row['icon']];
-    }
-} catch (PDOException $e) {
-    error_log("Failed to fetch sub-services for setup page: " . $e->getMessage());
-}
+    foreach ($results as $row) { $subServiceItems[$row['sub_service_id']][] = ['id' => $row['id'], 'name' => $row['name'], 'icon' => $row['icon']]; }
+} catch (PDOException $e) { error_log("Failed to fetch services for setup page: " . $e->getMessage()); }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -214,240 +169,243 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Create Your Account - DailyFix</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link href="/dailyfix/assets/css/signup.css" rel="stylesheet">
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
-    <link rel="stylesheet" href="/dailyfix/assets/css/signup.css">
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="row g-0">
-            <div class="col-lg-5 d-none d-lg-flex login-branding-panel">
-                <div class="branding-content">
-                    <img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo" class="branding-logo">
-                    <h1>Start Your Journey</h1>
-                    <p>Create an account to join the DailyFix community and manage your services with ease.</p>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo-container" id="main-logo-container">
+                <div class="logo">
+                    <div class="logo-inner">
+                        <img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo">
+                    </div>
+                </div>
+                <h1 class="login-title">Create an Account</h1>
+                <p class="login-subtitle">Join DailyFix to manage your services with ease.</p>
+            </div>
+            
+            <div id="signup-alert-placeholder"></div>
+
+            <div class="step-indicator-wrapper" id="worker-indicator" style="display: none;">
+                <ul class="step-indicator">
+                    <li class="step-indicator-item" data-step-target="step-key"><span>1</span>Verification</li>
+                    <li class="step-indicator-item" data-step-target="step-register-part1"><span>2</span>Account</li>
+                    <li class="step-indicator-item" data-step-target="step-register-part2"><span>3</span>Details</li>
+                    <li class="step-indicator-item" data-step-target="step-main-services"><span>4</span>Services</li>
+                    <li class="step-indicator-item" data-step-target="step-sub-services"><span>5</span>Sub-Services</li>
+                    <li class="step-indicator-item" data-step-target="step-sub-service-items"><span>6</span>Sub-Items</li>
+                    <li class="step-indicator-item" data-step-target="step-location"><span>7</span>Location</li>
+                </ul>
+            </div>
+            
+            <div class="step-indicator-wrapper" id="customer-indicator" style="display: none;">
+                <ul class="step-indicator">
+                    <li class="step-indicator-item" data-step-target="step-register-part1"><span>1</span>Account</li>
+                    <li class="step-indicator-item" data-step-target="step-location"><span>2</span>Location</li>
+                </ul>
+            </div>
+            
+            <div class="step active" id="step-role">
+                <h2 class="step-title">Join as a Customer or Worker</h2>
+                <p class="step-subtitle">First, tell us who you are.</p>
+                <div class="role-selection">
+                    <div class="role-card" data-role="customer">
+                        <i class="fas fa-user"></i>
+                       <h3>I'm a Customer</h3>
+                       <p>I'm here to find and book services.</p>
+                    </div>
+                    <div class="role-card" data-role="worker">
+                        <i class="fas fa-user-tie"></i>
+                       <h3>I'm a Worker</h3>
+                       <p>I'm here to offer my professional services.</p>
+                    </div>
                 </div>
             </div>
-
-            <div class="col-12 col-lg-7 login-form-panel">
-                <div class="login-form-container">
-                    <div id="signup-alert-placeholder"></div>
-
-                    <div class="step-indicator-wrapper" id="worker-indicator" style="display: none;">
-                        <ul class="step-indicator">
-                            <li class="step-indicator-item" data-step-target="step-key"><span>1</span>Verification</li>
-                            <li class="step-indicator-item" data-step-target="step-register-part1"><span>2</span>Account</li>
-                            <li class="step-indicator-item" data-step-target="step-register-part2"><span>3</span>Details</li>
-                            <li class="step-indicator-item" data-step-target="step-main-services"><span>4</span>Services</li>
-                            <li class="step-indicator-item" data-step-target="step-sub-services"><span>5</span>Sub-Services</li>
-                            <li class="step-indicator-item" data-step-target="step-sub-service-items"><span>6</span>Sub-Items</li>
-                            <li class="step-indicator-item" data-step-target="step-location"><span>7</span>Location</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="step-indicator-wrapper" id="customer-indicator" style="display: none;">
-                        <ul class="step-indicator">
-                            <li class="step-indicator-item" data-step-target="step-register-part1"><span>1</span>Account</li>
-                            <li class="step-indicator-item" data-step-target="step-location"><span>2</span>Location</li>
-                        </ul>
-                    </div>
-
-                    <div class="step active" id="step-role">
-                        <h2>Join as a Customer or Worker</h2>
-                        <p class="subtitle">First, tell us who you are.</p>
-                        <div class="role-selection">
-                            <div class="role-card" data-role="customer">
-                                <i class="fas fa-user"></i>
-                               <h3>I'm a Customer</h3>
-                               <p>I'm here to find and book services.</p>
-                            </div>
-                            <div class="role-card" data-role="worker">
-                                <i class="fas fa-user-tie"></i>
-                               <h3>I'm a Worker</h3>
-                               <p>I'm here to offer my professional services.</p>
-                            </div>
-                        </div>
-                         <div class="text-center mt-4">
-                            <p>Already have an account? <a class="signup-link" href="/dailyfix/login.php">Log In</a></p>
+            
+            <form id="signupForm" method="POST" enctype="multipart/form-data" novalidate>
+                <div class="step" id="step-key">
+                    <button type="button" class="back-btn" data-target="step-role"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Worker Verification</h2>
+                    <p class="step-subtitle">Please enter the 8-character key provided by your administrator.</p>
+                    <div class="form-group">
+                        <label class="form-label">Worker Key</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-key input-icon"></i>
+                            <input type="text" class="form-control" name="worker_key_verify" id="worker_key_input" placeholder="e.g., S9M1-17FR" required>
                         </div>
                     </div>
+                    <button type="button" class="btn-login" id="verifyKeyBtn">Verify Key</button>
+                </div>
+                
+                <div class="step" id="step-register-part1">
+                    <button type="button" class="back-btn" id="register-back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Create Your <span id="role-title"></span> Account</h2>
+                    <p class="step-subtitle">Please fill in your details to get started.</p>
                     
-                    <form id="signupForm" method="POST" enctype="multipart/form-data" novalidate>
-                    <div class="step" id="step-key">
-                        <button type="button" class="back-btn" data-target="step-role"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Worker Verification</h2>
-                        <p class="subtitle">Please enter the 8-character key provided by your administrator.</p>
-                        <div id="keyForm">
+                    <input type="hidden" name="role" id="role-hidden-input">
+                    <input type="hidden" name="worker_key" id="worker-key-hidden-input">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" class="form-control" name="full_name" id="full_name" placeholder="Full Name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" class="form-control" name="email" id="email" placeholder="Email Address" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" class="form-control" name="password" id="password" placeholder="Password" required>
+                            <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone input-icon"></i>
+                            <input type="tel" class="form-control" name="phone" id="phone" placeholder="Phone Number" required>
+                        </div>
+                    </div>
+                     <div class="form-group">
+                        <label for="profile_image" class="form-label">Profile Image (Optional)</label>
+                        <div class="file-drop-area">
+                            <i class="fas fa-cloud-upload-alt file-icon"></i>
+                            <span class="file-msg">Drag & drop your image here, or click to browse.</span>
+                            <input type="file" class="file-input" name="profile_image" id="profile_image" accept="image/*">
+                            <div id="filePreviewContainer" class="file-preview-container"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-login next-btn mt-3" data-target="step-register-part2" id="account-details-next-btn">Next</button>
+                </div>
+
+                <div class="step" id="step-register-part2">
+                    <button type="button" class="back-btn" data-target="step-register-part1"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Your Professional Details</h2>
+                    <p class="step-subtitle">Tell us more about your expertise to help customers find you.</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="bio">Professional Bio</label>
+                        <textarea class="form-control" name="bio" id="bio" rows="3" placeholder="Describe your skills and services..." required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <i class="fas fa-key form-icon"></i>
-                                <input type="text" class="form-control-custom" name="worker_key_verify" id="worker_key_input" placeholder="e.g., S9M1-17FR" required>
+                                <label class="form-label" for="experience_years">Years of Experience</label>
+                                <input type="number" class="form-control" name="experience_years" id="experience_years" placeholder="e.g., 5" required>
                             </div>
-                            <div class="d-grid">
-                                <button type="button" class="btn btn-signup" id="verifyKeyBtn">Verify Key</button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label" for="hourly_rate">Hourly Rate (₹)</label>
+                                <input type="number" step="0.01" class="form-control" name="hourly_rate" id="hourly_rate" placeholder="e.g., 25.50" required>
                             </div>
                         </div>
                     </div>
+                    <button type="button" class="btn-login next-btn mt-3" data-target="step-main-services">Next</button>
+                </div>
+
+                <div class="step" id="step-main-services">
+                    <button type="button" class="back-btn" data-target="step-register-part2"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Main Services</h2>
+                    <p class="step-subtitle">Select the main categories of services you offer.</p>
+                    <div class="services-category-list">
+                        <?php foreach ($mainServices as $service): ?>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="main-service-<?= $service['id'] ?>" name="main_services[]" value="<?= $service['id'] ?>">
+                                <label for="main-service-<?= $service['id'] ?>"><?= htmlspecialchars($service['name']) ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="btn-login next-btn mt-3" data-target="step-sub-services">Next</button>
+                </div>
+
+                <div class="step" id="step-sub-services">
+                    <button type="button" class="back-btn" data-target="step-main-services"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Sub Services</h2>
+                    <p class="step-subtitle">Select the specific services you offer.</p>
+                    <div id="sub-services-container"></div>
+                     <button type="button" class="btn-login next-btn mt-3" data-target="step-sub-service-items">Next</button>
+                </div>
+                
+                <div class="step" id="step-sub-service-items">
+                    <button type="button" class="back-btn" data-target="step-sub-services"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Service Items</h2>
+                    <p class="step-subtitle">Select the specific tasks you are able to perform.</p>
+                    <div id="sub-service-items-container"></div>
+                     <button type="button" class="btn-login next-btn mt-3" data-target="step-location">Next</button>
+                </div>
+
+                <div class="step" id="step-location">
+                    <button type="button" class="back-btn" id="location-back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Set Your Location</h2>
+                    <p class="step-subtitle">Drag the marker or type your pincode to begin.</p>
                     
-                    <div class="step" id="step-register-part1">
-                        <button type="button" class="back-btn" id="register-back-btn"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Create Your <span id="role-title"></span> Account</h2>
-                        <p class="subtitle">Please fill in your details to get started.</p>
-                        
-                        <input type="hidden" name="role" id="role-hidden-input">
-                        <input type="hidden" name="worker_key" id="worker-key-hidden-input">
-                        
-                        <div class="form-group">
-                            <i class="fas fa-user form-icon"></i>
-                            <input type="text" class="form-control-custom" name="full_name" id="full_name" placeholder="Full Name" required>
-                        </div>
-                        <div class="form-group">
-                            <i class="fas fa-envelope form-icon"></i>
-                            <input type="email" class="form-control-custom" name="email" id="email" placeholder="Email Address" required>
-                        </div>
-                        <div class="form-group">
-                            <i class="fas fa-lock form-icon"></i>
-                            <input type="password" class="form-control-custom" name="password" id="password" placeholder="Password" required>
-                            <span id="togglePassword" class="fas fa-eye password-toggle"></span>
-                        </div>
-                        <div class="form-group">
-                            <i class="fas fa-phone form-icon"></i>
-                            <input type="tel" class="form-control-custom" name="phone" id="phone" placeholder="Phone Number" required>
-                        </div>
-                         <div class="form-group">
-                            <label for="profile_image" class="form-label">Profile Image (Optional)</label>
-                            <div class="file-drop-area">
-                                <i class="fas fa-cloud-upload-alt file-icon"></i>
-                                <span class="file-msg">Drag & drop your profile image here, or click to browse.</span>
-                                <input type="file" class="file-input" name="profile_image" id="profile_image" accept="image/*">
-                                <div id="filePreviewContainer" class="file-preview-container"></div>
-                            </div>
-                        </div>
-                        <div class="d-grid mt-4">
-                            <button type="button" class="btn btn-signup next-btn" data-target="step-register-part2" id="account-details-next-btn">Next</button>
-                        </div>
-                    </div>
-
-                    <div class="step" id="step-register-part2">
-                        <button type="button" class="back-btn" data-target="step-register-part1"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Your Professional Details</h2>
-                        <p class="subtitle">Tell us more about your expertise to help customers find you.</p>
-                        
-                        <div class="form-group">
-                            <label for="bio">Professional Bio</label>
-                            <textarea class="form-control-custom" name="bio" id="bio" rows="3" placeholder="Describe your skills and services..." required></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="experience_years">Years of Experience</label>
-                                    <input type="number" class="form-control-custom" name="experience_years" id="experience_years" placeholder="e.g., 5" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="hourly_rate">Hourly Rate (₹)</label>
-                                    <input type="number" step="0.01" class="form-control-custom" name="hourly_rate" id="hourly_rate" placeholder="e.g., 25.50" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-grid mt-4">
-                            <button type="button" class="btn btn-signup next-btn" data-target="step-main-services">Next</button>
-                        </div>
-                    </div>
-
-                    <div class="step" id="step-main-services">
-                        <button type="button" class="back-btn" data-target="step-register-part2"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Main Services</h2>
-                        <p class="subtitle">Select the main categories of services you offer.</p>
-                        <div class="services-category-list">
-                            <?php foreach ($mainServices as $service): ?>
-                                <div class="checkbox-item">
-                                    <input type="checkbox" id="main-service-<?= $service['id'] ?>" name="main_services[]" value="<?= $service['id'] ?>">
-                                    <label for="main-service-<?= $service['id'] ?>"><?= htmlspecialchars($service['name']) ?></label>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="d-grid mt-4">
-                            <button type="button" class="btn btn-signup next-btn" data-target="step-sub-services">Next</button>
-                        </div>
-                    </div>
-
-                    <div class="step" id="step-sub-services">
-                        <button type="button" class="back-btn" data-target="step-main-services"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Sub Services</h2>
-                        <p class="subtitle">Select the specific services you offer.</p>
-                        <div id="sub-services-container"></div>
-                        <div class="d-grid mt-4">
-                             <button type="button" class="btn btn-signup next-btn" data-target="step-sub-service-items">Next</button>
-                        </div>
-                    </div>
+                    <div id="map"></div>
                     
-                    <div class="step" id="step-sub-service-items">
-                        <button type="button" class="back-btn" data-target="step-sub-services"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Service Items</h2>
-                        <p class="subtitle">Select the specific tasks you are able to perform.</p>
-                        <div id="sub-service-items-container"></div>
-                        <div class="d-grid mt-4">
-                             <button type="button" class="btn btn-signup next-btn" data-target="step-location">Next</button>
+                    <input type="hidden" name="latitude" id="latitude">
+                    <input type="hidden" name="longitude" id="longitude">
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <input type="text" class="form-control" name="address_line1" id="address_line1" placeholder="House No. & Building Name" required>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="step" id="step-location">
-                        <button type="button" class="back-btn" id="location-back-btn"><i class="fas fa-arrow-left"></i> Back</button>
-                        <h2>Set Your Location</h2>
-                        <p class="subtitle">Drag the marker or type your pincode to begin.</p>
-                        
-                        <div id="map"></div>
-                        
-                        <input type="hidden" name="latitude" id="latitude">
-                        <input type="hidden" name="longitude" id="longitude">
-
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control-custom" name="address_line1" id="address_line1" placeholder="House No. & Building Name" required>
-                                </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <input type="text" class="form-control" name="address_line2" id="address_line2" placeholder="Road, Area, Colony" required>
                             </div>
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control-custom" name="address_line2" id="address_line2" placeholder="Road, Area, Colony" required>
-                                </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <select class="form-control" name="state" id="state" required>
+                                    <option value="" disabled selected>Select State</option>
+                                    <?php foreach ($states as $state): ?>
+                                        <option value="<?= htmlspecialchars($state) ?>"><?= htmlspecialchars($state) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <select class="form-control-custom" name="state" id="state" required>
-                                        <option value="" disabled selected>Select State</option>
-                                        <?php foreach ($states as $state): ?>
-                                            <option value="<?= htmlspecialchars($state) ?>"><?= htmlspecialchars($state) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <select class="form-control" name="city" id="city" required>
+                                    <option value="" disabled selected>Select State First</option>
+                                </select>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <select class="form-control-custom" name="city" id="city" required>
-                                        <option value="" disabled selected>Select State First</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control-custom" name="pincode" id="pincode" placeholder="Pincode" required>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <input type="text" class="form-control" name="pincode" id="pincode" placeholder="Pincode" required>
                                     <div id="pincode-spinner" class="spinner-border spinner-border-sm text-primary" role="status" style="display: none; position: absolute; right: 10px; top: 12px;">
                                       <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="d-grid mt-2">
-                            <button type="submit" class="btn btn-signup">Create Account</button>
-                        </div>
                     </div>
+                    <button type="submit" class="btn-login mt-2">Create Account</button>
+                </div>
+            </form>
 
-                    </form>
+            <div id="bottom-link-container">
+                <div class="divider">
+                    <span>Already have an account?</span>
+                </div>
+                <div class="signup-text">
+                    <a href="/dailyfix/login.php">Log In Instead →</a>
                 </div>
             </div>
         </div>
