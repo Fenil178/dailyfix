@@ -99,14 +99,26 @@ if (!$booking) {
                     <div class="participant-card">
                         <h3>Participants</h3>
                         <div class="participant-profile">
-                            <img src="<?php echo htmlspecialchars($booking['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="Customer">
+                            <?php
+                                $customerAvatar = $booking['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                if ($booking['customer_avatar'] && strpos($booking['customer_avatar'], '/') !== 0) {
+                                    $customerAvatar = '/dailyfix/' . $booking['customer_avatar'];
+                                }
+                            ?>
+                            <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer">
                             <div>
                                 <div class="role">Customer</div>
                                 <div class="name"><?php echo htmlspecialchars($booking['customer_name']); ?></div>
                             </div>
                         </div>
                         <div class="participant-profile">
-                            <img src="<?php echo htmlspecialchars($booking['worker_avatar'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="Worker">
+                            <?php
+                                $workerAvatar = $booking['worker_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
+                                    $workerAvatar = '/dailyfix/' . $booking['worker_avatar'];
+                                }
+                            ?>
+                            <img src="<?php echo htmlspecialchars($workerAvatar); ?>" alt="Worker">
                             <div>
                                 <div class="role">Worker</div>
                                 <div class="name"><?php echo htmlspecialchars($booking['worker_name']); ?></div>

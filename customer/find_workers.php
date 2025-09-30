@@ -97,7 +97,13 @@ try {
                 <?php
                 foreach ($workers as $worker): ?>
                     <div class="worker-card">
-                        <img src="<?php echo htmlspecialchars($worker['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="worker-avatar">
+                        <?php
+                            $workerAvatar = $worker['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png';
+                            if ($worker['profile_image'] && strpos($worker['profile_image'], '/') !== 0) {
+                                $workerAvatar = '/dailyfix/' . $worker['profile_image'];
+                            }
+                        ?>
+                        <img src="<?php echo htmlspecialchars($workerAvatar); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="worker-avatar">
                         <h3 class="worker-name"><?php echo htmlspecialchars($worker['full_name']); ?></h3>
                         <p class="worker-bio"><?php echo htmlspecialchars(substr($worker['bio'], 0, 100)) . '...'; ?></p>
                         <div class="worker-meta">

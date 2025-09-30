@@ -212,8 +212,13 @@ sort($states);
     <main class="page-content">
         <div class="profile-page-container">
             <div class="profile-header">
-                <img src="<?php echo htmlspecialchars($userData['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>"
-                    alt="Profile Avatar" class="profile-header-avatar">
+                <?php
+                    $profileAvatar = $userData['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png';
+                    if ($userData['profile_image'] && strpos($userData['profile_image'], '/') !== 0) {
+                        $profileAvatar = '/dailyfix/' . $userData['profile_image'];
+                    }
+                ?>
+                <img src="<?php echo htmlspecialchars($profileAvatar); ?>" alt="Profile Avatar" class="profile-header-avatar">
                 <h1><?php echo htmlspecialchars($userData['full_name']); ?></h1>
                 <p><?php echo htmlspecialchars(ucfirst($role)); ?></p>
             </div>

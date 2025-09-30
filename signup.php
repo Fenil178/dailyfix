@@ -58,10 +58,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $fileExtension = pathinfo($profile_image['name'], PATHINFO_EXTENSION);
             $newFileName = uniqid() . '.' . $fileExtension;
-            $profile_imagePath = "uploads/profile_images/" . $newFileName;
+            $profile_imagePath = "/dailyfix/uploads/profile_images/" . $newFileName;
             
             // FIX: Added explicit error handling for move_uploaded_file failure.
-            if (!move_uploaded_file($profile_image['tmp_name'], __DIR__ . "/" . $profile_imagePath)) {
+            if (!move_uploaded_file($profile_image['tmp_name'], __DIR__ . "/uploads/profile_images/" . $newFileName)) {
                 $conn->rollBack();
                 echo json_encode(['status' => 'error', 'message' => 'Failed to upload profile image. Please check server permissions.']);
                 exit;

@@ -132,7 +132,13 @@ try {
                         <?php foreach ($pendingJobs as $job): ?>
                             <div class="job-card" id="job-card-<?php echo $job['id']; ?>">
                                 <div class="job-card-header">
-                                    <img src="<?php echo htmlspecialchars($job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="Customer" class="job-card-avatar">
+                                    <?php
+                                        $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                        if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
+                                            $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
+                                        }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer" class="job-card-avatar">
                                     <div class="job-card-customer-info">
                                         <h3><?php echo htmlspecialchars($job['customer_name']); ?></h3>
                                         <p>Requested: <?php echo format_time_ago($job['created_at']); ?></p>
@@ -193,7 +199,13 @@ try {
                         <?php foreach ($upcomingJobs as $job): ?>
                              <div class="job-card">
                                 <div class="job-card-header">
-                                    <img src="<?php echo htmlspecialchars($job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="Customer" class="job-card-avatar">
+                                    <?php
+                                        $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                        if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
+                                            $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
+                                        }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer" class="job-card-avatar">
                                     <div class="job-card-customer-info">
                                         <h3><?php echo htmlspecialchars($job['customer_name']); ?></h3>
                                         <p>Scheduled for: <?php 

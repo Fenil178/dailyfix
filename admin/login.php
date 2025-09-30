@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="logo-container">
                 <div class="logo">
                     <div class="logo-inner">
-                        <img src="../assets/images/logo.png" alt="DailyFix Logo">
+                        <img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo">
                     </div>
                 </div>
                 <h1 class="login-title">Administrator Login</h1>

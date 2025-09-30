@@ -22,7 +22,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <nav class="navbar">
         <div class="navbar-container">
             <div class="logo">
-                <a href="index.php"><img src="../assets/images/logo.png" alt="DailyFix Logo" /></a>
+                <a href="index.php"><img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo" /></a>
             </div>
             
             <button class="mobile-menu-btn" id="mobile-menu" aria-label="Toggle Navigation">

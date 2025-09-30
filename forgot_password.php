@@ -41,7 +41,7 @@ $login_path = ($from === 'admin') ? '/dailyfix/admin/login.php' : '/dailyfix/log
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30, 58, 138, 0.5); }
         .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
         .back-link { text-align: center; margin-top: 24px; font-size: 14px; }
-        .back-link a { color: white; text-decoration: none; font-weight: 600; }
+        .back-link a { color: #3b82f6; text-decoration: none; font-weight: 600; }
         .alert { padding: 14px 16px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; border: none; display: flex; align-items: center; gap: 10px; }
         .alert-danger { background: #f8d7da; color: #721c24; }
         .step { display: none; }

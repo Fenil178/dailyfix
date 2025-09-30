@@ -203,7 +203,13 @@ try {
         </div>
         <div class="booking-container">
             <div class="worker-profile-panel">
-                <img src="<?php echo htmlspecialchars($worker['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png'); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="profile-avatar-custom">
+                <?php
+                    $workerAvatar = $worker['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png';
+                    if ($worker['profile_image'] && strpos($worker['profile_image'], '/') !== 0) {
+                        $workerAvatar = '/dailyfix/' . $worker['profile_image'];
+                    }
+                ?>
+                <img src="<?php echo htmlspecialchars($workerAvatar); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="profile-avatar-custom">
                 <h1><?php echo htmlspecialchars($worker['full_name']); ?></h1>
                 <div class="profile-meta">
                     <span><i class="fas fa-star"></i> 4.8 Stars</span>

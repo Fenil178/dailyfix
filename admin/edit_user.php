@@ -64,7 +64,10 @@ if ($user_id > 0) {
             <div class="edit-user-layout">
                 <div class="user-profile-summary">
                     <?php 
-                        $avatar_path = !empty($user['profile_image']) ? '/dailyfix/' . ltrim($user['profile_image'], '/') : '/dailyfix/assets/images/default_avatar.png';
+                        $avatar_path = $user['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png';
+                        if ($user['profile_image'] && strpos($user['profile_image'], '/') !== 0) {
+                            $avatar_path = '/dailyfix/' . $user['profile_image'];
+                        }
                     ?>
                     <img src="<?php echo htmlspecialchars($avatar_path); ?>" alt="Profile Avatar" class="profile-avatar">
                     <h3><?php echo htmlspecialchars($user['full_name']); ?></h3>

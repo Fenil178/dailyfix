@@ -79,7 +79,14 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
     <div class="user-menu">
         <button class="profile-btn" id="profileBtn" title="User Menu">
             <?php if (!empty($profile_imagePath)): ?>
-                <img src="<?php echo htmlspecialchars($profile_imagePath); ?>" alt="My Profile" class="profile-avatar">
+                <?php 
+                    // This logic ensures the path is always correct
+                    $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
+                    if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
+                        $avatarUrl = '/dailyfix/' . $profile_imagePath;
+                    }
+                ?>
+                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="profile-avatar">
             <?php else: ?>
                 <i class="fas fa-user"></i>
             <?php endif; ?>
