@@ -269,7 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(result => {
                         if (result.success && result.data) {
                             const data = result.data;
-                            const bookingTime = new Date(data.booking_time).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' });
+                            
+                            // FIX: Use the new local time field from the API
+                            const bookingTimeLocal = new Date(data.booking_time_local).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' });
                             const createdAt = new Date(data.created_at).toLocaleString('en-US', { dateStyle: 'medium' });
 
                             modalBody.innerHTML = `
@@ -316,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </div>
                                         <div class="detail-item">
                                             <strong>Booking Time</strong>
-                                            <span>${bookingTime}</span>
+                                            <span>${bookingTimeLocal}</span>
                                         </div>
                                         <div class="detail-item">
                                             <strong>Booked On</strong>

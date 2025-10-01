@@ -31,6 +31,11 @@ if ($booking_id > 0) {
         $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($booking) {
+            // FIX: Convert the UTC booking_time to the local timezone (Asia/Kolkata)
+            $utc_time = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
+            $utc_time->setTimezone(new DateTimeZone('Asia/Kolkata'));
+            $booking['booking_time_local'] = $utc_time->format('Y-m-d H:i:s');
+            
             $response['success'] = true;
             $response['data'] = $booking;
         }
