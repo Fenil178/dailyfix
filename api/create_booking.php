@@ -7,14 +7,16 @@ ini_set('display_errors', 1);
 include_once __DIR__ . "/connect.php";
 include_once __DIR__ . "/user_session.php";
 
+header('Content-Type: application/json');
+
 // --- Security & Validation ---
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: /dailyfix/dashboard.php?error=invalid_request");
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
     exit;
 }
 
 if (!isset($userId) || $role !== 'customer') {
-    header("Location: /dailyfix/login.php?error=not_logged_in");
+    echo json_encode(['status' => 'error', 'message' => 'User not logged in or not a customer.']);
     exit;
 }
 
@@ -27,12 +29,12 @@ $booking_date = $_POST['booking_date'] ?? '';
 $booking_time = $_POST['booking_time'] ?? '';
 
 if (!$worker_id || !$customer_id || empty($sub_service_name) || empty($service_item_name) || empty($address) || empty($booking_date) || empty($booking_time)) {
-    header("Location: /dailyfix/customer/book_worker.php?id={$worker_id}&error=missing_fields");
+    echo json_encode(['status' => 'error', 'message' => 'Missing required fields.']);
     exit;
 }
 
 if ($userId != $customer_id) {
-    header("Location: /dailyfix/dashboard.php?error=unauthorized");
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized action.']);
     exit;
 }
 
@@ -50,7 +52,7 @@ try {
     $formatted_for_db = $booking_datetime->format('Y-m-d H:i:s');
 } catch (Exception $e) {
     error_log("Booking time processing error: " . $e->getMessage());
-    header("Location: /dailyfix/customer/book_worker.php?id={$worker_id}&error=invalid_date");
+    echo json_encode(['status' => 'error', 'message' => 'Invalid date or time.']);
     exit;
 }
 
@@ -71,12 +73,12 @@ try {
         $formatted_for_db
     ]);
 
-    header("Location: /dailyfix/customer/bookings.php?success=booking_created");
+    echo json_encode(['status' => 'success']);
     exit;
 
 } catch (PDOException $e) {
     error_log("Booking creation failed: " . $e->getMessage());
-    header("Location: /dailyfix/customer/book_worker.php?id={$worker_id}&error=database_error");
+    echo json_encode(['status' => 'error', 'message' => 'Database error.']);
     exit;
 }
 ?>

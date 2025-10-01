@@ -193,6 +193,28 @@ try {
         body.dark-mode .service-option.selected i {
             color: #000;
         }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            border-radius: 10px;
+        }
     </style>
 
 </head>
@@ -240,7 +262,7 @@ try {
 
             <div class="booking-form-panel">
                 <h2>Book This Worker</h2>
-                <form id="booking-form" action="/dailyfix/api/create_booking.php" method="POST" data-worker-id="<?php echo $worker['id']; ?>">
+                <form id="booking-form" method="POST" data-worker-id="<?php echo $worker['id']; ?>">
                     <input type="hidden" name="worker_id" value="<?php echo $worker['id']; ?>">
                     <input type="hidden" name="customer_id" value="<?php echo $userId; ?>">
                     <input type="hidden" name="sub_service_name" value="<?php echo htmlspecialchars($subServiceName); ?>">
@@ -287,6 +309,13 @@ try {
         </div>
     </main>
 
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h2>Booking Request Sent!</h2>
+            <p>Your request has been sent successfully. Redirecting to your bookings page in <span id="countdown">5</span> seconds...</p>
+        </div>
+    </div>
+
     <?php include_once __DIR__ . "/../api/footer.php"; ?>
 
     <?php if ($customer_lat && $customer_lon && $worker['latitude'] && $worker['longitude']): ?>
@@ -320,7 +349,10 @@ try {
         document.addEventListener('DOMContentLoaded', function() {
             const serviceSelectionGrid = document.getElementById('service-selection-grid');
             const hiddenServiceItemInput = document.getElementById('service_item_name');
+            const bookingForm = document.getElementById('booking-form');
             const submitButton = document.getElementById('submit-booking-btn');
+            const successModal = document.getElementById('successModal');
+            const countdownSpan = document.getElementById('countdown');
             
             if (serviceSelectionGrid) {
                 serviceSelectionGrid.addEventListener('click', function(e) {
@@ -336,11 +368,42 @@ try {
                 });
             }
 
-            submitButton.addEventListener('click', function(e) {
+            bookingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
                 if (!hiddenServiceItemInput.value) {
-                    e.preventDefault();
                     alert('Please select a service item before sending the booking request.');
+                    return;
                 }
+
+                const formData = new FormData(bookingForm);
+
+                fetch('/dailyfix/api/create_booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        successModal.style.display = 'block';
+                        let countdown = 5;
+                        countdownSpan.textContent = countdown;
+                        const interval = setInterval(() => {
+                            countdown--;
+                            countdownSpan.textContent = countdown;
+                            if (countdown <= 0) {
+                                clearInterval(interval);
+                                window.location.href = '/dailyfix/customer/bookings.php';
+                            }
+                        }, 1000);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
             });
         });
     </script>

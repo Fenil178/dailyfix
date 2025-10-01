@@ -15,12 +15,17 @@ if (!isset($_GET['date'])) {
     exit;
 }
 
-// The customer can only request a worker's availability, not their own
-// The worker can request their own availability
+// Determine target worker ID based on role
 $target_worker_id = null;
-if ($role === 'customer' && isset($_GET['worker_id'])) {
+
+if ($role === 'admin' && isset($_GET['worker_id'])) {
+    // Admin can view any worker's availability
+    $target_worker_id = filter_var($_GET['worker_id'], FILTER_VALIDATE_INT);
+} else if ($role === 'customer' && isset($_GET['worker_id'])) {
+    // Customer can only request a worker's availability
     $target_worker_id = filter_var($_GET['worker_id'], FILTER_VALIDATE_INT);
 } else if ($role === 'worker') {
+    // Worker can request their own availability
     $target_worker_id = $userId;
 }
 
@@ -43,7 +48,7 @@ try {
     $stmt_booked->execute([$target_worker_id, $date]);
     $booked_slots_raw = $stmt_booked->fetchAll(PDO::FETCH_COLUMN, 0);
     
-    // FIXED: Convert UTC booked times to the local timezone (Asia/Kolkata)
+    // Convert UTC booked times to the local timezone (Asia/Kolkata)
     $booked_slots = array_map(function($time) {
         $utc_time = new DateTime($time, new DateTimeZone('UTC'));
         $utc_time->setTimezone(new DateTimeZone('Asia/Kolkata'));
