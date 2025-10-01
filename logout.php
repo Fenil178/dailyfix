@@ -1,13 +1,4 @@
 <?php
-/**
- * logout.php
- * Clears user session cookies and redirects to the login page.
- */
-
-// To log the user out, we set the expiration time of each cookie to a time in the past.
-// This tells the browser to immediately delete them.
-// The path "/" ensures the cookies are cleared for the entire site.
-
 // Clear the user ID cookie
 setcookie("encrypted_user_id", "", time() - 3600, "/");
 

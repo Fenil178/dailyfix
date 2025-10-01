@@ -1,15 +1,9 @@
 <?php
-/**
- * index.php
- * This file acts as a router for the DailyFix application.
- * It checks if a user is logged in and redirects them accordingly.
- */
-
 // Include the necessary encryption functions to read the session cookies.
 include_once __DIR__ . "/api/encryption.php";
 
 // Define the list of valid roles within your application.
-$allowed_roles = ['customer', 'worker'];
+$allowed_roles = ['customer', 'worker', 'admin'];
 $role = null;
 
 // Check if the encrypted role cookie exists.
@@ -26,10 +20,15 @@ if (isset($_COOKIE['encrypted_user_role'])) {
 // If the user has a valid, recognized role, they are considered logged in.
 if ($role) {
     // Redirect the logged-in user to their dashboard.
-    header("Location: dashboard.php");
+    // Admin users are redirected to the admin panel.
+    if ($role === 'admin') {
+        header("Location: /dailyfix/admin/index.php");
+    } else {
+        header("Location: /dailyfix/dashboard.php");
+    }
 } else {
-    // If the user is not logged in or has an invalid role, redirect them to the login page.
-    header("Location: login.php");
+    // If the user is not logged in or has an invalid role, redirect them to the new landing page.
+    header("Location: home.php");
 }
 
 // It's a best practice to call exit() after a header redirect to ensure no further code is executed.
