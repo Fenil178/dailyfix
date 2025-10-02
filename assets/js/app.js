@@ -111,6 +111,24 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  // Location Dropdown in Header
+  const locationToggle = document.getElementById('dashboard-location-toggle');
+  const locationDropdown = document.getElementById('location-dropdown');
+
+  if (locationToggle && locationDropdown) {
+      locationToggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          locationDropdown.classList.toggle('active');
+      });
+
+      // Close dropdown if clicked outside
+      window.addEventListener('click', (event) => {
+          if (!locationToggle.contains(event.target) && !locationDropdown.contains(event.target)) {
+              locationDropdown.classList.remove('active');
+          }
+      });
+  }
+
   // Intersection Observer for section fly-in animation
   const flySections = document.querySelectorAll(".section-fly");
   if (flySections.length > 0) {

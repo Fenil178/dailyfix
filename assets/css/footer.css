@@ -1,10 +1,7 @@
-/* =================================
-   Footer Styles
-   ================================= */
-   footer {
+footer {
     background-color: #ffffff; /* Light mode background color */
     color: #333; /* Light mode text color */
-    padding: 2rem 0;
+    padding: 0.5rem 0;
     text-align: center;
     border-top: 1px solid #e0e0e0;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -17,7 +14,7 @@
 }
 
 .social-icons {
-    margin-top: 1rem;
+    margin-top: 1rem 0;
 }
 
 .social-icons a {
