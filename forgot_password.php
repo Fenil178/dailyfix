@@ -97,7 +97,7 @@ $login_path = ($from === 'admin') ? '/dailyfix/admin/login.php' : '/dailyfix/log
                 <h1 class="form-title">Success!</h1>
                 <p class="form-subtitle">Your password has been reset successfully.</p>
                 <div class="back-link" style="margin-top: 2rem;">
-                    <a href="<?php echo htmlspecialchars($login_path); ?>" class="btn-submit" style="text-decoration: none;">Back to Login</a>
+                    <a href="<?php echo htmlspecialchars($login_path); ?>" style="text-decoration: none;">Back to Login</a>
                 </div>
             </div>
 

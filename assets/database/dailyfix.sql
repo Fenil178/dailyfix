@@ -3065,14 +3065,19 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N	unpaid	\N	\N	\N	\N	pending
 6	1	13	Work Details: Cleaning utensils and garden\nAddress: 37, Park Street, Surat	2025-08-22 09:15:00+00	confirmed	2025-08-21 12:46:12.708408+00	\N	unpaid	\N	\N	\N	\N	pending
 10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N	unpaid	\N	\N	\N	\N	pending
+20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	\N	\N	pending
+21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	\N	\N	pending
 15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	\N	\N	pending
 12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	\N	\N	pending
 13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	\N	\N	pending
+22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	\N	\N	pending
 16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	\N	\N	pending
 11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	\N	\N	pending
 17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	\N	\N	pending
 18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	\N	\N	pending
 19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	\N	\N	pending
+24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	\N	\N	pending
+23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	\N	\N	pending
 \.
 
 
@@ -3094,13 +3099,13 @@ COPY public.reviews (id, booking_id, reviewer_id, worker_id, rating, comment, cr
 COPY public.services (id, name, icon, slug) FROM stdin;
 2	Home Services	fas fa-tools	home-services
 3	Vehicle Services	fas fa-car	vehicle-services
-4	Cooling Services	fas fa-air-conditioner	cooling-services
-5	Refrigerator Services	fas fa-refrigerator	refrigerator-services
 6	Washing Machine Services	fas fa-washing-machine	washing-machine-services
-7	RO Services	fas fa-water	ro-services
 8	Elevator Services	fas fa-elevator	elevator-services
 1	Cleaning Services	fas fa-broom	cleaning-services
 11	Laundry Service	fa-solid fa-hands-bubbles	laundry-service
+5	Refrigerator Services	fa-solid fa-refrigerator	refrigerator-services
+4	Cooling Services	fa-solid fa-wind	cooling-services
+7	Water Purifier Services	fa-solid fa-droplet	water-purifier-services
 \.
 
 
@@ -3162,23 +3167,23 @@ COPY public.transactions (id, booking_id, customer_id, amount, transaction_statu
 --
 
 COPY public.users (id, full_name, email, password, phone, role, profile_image, account_status, created_at, latitude, longitude, address_line1, address_line2, city, pincode, state, otp_code, otp_expires_at) FROM stdin;
-3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	/dailyfix/worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 7	Swayam Shah	swayam@gmail.com	$2y$10$EKVBlEHgag1sAKIl0Cmp8Oor/rLjv7OgJnjKtHzTHffBhSinsknym	9623001236	customer	\N	active	2025-08-16 09:48:01.576568+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 8	Ankit Verma	ankit@gmail.com	$2y$10$h0lmMCHM3ae9qv342gWjZ.BJQ69as.7JvPDJa5QBWjb5YOl3oFRhq	8523001456	customer	\N	active	2025-08-16 09:52:37.721337+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 9	Sushant Rajput	sushant@gmail.com	$2y$10$oWRFuH4Qgcgu6HSAPcCx1uDvV/k8qYWMvqF2dSgZz41xQHApe.jrC	9852110036	customer	\N	active	2025-08-16 09:56:45.35922+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	\N	395006	Gujarat	\N	\N
+3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	/dailyfix/worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N
+5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+1	Fenil Pastagia	17fenill@gmail.com	$2y$10$BgFO9cG.InRUoCsVyWOzfuTfVBYbRLgXT7WMu.FDon.QBkGeXmVmS	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	\N	\N
 10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	/dailyfix/customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	/dailyfix/worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	/dailyfix/customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 13	Purvi Panchal 	purvi@gmail.com	$2y$10$zPrZvJJATh7yNwJg5Z2pD.tpusOEa3rnDin/8G2MjS8oU7ysY8ufa	8520014563	worker	/dailyfix/worker/uploads/68a06aed05d049.49404600.jpg	active	2025-08-16 11:26:33.93526+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N
-21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	\N	395006	Gujarat	\N	\N
-18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-1	Fenil Pastagia	17fenill@gmail.com	$2y$10$yWoYFsRIH68dhjGnuU3LJObWdFFEv3HF6VcwORtdlS8qT8dW7rnze	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	\N	\N
-20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	/dailyfix/uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 \.
 
 
@@ -3199,10 +3204,7 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 372	21	2025-10-04	19:00:00	2025-09-30 15:47:07.995331+00
 374	21	2025-09-30	20:00:00	2025-09-30 15:47:07.977515+00
 378	21	2025-10-04	20:00:00	2025-09-30 15:47:07.995331+00
-316	4	2025-10-03	09:00:00	2025-09-28 14:06:24.513312+00
-318	4	2025-10-03	11:00:00	2025-09-28 14:06:24.513312+00
 322	4	2025-09-28	09:00:00	2025-09-28 14:06:24.54987+00
-323	4	2025-10-03	20:00:00	2025-09-28 14:06:24.513312+00
 327	4	2025-09-28	11:00:00	2025-09-28 14:06:24.54987+00
 330	4	2025-09-28	20:00:00	2025-09-28 14:06:24.54987+00
 338	4	2025-09-30	09:00:00	2025-09-28 14:08:17.314321+00
@@ -3217,6 +3219,13 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 155	4	2025-09-23	09:00:00	2025-09-20 12:34:36.82439+00
 156	4	2025-09-25	10:00:00	2025-09-20 12:34:36.803045+00
 157	4	2025-09-20	10:00:00	2025-09-20 12:34:36.809386+00
+400	4	2025-10-02	09:00:00	2025-10-01 15:36:29.215619+00
+402	4	2025-10-03	09:00:00	2025-10-01 15:36:29.221974+00
+401	4	2025-10-01	09:00:00	2025-10-01 15:36:29.19684+00
+404	4	2025-10-03	11:00:00	2025-10-01 15:36:29.221974+00
+405	4	2025-10-01	11:00:00	2025-10-01 15:36:29.19684+00
+406	4	2025-10-02	11:00:00	2025-10-01 15:36:29.215619+00
+408	4	2025-10-04	09:00:00	2025-10-01 15:36:29.252714+00
 158	4	2025-09-20	11:00:00	2025-09-20 12:34:36.809386+00
 159	4	2025-09-23	10:00:00	2025-09-20 12:34:36.82439+00
 161	4	2025-09-25	11:00:00	2025-09-20 12:34:36.803045+00
@@ -3230,6 +3239,15 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 168	4	2025-09-26	09:00:00	2025-09-20 12:34:37.140077+00
 169	4	2025-09-26	10:00:00	2025-09-20 12:34:37.140077+00
 170	4	2025-09-26	11:00:00	2025-09-20 12:34:37.140077+00
+410	4	2025-10-01	17:00:00	2025-10-01 15:36:29.19684+00
+411	4	2025-10-03	17:00:00	2025-10-01 15:36:29.221974+00
+412	4	2025-10-02	17:00:00	2025-10-01 15:36:29.215619+00
+414	4	2025-10-01	20:00:00	2025-10-01 15:36:29.19684+00
+415	4	2025-10-04	11:00:00	2025-10-01 15:36:29.252714+00
+416	4	2025-10-03	20:00:00	2025-10-01 15:36:29.221974+00
+418	4	2025-10-02	20:00:00	2025-10-01 15:36:29.215619+00
+420	4	2025-10-04	17:00:00	2025-10-01 15:36:29.252714+00
+422	4	2025-10-04	20:00:00	2025-10-01 15:36:29.252714+00
 221	21	2025-09-29	10:00:00	2025-09-28 13:18:07.367208+00
 225	21	2025-09-29	11:00:00	2025-09-28 13:18:07.367208+00
 227	21	2025-09-28	10:00:00	2025-09-28 13:18:07.392457+00
@@ -3244,15 +3262,6 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 353	21	2025-10-05	10:00:00	2025-09-30 15:47:08.001006+00
 360	21	2025-10-05	11:00:00	2025-09-30 15:47:08.001006+00
 365	21	2025-10-05	17:00:00	2025-09-30 15:47:08.001006+00
-313	4	2025-10-01	09:00:00	2025-09-28 14:06:24.512923+00
-315	4	2025-10-01	11:00:00	2025-09-28 14:06:24.512923+00
-317	4	2025-10-02	09:00:00	2025-09-28 14:06:24.51292+00
-319	4	2025-10-01	20:00:00	2025-09-28 14:06:24.512923+00
-324	4	2025-10-02	11:00:00	2025-09-28 14:06:24.51292+00
-328	4	2025-10-02	20:00:00	2025-09-28 14:06:24.51292+00
-331	4	2025-10-04	09:00:00	2025-09-28 14:06:25.009092+00
-332	4	2025-10-04	11:00:00	2025-09-28 14:06:25.009092+00
-333	4	2025-10-04	20:00:00	2025-09-28 14:06:25.009092+00
 342	4	2025-09-29	09:00:00	2025-09-29 15:04:30.547022+00
 343	4	2025-09-29	11:00:00	2025-09-29 15:04:30.547022+00
 344	4	2025-09-29	12:00:00	2025-09-29 15:04:30.547022+00
@@ -3267,6 +3276,14 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 392	21	2025-10-06	18:00:00	2025-09-30 15:47:15.41401+00
 393	21	2025-10-06	19:00:00	2025-09-30 15:47:15.41401+00
 394	21	2025-10-06	20:00:00	2025-09-30 15:47:15.41401+00
+403	4	2025-10-06	09:00:00	2025-10-01 15:36:29.22781+00
+409	4	2025-10-06	11:00:00	2025-10-01 15:36:29.22781+00
+417	4	2025-10-06	17:00:00	2025-10-01 15:36:29.22781+00
+421	4	2025-10-06	20:00:00	2025-10-01 15:36:29.22781+00
+424	4	2025-10-07	09:00:00	2025-10-01 15:36:29.617553+00
+425	4	2025-10-07	11:00:00	2025-10-01 15:36:29.617553+00
+426	4	2025-10-07	17:00:00	2025-10-01 15:36:29.617553+00
+427	4	2025-10-07	20:00:00	2025-10-01 15:36:29.617553+00
 252	21	2025-09-28	20:00:00	2025-09-28 13:18:07.392457+00
 348	21	2025-10-01	10:00:00	2025-09-30 15:47:07.99174+00
 355	21	2025-10-01	11:00:00	2025-09-30 15:47:07.99174+00
@@ -3285,6 +3302,10 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 397	21	2025-10-03	17:00:00	2025-09-30 16:04:57.38118+00
 398	21	2025-10-03	18:00:00	2025-09-30 16:04:57.38118+00
 399	21	2025-10-03	19:00:00	2025-09-30 16:04:57.38118+00
+407	4	2025-10-05	09:00:00	2025-10-01 15:36:29.242878+00
+413	4	2025-10-05	11:00:00	2025-10-01 15:36:29.242878+00
+419	4	2025-10-05	17:00:00	2025-10-01 15:36:29.242878+00
+423	4	2025-10-05	20:00:00	2025-10-01 15:36:29.242878+00
 \.
 
 
@@ -3508,7 +3529,7 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 19, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 24, true);
 
 
 --
@@ -3557,7 +3578,7 @@ SELECT pg_catalog.setval('public.users_id_seq', 21, true);
 -- Name: worker_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_availability_id_seq', 399, true);
+SELECT pg_catalog.setval('public.worker_availability_id_seq', 427, true);
 
 
 --
