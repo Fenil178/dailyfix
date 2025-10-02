@@ -44,7 +44,7 @@ try {
     $slots = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
 
     // Fetch booked time slots for the specific worker and date
-    $stmt_booked = $conn->prepare("SELECT booking_time FROM public.bookings WHERE worker_id = ? AND booking_time::date = ? AND status IN ('confirmed', 'in_progress')");
+    $stmt_booked = $conn->prepare("SELECT booking_time FROM public.bookings WHERE worker_id = ? AND booking_time::date = ? AND status IN ('confirmed', 'in_progress' , 'pending')");
     $stmt_booked->execute([$target_worker_id, $date]);
     $booked_slots_raw = $stmt_booked->fetchAll(PDO::FETCH_COLUMN, 0);
     

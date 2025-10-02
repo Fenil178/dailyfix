@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const timeSlotContainer = document.getElementById('time-slot-container');
     const selectedDateText = document.getElementById('selected-date-text');
     const slotsGrid = document.getElementById('slots-grid');
-    
+
     const saveScopeToggle = document.getElementById('save-scope-toggle');
     const toggleText = document.getElementById('toggle-text');
     const saveFinalBtn = document.getElementById('save-final-btn');
@@ -16,13 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!availabilityTabLink || !calendarDaysContainer) {
         return;
     }
-    
+
     // This function will run when the "My Availability" tab is clicked or is active on page load
     function initializeAvailabilityTab() {
         if (initialLoadComplete) return; // Prevent re-running the setup
 
         generateCalendar();
-        
+
         const firstDay = document.querySelector('.calendar-day');
         if (firstDay) {
             selectedDate = firstDay.dataset.date;
@@ -69,9 +69,9 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function fetchAndPopulateAvailability(date) {
         // First, try to fetch availability for the selected date
-        fetchAvailability(date).then(slots => {
-            if (slots.length > 0) {
-                populateTimeSlots(slots);
+        fetchAvailability(date).then(data => {
+            if (data.status === 'success' && (data.slots.length > 0 || data.booked.length > 0)) {
+                populateTimeSlots(data);
             } else {
                 // If no slots exist for the current day, fetch from the previous day
                 const selectedDay = new Date(date + 'T00:00:00');
@@ -82,11 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Only fetch from previous day if it's not before the calendar's start date
                 const firstCalendarDay = document.querySelector('.calendar-day').dataset.date;
                 if (previousDateString >= firstCalendarDay) {
-                     fetchAvailability(previousDateString).then(prevSlots => {
-                        populateTimeSlots(prevSlots);
+                     fetchAvailability(previousDateString).then(prevData => {
+                        populateTimeSlots(prevData);
                     });
                 } else {
-                    populateTimeSlots([]); 
+                    populateTimeSlots({ slots: [], booked: [] });
                 }
             }
         });
@@ -95,43 +95,49 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * Handles the actual fetch request to the backend API.
      * @param {string} date - The date in 'YYYY-MM-DD' format.
-     * @returns {Promise<string[]>} - A promise that resolves with an array of time slots.
+     * @returns {Promise<object>} - A promise that resolves with the full data object from the API.
      */
     function fetchAvailability(date) {
         return fetch(`/dailyfix/api/get_availability.php?date=${date}`)
             .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Filter out booked slots, but also handle the booked array being empty
-                    const bookedSet = new Set(data.booked || []);
-                    return (data.slots || []).filter(slot => !bookedSet.has(slot));
-                } else {
-                    console.error('Error fetching availability:', data.message);
-                    return [];
-                }
-            })
             .catch(error => {
                 console.error('Fetch network error:', error);
-                return [];
+                return { status: 'error', message: 'Network error', slots: [], booked: [] };
             });
     }
 
-    function populateTimeSlots(savedSlots) {
-        slotsGrid.innerHTML = '';
-        const allSlots = generateAllTimeSlots();
+    function populateTimeSlots(data) {
+    const savedSlots = new Set(data.slots || []);
+    const bookedSlots = new Set(data.booked || []);
+    slotsGrid.innerHTML = '';
+    const allSlots = generateAllTimeSlots();
 
-        allSlots.forEach(slotElement => {
-            if (savedSlots.includes(slotElement.dataset.time)) {
+    allSlots.forEach(slotElement => {
+        const slotTime = slotElement.dataset.time;
+
+        if (bookedSlots.has(slotTime)) {
+            slotElement.classList.add('unavailable', 'floating-label');
+            const timeText = slotElement.textContent; 
+            
+            // Create the new floating label structure
+            slotElement.innerHTML = `
+                <span class="slot-label">Booked</span>
+                <span class="slot-content">${timeText}</span>
+            `;
+        } else {
+            // This part remains the same for available slots
+            if (savedSlots.has(slotTime)) {
                 slotElement.classList.add('selected');
             }
             slotElement.addEventListener('click', () => {
                 slotElement.classList.toggle('selected');
             });
-            slotsGrid.appendChild(slotElement);
-        });
+        }
+        slotsGrid.appendChild(slotElement);
+    });
 
-        timeSlotContainer.style.display = 'block';
-    }
+    timeSlotContainer.style.display = 'block';
+}
 
     function generateAllTimeSlots() {
         const slots = [];
@@ -139,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const endHour = 22; // 10 PM
 
         for (let hour = startHour; hour <= endHour; hour++) {
-            const time24hr = `${String(hour).padStart(2, '0')}:00:00`; 
+            const time24hr = `${String(hour).padStart(2, '0')}:00:00`;
             const slotElement = document.createElement('div');
             slotElement.classList.add('time-slot');
             slotElement.dataset.time = time24hr;
@@ -148,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return slots;
     }
-    
+
     function formatTime12hr(time24hr) {
         const [hourStr, minuteStr] = time24hr.split(':');
         const hour = parseInt(hourStr, 10);
@@ -168,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const selectedSlots = Array.from(document.querySelectorAll('.time-slot.selected')).map(el => el.dataset.time);
-        
+
         // This handles the "Save for all" toggle correctly
         const datesToSave = saveScopeToggle.checked
             ? Array.from(document.querySelectorAll('.calendar-day')).map(el => el.dataset.date)
