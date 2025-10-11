@@ -26,7 +26,7 @@
 .details-hero-header h1 {
     margin: 0;
     font-size: 2rem;
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 
 /* Main Two-Column Grid Layout */
@@ -76,7 +76,7 @@
 .timeline-content .label {
     font-weight: 600;
     margin-bottom: 0.25rem;
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 .timeline-content .value, .timeline-content .name {
     color: var(--text-color-light);
@@ -106,7 +106,7 @@
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.75rem;
     font-size: 1.1rem;
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 .participant-profile {
     display: flex;

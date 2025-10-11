@@ -44,13 +44,18 @@
 
 .tab-nav {
     display: flex;
+    gap: 0; /* Remove gap since we'll use padding */
     border-bottom: 1px solid #ddd;
     margin-bottom: 0;
 }
-body.dark-mode .tab-nav { border-color: #333; }
+
+body.dark-mode .tab-nav { 
+    border-color: #333; 
+}
 
 .tab-link {
     padding: 1rem 1.5rem;
+    padding-bottom: calc(1rem - 3px); /* Adjust for the underline */
     cursor: pointer;
     background: none;
     border: none;
@@ -58,12 +63,38 @@ body.dark-mode .tab-nav { border-color: #333; }
     font-weight: 500;
     color: var(--text-color-light);
     position: relative;
-    top: 1px;
+    transition: color 0.3s ease;
+    border-bottom: 3px solid transparent; /* Add space for the animated underline */
 }
 
+/* Create the animated underline using ::after pseudo-element */
+.tab-link::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; /* Position it at the bottom edge */
+    left: 0;
+    width: 0; /* Initially hidden */
+    height: 3px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+/* Hover effect - show underline and change text color */
+.tab-link:hover {
+    color: var(--primary-color);
+}
+
+.tab-link:hover::after {
+    width: 100%; /* Expand underline on hover */
+}
+
+/* Active state - keep underline visible and text colored */
 .tab-link.active {
     color: var(--primary-color);
-    border-bottom: 3px solid var(--primary-color);
+}
+
+.tab-link.active::after {
+    display: none; /* Keep underline visible for active tab */
 }
 
 .tab-content {
@@ -121,7 +152,7 @@ body.dark-mode .form-section h3 {
     display: block;
     font-weight: 500;
     margin-bottom: 0.5rem;
-    color: var(--text-color-dark); 
+    color: var(--text-color); /* CHANGED from --text-color-dark */
 }
 
 .form-group input, .form-group textarea, .form-group select {
@@ -130,7 +161,7 @@ body.dark-mode .form-section h3 {
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: var(--background-color-light);
-    color: var(--text-color-dark);
+    color: var(--text-color);
     box-sizing: border-box;
     font-family: 'Poppins';
 }

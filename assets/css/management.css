@@ -128,7 +128,7 @@ body.dark-mode .job-card-header { border-color: #333; }
     line-height: 1.6;
 }
 .job-card-body strong {
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 
 .job-card-actions {
