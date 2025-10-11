@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </div>
                                         <div class="detail-item">
                                             <strong>Final Cost</strong>
-                                            <span>${data.final_cost ? '$' + parseFloat(data.final_cost).toFixed(2) : 'Not Set'}</span>
+                                            <span>${data.final_cost ? '<i class="fa-solid fa-indian-rupee-sign"></i>' + parseFloat(data.final_cost).toFixed(2) : 'Not Set'}</span>
                                         </div>
                                     </div>
                                 </div>

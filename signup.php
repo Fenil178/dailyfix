@@ -23,8 +23,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $worker_key = isset($_POST['worker_key']) ? trim(strtoupper(str_replace('-', '', $_POST['worker_key']))) : null;
     $bio = $_POST['bio'] ?? null;
     $experience_years = $_POST['experience_years'] ?? null;
-    $hourly_rate = $_POST['hourly_rate'] ?? null;
     $selected_services = $_POST['services'] ?? [];
+    $item_prices = $_POST['prices'] ?? []; // Array of prices for sub-services
     $selected_sub_service_items = $_POST['sub_service_items'] ?? [];
 
     // --- Location Fields ---
@@ -53,15 +53,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($profile_image && $profile_image['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . "/uploads/profile_images/";
             if (!is_dir($uploadDir)) {
-                // FIX: Changed permissions from 0777 to 0755 for better security.
                 mkdir($uploadDir, 0755, true);
             }
             $fileExtension = pathinfo($profile_image['name'], PATHINFO_EXTENSION);
             $newFileName = uniqid() . '.' . $fileExtension;
-            $profile_imagePath = "/dailyfix/uploads/profile_images/" . $newFileName;
+            $profile_imagePath = "uploads/profile_images/" . $newFileName;
             
-            // FIX: Added explicit error handling for move_uploaded_file failure.
-            if (!move_uploaded_file($profile_image['tmp_name'], __DIR__ . "/uploads/profile_images/" . $newFileName)) {
+            if (!move_uploaded_file($profile_image['tmp_name'], $uploadDir . $newFileName)) {
                 $conn->rollBack();
                 echo json_encode(['status' => 'error', 'message' => 'Failed to upload profile image. Please check server permissions.']);
                 exit;
@@ -97,14 +95,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($role === 'worker') {
             // Insert worker profile details
-            $stmt_profile = $conn->prepare("INSERT INTO public.worker_profiles (user_id, bio, experience_years, hourly_rate) VALUES (?, ?, ?, ?)");
-            $stmt_profile->execute([$new_user_id, $bio, $experience_years, $hourly_rate]);
+            $stmt_profile = $conn->prepare("INSERT INTO public.worker_profiles (user_id, bio, experience_years) VALUES (?, ?, ?)");
+            $stmt_profile->execute([$new_user_id, $bio, $experience_years]);
             
             // Mark the key as used
             $stmt_key_update = $conn->prepare("UPDATE public.worker_keys SET is_used = true, used_by_worker_id = ? WHERE access_key = ?");
             $stmt_key_update->execute([$new_user_id, $worker_key]);
 
-            // Link services to worker (if any)
+            // Link services to worker
             if (!empty($selected_services)) {
                 $sql_worker_services = "INSERT INTO public.worker_services (user_id, sub_service_id) VALUES (?, ?)";
                 $stmt_services = $conn->prepare($sql_worker_services);
@@ -113,12 +111,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
             
-            // Link sub-service items to worker (if any)
+            // Link sub-service items to worker with their prices
             if (!empty($selected_sub_service_items)) {
-                $sql_worker_items = "INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id) VALUES (?, ?)";
+                $sql_worker_items = "INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id, price) VALUES (?, ?, ?)";
                 $stmt_items = $conn->prepare($sql_worker_items);
                 foreach ($selected_sub_service_items as $item_id) {
-                    $stmt_items->execute([$new_user_id, $item_id]);
+                    $price = $item_prices[$item_id] ?? 0.00;
+                    $stmt_items->execute([$new_user_id, $item_id, $price]);
                 }
             }
         }
@@ -145,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Data for State and City Dropdowns
-$indian_states_cities = [ "Gujarat" => ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar"], /* ... other states ... */ ];
+$indian_states_cities = [ "Gujarat" => ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar"]];
 $states = array_keys($indian_states_cities);
 sort($states);
 
@@ -171,7 +170,7 @@ try {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link href="/dailyfix/assets/css/signup.css" rel="stylesheet">
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 </head>
@@ -180,9 +179,7 @@ try {
         <div class="login-card">
             <div class="logo-container" id="main-logo-container">
                 <div class="logo">
-                    <div class="logo-inner">
-                        <img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo">
-                    </div>
+                    <div class="logo-inner"><img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo"></div>
                 </div>
                 <h1 class="login-title">Create an Account</h1>
                 <p class="login-subtitle">Join DailyFix to manage your services with ease.</p>
@@ -198,7 +195,8 @@ try {
                     <li class="step-indicator-item" data-step-target="step-main-services"><span>4</span>Services</li>
                     <li class="step-indicator-item" data-step-target="step-sub-services"><span>5</span>Sub-Services</li>
                     <li class="step-indicator-item" data-step-target="step-sub-service-items"><span>6</span>Sub-Items</li>
-                    <li class="step-indicator-item" data-step-target="step-location"><span>7</span>Location</li>
+                    <li class="step-indicator-item" data-step-target="step-set-prices"><span>7</span>Set Prices</li>
+                    <li class="step-indicator-item" data-step-target="step-location"><span>8</span>Location</li>
                 </ul>
             </div>
             
@@ -291,7 +289,7 @@ try {
                 </div>
 
                 <div class="step" id="step-register-part2">
-                    <button type="button" class="back-btn" data-target="step-register-part1"><i class="fas fa-arrow-left"></i> Back</button>
+                     <button type="button" class="back-btn" data-target="step-register-part1"><i class="fas fa-arrow-left"></i> Back</button>
                     <h2 class="step-title">Your Professional Details</h2>
                     <p class="step-subtitle">Tell us more about your expertise to help customers find you.</p>
                     
@@ -300,16 +298,10 @@ try {
                         <textarea class="form-control" name="bio" id="bio" rows="3" placeholder="Describe your skills and services..." required></textarea>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <div class="form-group">
                                 <label class="form-label" for="experience_years">Years of Experience</label>
                                 <input type="number" class="form-control" name="experience_years" id="experience_years" placeholder="e.g., 5" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="hourly_rate">Hourly Rate (₹)</label>
-                                <input type="number" step="0.01" class="form-control" name="hourly_rate" id="hourly_rate" placeholder="e.g., 25.50" required>
                             </div>
                         </div>
                     </div>
@@ -344,11 +336,19 @@ try {
                     <h2 class="step-title">Service Items</h2>
                     <p class="step-subtitle">Select the specific tasks you are able to perform.</p>
                     <div id="sub-service-items-container"></div>
-                     <button type="button" class="btn-login next-btn mt-3" data-target="step-location">Next</button>
+                     <button type="button" class="btn-login next-btn mt-3" data-target="step-set-prices">Next</button>
+                </div>
+
+                <div class="step" id="step-set-prices">
+                    <button type="button" class="back-btn" data-target="step-sub-service-items"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 class="step-title">Set Your Prices</h2>
+                    <p class="step-subtitle">Set a price for each sub-service you offer.</p>
+                    <div id="price-setting-container"></div>
+                    <button type="button" class="btn-login next-btn mt-3" data-target="step-location">Next</button>
                 </div>
 
                 <div class="step" id="step-location">
-                    <button type="button" class="back-btn" id="location-back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button type="button" class="back-btn" id="location-back-btn" data-target="step-set-prices"><i class="fas fa-arrow-left"></i> Back</button>
                     <h2 class="step-title">Set Your Location</h2>
                     <p class="step-subtitle">Drag the marker or type your pincode to begin.</p>
                     
@@ -417,7 +417,7 @@ try {
         const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/dailyfix/assets/js/signup.js"></script>
 </body>
 </html>

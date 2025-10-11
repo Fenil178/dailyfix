@@ -2,7 +2,7 @@
 include_once __DIR__ . '/includes/header.php';
 include_once __DIR__ . '/../api/connect.php';
 
-// NEW: Handle status messages
+// Handle status messages
 $status_msg = '';
 if (isset($_GET['status'])) {
     switch ($_GET['status']) {
@@ -48,56 +48,73 @@ try {
         <h2>All Bookings</h2>
     </div>
     <div class="card-content">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Customer</th>
-                    <th>Worker</th>
-                    <th>Booking Time</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($bookings)): ?>
-                    <tr><td colspan="6" style="text-align: center;">No bookings found.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($bookings as $booking): ?>
+        <div style="overflow-x: auto;"> <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Worker</th>
+                        <th>Booking Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($bookings)): ?>
                         <tr>
-                            <td>#<?php echo htmlspecialchars($booking['id']); ?></td>
-                            <td><?php echo htmlspecialchars($booking['customer_name']); ?></td>
-                            <td><?php echo htmlspecialchars($booking['worker_name']); ?></td>
-                            <td>
-                                <?php 
-                                    // FIXED: Create DateTime object with UTC timezone and then set it to IST for display
-                                    $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
-                                    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
-                                    echo htmlspecialchars($bookingTime->format("D, M d, Y - g:i A")); 
-                                ?>
-                            </td>
-                            <td>
-                                <?php $status_class = strtolower(str_replace(' ', '_', $booking['status'])); ?>
-                                <span class="status-badge status-<?php echo $status_class; ?>"><?php echo htmlspecialchars($booking['status']); ?></span>
-                            </td>
-                            <td class="action-buttons">
-                                <a href="#" class="view-details-btn" data-booking-id="<?php echo $booking['id']; ?>" title="View Details"><i class="fas fa-eye"></i></a>
-                                <?php if ($booking['status'] !== 'completed' && $booking['status'] !== 'cancelled'): ?>
-                                <a href="actions/booking_actions.php?action=cancel&booking_id=<?php echo $booking['id']; ?>" 
-                                   class="action-trigger"
-                                   data-modal-title="Confirm Cancellation"
-                                   data-modal-description="Are you sure you want to cancel this booking?"
-                                   data-modal-icon="fas fa-times-circle"
-                                   data-modal-theme="modal-danger"
-                                   data-modal-confirm-text="Yes, Cancel"
-                                   title="Cancel Booking"><i class="fas fa-times-circle"></i></a>
-                                <?php endif; ?>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <h3>No Bookings Found</h3>
+                                    <p>There are currently no bookings in the system. New bookings will appear here as they are made.</p>
+                                </div>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    <?php else: ?>
+                        <?php foreach ($bookings as $booking): ?>
+                            <tr>
+                                <td>#<?php echo htmlspecialchars($booking['id']); ?></td>
+                                <td><?php echo htmlspecialchars($booking['customer_name']); ?></td>
+                                <td><?php echo htmlspecialchars($booking['worker_name']); ?></td>
+                                <td>
+                                    <?php 
+                                        $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
+                                        $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                        echo htmlspecialchars($bookingTime->format("D, M d, Y - g:i A")); 
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php 
+                                        $status_class = strtolower(str_replace(' ', '_', $booking['status']));
+                                        $status_text = htmlspecialchars(str_replace('_', ' ', $booking['status']));
+                                    ?>
+                                    <span class="status-badge status-<?php echo $status_class; ?>"><?php echo $status_text; ?></span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn view-details-btn" title="View Details" data-booking-id="<?php echo $booking['id']; ?>">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <?php if ($booking['status'] !== 'completed' && $booking['status'] !== 'cancelled'): ?>
+                                        <a href="actions/booking_actions.php?action=cancel&booking_id=<?php echo $booking['id']; ?>" 
+                                        class="action-btn cancel-btn action-trigger"
+                                        data-modal-title="Confirm Cancellation"
+                                        data-modal-description="Are you sure you want to cancel this booking? This action cannot be undone."
+                                        data-modal-icon="fas fa-times-circle"
+                                        data-modal-theme="modal-danger"
+                                        data-modal-confirm-text="Yes, Cancel Booking"
+                                        title="Cancel Booking">
+                                        <i class="fas fa-times-circle"></i>
+                                        </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -108,7 +125,7 @@ try {
             <button class="close-button" aria-label="Close modal"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <p style="text-align: center; color: var(--text-secondary);"><i class="fas fa-spinner fa-spin"></i> Loading details...</p>
+            <p style="text-align: center; color: var(--text-secondary); padding: 3rem;"><i class="fas fa-spinner fa-spin"></i> Loading details...</p>
         </div>
     </div>
 </div>
@@ -125,6 +142,5 @@ try {
         </div>
     </div>
 </div>
-<style>.booking-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }</style>
 
 <?php include_once __DIR__ . '/includes/footer.php'; ?>

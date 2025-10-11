@@ -22,7 +22,7 @@ if (isset($_GET['success'])) {
             $successMessage = 'Location updated successfully!';
             break;
         case 'services_updated':
-            $successMessage = 'Services updated successfully!';
+            $successMessage = 'Services and prices updated successfully!';
             break;
         case 'availability_updated': // Added this case
             $successMessage = 'Availability updated successfully!';
@@ -38,6 +38,7 @@ $subServices = [];
 $subServiceItems = [];
 $workerServiceIds = [];
 $workerSubServiceItemIds = [];
+$workerItemPrices = []; // NEW: Array to hold existing item prices
 
 try {
     // Handle form submissions
@@ -79,16 +80,23 @@ try {
         $subServices = $conn->query("SELECT id, service_id, name, icon FROM public.sub_services ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
 
         // Fetch all sub-service items
-        $subServiceItems = $conn->query("SELECT id, sub_service_id, name FROM public.sub_service_items ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+        $subServiceItems = $conn->query("SELECT id, sub_service_id, name, icon FROM public.sub_service_items ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
 
-        // Fetch worker's selected sub-services and items
+        // Fetch worker's selected sub-services
         $stmt = $conn->prepare("SELECT sub_service_id FROM public.worker_services WHERE user_id = ?");
         $stmt->execute([$userId]);
         $workerServiceIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        $stmt = $conn->prepare("SELECT sub_service_item_id FROM public.worker_sub_service_items WHERE user_id = ?");
+        // Fetch worker's selected sub-service items AND their custom price
+        // MODIFIED QUERY: Fetch price along with item ID
+        $stmt = $conn->prepare("SELECT sub_service_item_id, price FROM public.worker_sub_service_items WHERE user_id = ?");
         $stmt->execute([$userId]);
-        $workerSubServiceItemIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        $itemResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $workerSubServiceItemIds = array_column($itemResults, 'sub_service_item_id');
+
+        // NEW: Map item IDs to their prices for easy lookup in JS
+        $workerItemPrices = array_column($itemResults, 'price', 'sub_service_item_id');
     }
 
 } catch (PDOException $e) {
@@ -154,58 +162,6 @@ sort($states);
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/worker_availability.js"></script>
-    <style>
-        /* Additional CSS for the multi-step service form */
-        .step { display: none; }
-        .step.active { display: block; }
-        .services-category-group { margin-bottom: 1.5rem; }
-        .service-category-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 1rem;
-        }
-        .sub-service-group { margin-left: 1.5rem; }
-        .sub-service-items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        .form-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 2rem;
-        }
-        .form-actions .btn {
-            width: 48%;
-        }
-        .services-list-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 1rem;
-        }
-
-        /* Improved Button Styles */
-        .btn-primary.disabled,
-        .btn-primary:disabled {
-            background-color: #a0a0a0;
-            cursor: not-allowed;
-            color: #e0e0e0;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .btn-primary.disabled:hover,
-        .btn-primary:disabled:hover {
-            background-color: #a0a0a0;
-            color: #e0e0e0;
-        }
-    </style>
 </head>
 
 <body>
@@ -363,12 +319,14 @@ sort($states);
                         </div>
 
                         <div id="service-step-3" class="step">
-                            <h4>3. Service Items</h4>
-                            <p>Select the specific tasks you can perform.</p>
-                            <div id="sub-service-items-container" class="services-list-container"></div>
+                            <h4>3. Service Items & Pricing</h4>
+                            <p>Select the specific tasks you can perform and set a default price for each.</p>
+                            
+                            <div id="sub-service-items-and-price-container"></div>
+                            
                             <div class="form-actions">
                                 <button type="button" class="btn btn-secondary back-btn" data-prev-step="service-step-2">Back</button>
-                                <button type="submit" class="btn btn-primary">Save Selections</button>
+                                <button type="submit" class="btn btn-primary">Save Services & Prices</button>
                             </div>
                         </div>
                     </form>
@@ -448,6 +406,17 @@ sort($states);
         const allSubServiceItems = <?php echo json_encode($subServiceItems); ?>;
         const workerServiceIds = <?php echo json_encode($workerServiceIds); ?>.map(id => parseInt(id));
         const workerSubServiceItemIds = <?php echo json_encode($workerSubServiceItemIds); ?>.map(id => parseInt(id));
+        const workerItemPrices = <?php echo json_encode($workerItemPrices); ?>; // NEW: Existing prices
+        
+        // Helper function to find a sub-service by ID from the global array
+        function getSubServiceById(id) {
+            return allSubServices.find(sub => sub.id === id);
+        }
+        
+        // Helper function to find an item by ID from the global array
+        function getServiceItemById(id) {
+            return allSubServiceItems.find(item => item.id === id);
+        }
 
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -480,6 +449,9 @@ sort($states);
             const nextBtns = servicesTab ? servicesTab.querySelectorAll('.next-btn') : [];
             const backBtns = servicesTab ? servicesTab.querySelectorAll('.back-btn') : [];
             const mainServicesContainer = servicesTab ? document.getElementById('main-services-container') : null;
+            const subServicesContainer = servicesTab ? document.getElementById('sub-services-container') : null;
+            const subServiceItemsAndPriceContainer = servicesTab ? document.getElementById('sub-service-items-and-price-container') : null;
+
 
             // Map variables
             let map, marker;
@@ -495,25 +467,29 @@ sort($states);
 
             function populateMainServices() {
                 if (!mainServicesContainer) return;
+                // Use our new, non-conflicting grid class
+                mainServicesContainer.className = 'service-selection-grid';
                 mainServicesContainer.innerHTML = '';
                 
-                // Get the main service IDs corresponding to the worker's selected sub-services
                 const workerMainServiceIds = [...new Set(allSubServices
                     .filter(sub => workerServiceIds.includes(sub.id))
                     .map(sub => sub.service_id))];
 
                 allServices.forEach(service => {
                     const isChecked = workerMainServiceIds.includes(service.id) ? 'checked' : '';
+                    // Generate HTML using the new card structure
                     const serviceHtml = `
-                        <div class="checkbox-item">
+                        <div class="service-card-selectable">
                             <input type="checkbox" id="main-service-${service.id}" name="main_services[]" value="${service.id}" ${isChecked}>
-                            <label for="main-service-${service.id}"><i class="${service.icon}"></i> ${service.name}</label>
+                            <label for="main-service-${service.id}">
+                                <i class="${service.icon}"></i>
+                                <span>${service.name}</span>
+                            </label>
                         </div>
                     `;
                     mainServicesContainer.innerHTML += serviceHtml;
                 });
                 
-                // Attach event listener and update button state
                 const checkboxes = mainServicesContainer.querySelectorAll('input[type="checkbox"]');
                 const nextBtn = serviceStep1.querySelector('.next-btn');
                 const updateButtonState = () => {
@@ -527,7 +503,6 @@ sort($states);
 
             function populateSubServices() {
                 const selectedServiceIds = Array.from(serviceStep1.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
-                const subServicesContainer = document.getElementById('sub-services-container');
                 subServicesContainer.innerHTML = '';
 
                 let content = '';
@@ -538,14 +513,17 @@ sort($states);
                             content += `
                                 <div class="services-category-group">
                                     <h4 class="service-category-title"><i class="${service.icon}"></i> ${service.name}</h4>
-                                    <div class="services-checkbox-grid">
+                                    <div class="service-selection-grid">
                             `;
                             relatedSubServices.forEach(sub => {
                                 const isChecked = workerServiceIds.includes(sub.id) ? 'checked' : '';
                                 content += `
-                                    <div class="checkbox-item">
+                                    <div class="service-card-selectable">
                                         <input type="checkbox" id="sub-service-${sub.id}" name="services[]" value="${sub.id}" ${isChecked}>
-                                        <label for="sub-service-${sub.id}"><i class="${sub.icon}"></i> ${sub.name}</label>
+                                        <label for="sub-service-${sub.id}">
+                                            <i class="${sub.icon}"></i>
+                                            <span>${sub.name}</span>
+                                        </label>
                                     </div>
                                 `;
                             });
@@ -555,7 +533,6 @@ sort($states);
                 });
                 subServicesContainer.innerHTML = content || '<p>No sub-services found for selected categories.</p>';
                  
-                // Update button state for step 2
                 const checkboxes = subServicesContainer.querySelectorAll('input[type="checkbox"]');
                 const nextBtn = serviceStep2.querySelector('.next-btn');
                 const updateButtonState = () => {
@@ -567,36 +544,83 @@ sort($states);
                 updateButtonState();
             }
 
-            function populateSubServiceItems() {
+            /**
+             * Renders the final step, showing service items AND collecting prices.
+             */
+            function populateSubServiceItemsAndPrice() {
                 const selectedSubServiceIds = Array.from(serviceStep2.querySelectorAll('input[name="services[]"]:checked')).map(cb => parseInt(cb.value));
-                const subServiceItemsContainer = document.getElementById('sub-service-items-container');
-                subServiceItemsContainer.innerHTML = '';
+                subServiceItemsAndPriceContainer.innerHTML = '';
                 
                 let content = '';
-                allSubServices.forEach(subService => {
-                    if (selectedSubServiceIds.includes(subService.id)) {
-                        const relatedItems = allSubServiceItems.filter(item => item.sub_service_id === subService.id);
-                        if (relatedItems.length > 0) {
-                             content += `
-                                <div class="services-category-group">
-                                    <h4 class="service-category-title"><i class="${subService.icon}"></i> ${subService.name}</h4>
-                                    <div class="sub-service-items-grid">
-                            `;
-                            relatedItems.forEach(item => {
-                                const isChecked = workerSubServiceItemIds.includes(item.id) ? 'checked' : '';
-                                content += `
-                                     <div class="checkbox-item">
+                
+                // Track which items have already been rendered (to prevent duplication)
+                let renderedItems = new Set(); 
+                
+                selectedSubServiceIds.forEach(subServiceId => {
+                    const subService = getSubServiceById(subServiceId);
+                    if (!subService) return;
+
+                    const relatedItems = allSubServiceItems.filter(item => item.sub_service_id === subServiceId);
+                    
+                    if (relatedItems.length > 0) {
+                        content += `
+                            <div class="services-category-group">
+                                <h4 class="service-category-title"><i class="${subService.icon}"></i> ${subService.name}</h4>
+                                <div class="sub-service-items-grid">
+                        `; 
+                        relatedItems.forEach(item => {
+                            if (renderedItems.has(item.id)) return;
+                            renderedItems.add(item.id);
+
+                            const isChecked = workerSubServiceItemIds.includes(item.id) ? 'checked' : '';
+                            const currentPrice = workerItemPrices[item.id] || 0.00; // Get existing price or default
+                            
+                            content += `
+                                <div class="item-and-price-group">
+                                    <div class="service-card-selectable" style="margin-bottom: 0.5rem;">
                                         <input type="checkbox" id="item-${item.id}" name="sub_service_items[]" value="${item.id}" ${isChecked}>
-                                        <label for="item-${item.id}">${item.name}</label>
+                                        <label for="item-${item.id}" style="height: 100%;">
+                                            <span>${item.name}</span>
+                                        </label>
                                     </div>
-                                `;
-                            });
-                            content += `</div></div>`;
-                        }
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="price-${item.id}" style="font-size: 0.85rem;">Price (₹)</label>
+                                        <input type="number" id="price-${item.id}" name="prices[${item.id}]" step="0.01" min="0.00" 
+                                               value="${parseFloat(currentPrice).toFixed(2)}" placeholder="0.00" required>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        content += `</div></div>`;
                     }
                 });
-                subServiceItemsContainer.innerHTML = content || '<p>No service items found for selected sub-services.</p>';
+                
+                subServiceItemsAndPriceContainer.innerHTML = content || '<p>No service items found for the selected sub-services. Please go back.</p>';
+
+                // Add event listeners to require price if item is checked
+                const itemCheckboxes = subServiceItemsAndPriceContainer.querySelectorAll('input[name="sub_service_items[]"]');
+                itemCheckboxes.forEach(checkbox => {
+                    const itemId = checkbox.value;
+                    const priceInput = document.getElementById(`price-${itemId}`);
+                    
+                    const togglePriceRequirement = () => {
+                        // We always require the price if the checkbox is checked.
+                        // For a profile page, we require a price if the box is checked AND when submitting.
+                        // The server-side validation is the ultimate guard.
+                        priceInput.required = checkbox.checked;
+                        priceInput.min = checkbox.checked ? '1.00' : '0.00';
+                    };
+                    
+                    // Initial setup
+                    togglePriceRequirement();
+                    
+                    // Listen for changes
+                    checkbox.addEventListener('change', togglePriceRequirement);
+                });
             }
+
+
+            // --- Map/Location Functions (unchanged, included for context) ---
             
             function initializeMap() {
                 const lat = parseFloat(userData.latitude) || 21.1702;
@@ -624,7 +648,7 @@ sort($states);
                     });
                 }
             }
-
+            
             async function geocodeAddress() {
                 const address = `${address1Input.value}, ${address2Input.value}, ${cityDropdown.value}, ${stateDropdown.value}, ${pincodeInput.value}`;
                 if (address.trim().length < 10) return;
@@ -655,12 +679,11 @@ sort($states);
             
             // --- EVENT LISTENERS ---
 
-            // Handle manual tab clicking
+            // Handle tab clicking
             tabLinks.forEach(link => {
                 link.addEventListener('click', () => {
                     const tabId = link.getAttribute('data-tab');
                     activateTab(tabId);
-                    // Update the URL hash for a better user experience, without reloading the page
                     history.pushState(null, null, `#${tabId}`);
                 });
             });
@@ -673,7 +696,7 @@ sort($states);
                         if (nextStepId === 'service-step-2') {
                             populateSubServices();
                         } else if (nextStepId === 'service-step-3') {
-                            populateSubServiceItems();
+                            populateSubServiceItemsAndPrice(); // CALL NEW FUNCTION HERE
                         }
                         showServiceStep(document.getElementById(nextStepId));
                     });
@@ -715,24 +738,26 @@ sort($states);
 
             // --- INITIALIZATION ---
             function activateTab(tabId) {
-    tabLinks.forEach(l => l.classList.remove('active'));
-    tabContents.forEach(c => c.classList.remove('active'));
+                tabLinks.forEach(l => l.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
 
-    const linkToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
-    const contentToActivate = document.getElementById(tabId);
+                const linkToActivate = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+                const contentToActivate = document.getElementById(tabId);
 
-    if (linkToActivate && contentToActivate) {
-        linkToActivate.classList.add('active');
-        contentToActivate.classList.add('active');
+                if (linkToActivate && contentToActivate) {
+                    linkToActivate.classList.add('active');
+                    contentToActivate.classList.add('active');
 
-        if (tabId === 'location' && !map) {
-            initializeMap();
-            setTimeout(() => map.invalidateSize(), 10);
-        } else if (tabId === 'services') { // Add this new condition
-            populateMainServices();
-        }
-    }
-}
+                    if (tabId === 'location' && !map) {
+                        initializeMap();
+                        setTimeout(() => map.invalidateSize(), 10);
+                    } else if (tabId === 'services') { 
+                        populateMainServices();
+                        // Reset to step 1 when the tab is activated
+                        showServiceStep(serviceStep1);
+                    }
+                }
+            }
 
             // Check for a hash in the URL on page load and activate the corresponding tab
             const currentHash = window.location.hash.substring(1); // Remove the '#'
@@ -740,11 +765,6 @@ sort($states);
                 activateTab(currentHash);
             } else {
                 activateTab('details');
-            }
-            
-            // Initial population of main services when the page loads
-            if (servicesTab && servicesTab.classList.contains('active')) {
-                 populateMainServices();
             }
         });
     </script>

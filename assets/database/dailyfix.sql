@@ -353,6 +353,18 @@ CREATE TYPE realtime.wal_rls AS (
 ALTER TYPE realtime.wal_rls OWNER TO supabase_admin;
 
 --
+-- Name: buckettype; Type: TYPE; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TYPE storage.buckettype AS ENUM (
+    'STANDARD',
+    'ANALYTICS'
+);
+
+
+ALTER TYPE storage.buckettype OWNER TO supabase_storage_admin;
+
+--
 -- Name: email(); Type: FUNCTION; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -1478,6 +1490,28 @@ $$;
 ALTER FUNCTION realtime.topic() OWNER TO supabase_realtime_admin;
 
 --
+-- Name: add_prefixes(text, text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.add_prefixes(_bucket_id text, _name text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    prefixes text[];
+BEGIN
+    prefixes := "storage"."get_prefixes"("_name");
+
+    IF array_length(prefixes, 1) > 0 THEN
+        INSERT INTO storage.prefixes (name, bucket_id)
+        SELECT UNNEST(prefixes) as name, "_bucket_id" ON CONFLICT DO NOTHING;
+    END IF;
+END;
+$$;
+
+
+ALTER FUNCTION storage.add_prefixes(_bucket_id text, _name text) OWNER TO supabase_storage_admin;
+
+--
 -- Name: can_insert_object(text, text, uuid, jsonb); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
 --
 
@@ -1497,20 +1531,165 @@ $$;
 ALTER FUNCTION storage.can_insert_object(bucketid text, name text, owner uuid, metadata jsonb) OWNER TO supabase_storage_admin;
 
 --
+-- Name: delete_leaf_prefixes(text[], text[]); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.delete_leaf_prefixes(bucket_ids text[], names text[]) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    v_rows_deleted integer;
+BEGIN
+    LOOP
+        WITH candidates AS (
+            SELECT DISTINCT
+                t.bucket_id,
+                unnest(storage.get_prefixes(t.name)) AS name
+            FROM unnest(bucket_ids, names) AS t(bucket_id, name)
+        ),
+        uniq AS (
+             SELECT
+                 bucket_id,
+                 name,
+                 storage.get_level(name) AS level
+             FROM candidates
+             WHERE name <> ''
+             GROUP BY bucket_id, name
+        ),
+        leaf AS (
+             SELECT
+                 p.bucket_id,
+                 p.name,
+                 p.level
+             FROM storage.prefixes AS p
+                  JOIN uniq AS u
+                       ON u.bucket_id = p.bucket_id
+                           AND u.name = p.name
+                           AND u.level = p.level
+             WHERE NOT EXISTS (
+                 SELECT 1
+                 FROM storage.objects AS o
+                 WHERE o.bucket_id = p.bucket_id
+                   AND o.level = p.level + 1
+                   AND o.name COLLATE "C" LIKE p.name || '/%'
+             )
+             AND NOT EXISTS (
+                 SELECT 1
+                 FROM storage.prefixes AS c
+                 WHERE c.bucket_id = p.bucket_id
+                   AND c.level = p.level + 1
+                   AND c.name COLLATE "C" LIKE p.name || '/%'
+             )
+        )
+        DELETE
+        FROM storage.prefixes AS p
+            USING leaf AS l
+        WHERE p.bucket_id = l.bucket_id
+          AND p.name = l.name
+          AND p.level = l.level;
+
+        GET DIAGNOSTICS v_rows_deleted = ROW_COUNT;
+        EXIT WHEN v_rows_deleted = 0;
+    END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION storage.delete_leaf_prefixes(bucket_ids text[], names text[]) OWNER TO supabase_storage_admin;
+
+--
+-- Name: delete_prefix(text, text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.delete_prefix(_bucket_id text, _name text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Check if we can delete the prefix
+    IF EXISTS(
+        SELECT FROM "storage"."prefixes"
+        WHERE "prefixes"."bucket_id" = "_bucket_id"
+          AND level = "storage"."get_level"("_name") + 1
+          AND "prefixes"."name" COLLATE "C" LIKE "_name" || '/%'
+        LIMIT 1
+    )
+    OR EXISTS(
+        SELECT FROM "storage"."objects"
+        WHERE "objects"."bucket_id" = "_bucket_id"
+          AND "storage"."get_level"("objects"."name") = "storage"."get_level"("_name") + 1
+          AND "objects"."name" COLLATE "C" LIKE "_name" || '/%'
+        LIMIT 1
+    ) THEN
+    -- There are sub-objects, skip deletion
+    RETURN false;
+    ELSE
+        DELETE FROM "storage"."prefixes"
+        WHERE "prefixes"."bucket_id" = "_bucket_id"
+          AND level = "storage"."get_level"("_name")
+          AND "prefixes"."name" = "_name";
+        RETURN true;
+    END IF;
+END;
+$$;
+
+
+ALTER FUNCTION storage.delete_prefix(_bucket_id text, _name text) OWNER TO supabase_storage_admin;
+
+--
+-- Name: delete_prefix_hierarchy_trigger(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.delete_prefix_hierarchy_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    prefix text;
+BEGIN
+    prefix := "storage"."get_prefix"(OLD."name");
+
+    IF coalesce(prefix, '') != '' THEN
+        PERFORM "storage"."delete_prefix"(OLD."bucket_id", prefix);
+    END IF;
+
+    RETURN OLD;
+END;
+$$;
+
+
+ALTER FUNCTION storage.delete_prefix_hierarchy_trigger() OWNER TO supabase_storage_admin;
+
+--
+-- Name: enforce_bucket_name_length(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.enforce_bucket_name_length() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+    if length(new.name) > 100 then
+        raise exception 'bucket name "%" is too long (% characters). Max is 100.', new.name, length(new.name);
+    end if;
+    return new;
+end;
+$$;
+
+
+ALTER FUNCTION storage.enforce_bucket_name_length() OWNER TO supabase_storage_admin;
+
+--
 -- Name: extension(text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
 --
 
 CREATE FUNCTION storage.extension(name text) RETURNS text
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
-_parts text[];
-_filename text;
+    _parts text[];
+    _filename text;
 BEGIN
-	select string_to_array(name, '/') into _parts;
-	select _parts[array_length(_parts,1)] into _filename;
-	-- @todo return the last part instead of 2
-	return reverse(split_part(reverse(_filename), '.', 1));
+    SELECT string_to_array(name, '/') INTO _parts;
+    SELECT _parts[array_length(_parts,1)] INTO _filename;
+    RETURN reverse(split_part(reverse(_filename), '.', 1));
 END
 $$;
 
@@ -1540,13 +1719,15 @@ ALTER FUNCTION storage.filename(name text) OWNER TO supabase_storage_admin;
 --
 
 CREATE FUNCTION storage.foldername(name text) RETURNS text[]
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql IMMUTABLE
     AS $$
 DECLARE
-_parts text[];
+    _parts text[];
 BEGIN
-	select string_to_array(name, '/') into _parts;
-	return _parts[1:array_length(_parts,1)-1];
+    -- Split on "/" to get path segments
+    SELECT string_to_array(name, '/') INTO _parts;
+    -- Return everything except the last segment
+    RETURN _parts[1 : array_length(_parts,1) - 1];
 END
 $$;
 
@@ -1554,15 +1735,75 @@ $$;
 ALTER FUNCTION storage.foldername(name text) OWNER TO supabase_storage_admin;
 
 --
+-- Name: get_level(text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.get_level(name text) RETURNS integer
+    LANGUAGE sql IMMUTABLE STRICT
+    AS $$
+SELECT array_length(string_to_array("name", '/'), 1);
+$$;
+
+
+ALTER FUNCTION storage.get_level(name text) OWNER TO supabase_storage_admin;
+
+--
+-- Name: get_prefix(text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.get_prefix(name text) RETURNS text
+    LANGUAGE sql IMMUTABLE STRICT
+    AS $_$
+SELECT
+    CASE WHEN strpos("name", '/') > 0 THEN
+             regexp_replace("name", '[\/]{1}[^\/]+\/?$', '')
+         ELSE
+             ''
+        END;
+$_$;
+
+
+ALTER FUNCTION storage.get_prefix(name text) OWNER TO supabase_storage_admin;
+
+--
+-- Name: get_prefixes(text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.get_prefixes(name text) RETURNS text[]
+    LANGUAGE plpgsql IMMUTABLE STRICT
+    AS $$
+DECLARE
+    parts text[];
+    prefixes text[];
+    prefix text;
+BEGIN
+    -- Split the name into parts by '/'
+    parts := string_to_array("name", '/');
+    prefixes := '{}';
+
+    -- Construct the prefixes, stopping one level below the last part
+    FOR i IN 1..array_length(parts, 1) - 1 LOOP
+            prefix := array_to_string(parts[1:i], '/');
+            prefixes := array_append(prefixes, prefix);
+    END LOOP;
+
+    RETURN prefixes;
+END;
+$$;
+
+
+ALTER FUNCTION storage.get_prefixes(name text) OWNER TO supabase_storage_admin;
+
+--
 -- Name: get_size_by_bucket(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
 --
 
 CREATE FUNCTION storage.get_size_by_bucket() RETURNS TABLE(size bigint, bucket_id text)
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql STABLE
     AS $$
 BEGIN
     return query
-        select sum((metadata->>'size')::int) as size, obj.bucket_id
+        select sum((metadata->>'size')::bigint) as size, obj.bucket_id
         from "storage".objects as obj
         group by obj.bucket_id;
 END
@@ -1666,6 +1907,241 @@ $_$;
 ALTER FUNCTION storage.list_objects_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer, start_after text, next_token text) OWNER TO supabase_storage_admin;
 
 --
+-- Name: lock_top_prefixes(text[], text[]); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.lock_top_prefixes(bucket_ids text[], names text[]) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    v_bucket text;
+    v_top text;
+BEGIN
+    FOR v_bucket, v_top IN
+        SELECT DISTINCT t.bucket_id,
+            split_part(t.name, '/', 1) AS top
+        FROM unnest(bucket_ids, names) AS t(bucket_id, name)
+        WHERE t.name <> ''
+        ORDER BY 1, 2
+        LOOP
+            PERFORM pg_advisory_xact_lock(hashtextextended(v_bucket || '/' || v_top, 0));
+        END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION storage.lock_top_prefixes(bucket_ids text[], names text[]) OWNER TO supabase_storage_admin;
+
+--
+-- Name: objects_delete_cleanup(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.objects_delete_cleanup() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    v_bucket_ids text[];
+    v_names      text[];
+BEGIN
+    IF current_setting('storage.gc.prefixes', true) = '1' THEN
+        RETURN NULL;
+    END IF;
+
+    PERFORM set_config('storage.gc.prefixes', '1', true);
+
+    SELECT COALESCE(array_agg(d.bucket_id), '{}'),
+           COALESCE(array_agg(d.name), '{}')
+    INTO v_bucket_ids, v_names
+    FROM deleted AS d
+    WHERE d.name <> '';
+
+    PERFORM storage.lock_top_prefixes(v_bucket_ids, v_names);
+    PERFORM storage.delete_leaf_prefixes(v_bucket_ids, v_names);
+
+    RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION storage.objects_delete_cleanup() OWNER TO supabase_storage_admin;
+
+--
+-- Name: objects_insert_prefix_trigger(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.objects_insert_prefix_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    PERFORM "storage"."add_prefixes"(NEW."bucket_id", NEW."name");
+    NEW.level := "storage"."get_level"(NEW."name");
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION storage.objects_insert_prefix_trigger() OWNER TO supabase_storage_admin;
+
+--
+-- Name: objects_update_cleanup(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.objects_update_cleanup() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    -- NEW - OLD (destinations to create prefixes for)
+    v_add_bucket_ids text[];
+    v_add_names      text[];
+
+    -- OLD - NEW (sources to prune)
+    v_src_bucket_ids text[];
+    v_src_names      text[];
+BEGIN
+    IF TG_OP <> 'UPDATE' THEN
+        RETURN NULL;
+    END IF;
+
+    -- 1) Compute NEW−OLD (added paths) and OLD−NEW (moved-away paths)
+    WITH added AS (
+        SELECT n.bucket_id, n.name
+        FROM new_rows n
+        WHERE n.name <> '' AND position('/' in n.name) > 0
+        EXCEPT
+        SELECT o.bucket_id, o.name FROM old_rows o WHERE o.name <> ''
+    ),
+    moved AS (
+         SELECT o.bucket_id, o.name
+         FROM old_rows o
+         WHERE o.name <> ''
+         EXCEPT
+         SELECT n.bucket_id, n.name FROM new_rows n WHERE n.name <> ''
+    )
+    SELECT
+        -- arrays for ADDED (dest) in stable order
+        COALESCE( (SELECT array_agg(a.bucket_id ORDER BY a.bucket_id, a.name) FROM added a), '{}' ),
+        COALESCE( (SELECT array_agg(a.name      ORDER BY a.bucket_id, a.name) FROM added a), '{}' ),
+        -- arrays for MOVED (src) in stable order
+        COALESCE( (SELECT array_agg(m.bucket_id ORDER BY m.bucket_id, m.name) FROM moved m), '{}' ),
+        COALESCE( (SELECT array_agg(m.name      ORDER BY m.bucket_id, m.name) FROM moved m), '{}' )
+    INTO v_add_bucket_ids, v_add_names, v_src_bucket_ids, v_src_names;
+
+    -- Nothing to do?
+    IF (array_length(v_add_bucket_ids, 1) IS NULL) AND (array_length(v_src_bucket_ids, 1) IS NULL) THEN
+        RETURN NULL;
+    END IF;
+
+    -- 2) Take per-(bucket, top) locks: ALL prefixes in consistent global order to prevent deadlocks
+    DECLARE
+        v_all_bucket_ids text[];
+        v_all_names text[];
+    BEGIN
+        -- Combine source and destination arrays for consistent lock ordering
+        v_all_bucket_ids := COALESCE(v_src_bucket_ids, '{}') || COALESCE(v_add_bucket_ids, '{}');
+        v_all_names := COALESCE(v_src_names, '{}') || COALESCE(v_add_names, '{}');
+
+        -- Single lock call ensures consistent global ordering across all transactions
+        IF array_length(v_all_bucket_ids, 1) IS NOT NULL THEN
+            PERFORM storage.lock_top_prefixes(v_all_bucket_ids, v_all_names);
+        END IF;
+    END;
+
+    -- 3) Create destination prefixes (NEW−OLD) BEFORE pruning sources
+    IF array_length(v_add_bucket_ids, 1) IS NOT NULL THEN
+        WITH candidates AS (
+            SELECT DISTINCT t.bucket_id, unnest(storage.get_prefixes(t.name)) AS name
+            FROM unnest(v_add_bucket_ids, v_add_names) AS t(bucket_id, name)
+            WHERE name <> ''
+        )
+        INSERT INTO storage.prefixes (bucket_id, name)
+        SELECT c.bucket_id, c.name
+        FROM candidates c
+        ON CONFLICT DO NOTHING;
+    END IF;
+
+    -- 4) Prune source prefixes bottom-up for OLD−NEW
+    IF array_length(v_src_bucket_ids, 1) IS NOT NULL THEN
+        -- re-entrancy guard so DELETE on prefixes won't recurse
+        IF current_setting('storage.gc.prefixes', true) <> '1' THEN
+            PERFORM set_config('storage.gc.prefixes', '1', true);
+        END IF;
+
+        PERFORM storage.delete_leaf_prefixes(v_src_bucket_ids, v_src_names);
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION storage.objects_update_cleanup() OWNER TO supabase_storage_admin;
+
+--
+-- Name: objects_update_level_trigger(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.objects_update_level_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Ensure this is an update operation and the name has changed
+    IF TG_OP = 'UPDATE' AND (NEW."name" <> OLD."name" OR NEW."bucket_id" <> OLD."bucket_id") THEN
+        -- Set the new level
+        NEW."level" := "storage"."get_level"(NEW."name");
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION storage.objects_update_level_trigger() OWNER TO supabase_storage_admin;
+
+--
+-- Name: objects_update_prefix_trigger(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.objects_update_prefix_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    old_prefixes TEXT[];
+BEGIN
+    -- Ensure this is an update operation and the name has changed
+    IF TG_OP = 'UPDATE' AND (NEW."name" <> OLD."name" OR NEW."bucket_id" <> OLD."bucket_id") THEN
+        -- Retrieve old prefixes
+        old_prefixes := "storage"."get_prefixes"(OLD."name");
+
+        -- Remove old prefixes that are only used by this object
+        WITH all_prefixes as (
+            SELECT unnest(old_prefixes) as prefix
+        ),
+        can_delete_prefixes as (
+             SELECT prefix
+             FROM all_prefixes
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM "storage"."objects"
+                 WHERE "bucket_id" = OLD."bucket_id"
+                   AND "name" <> OLD."name"
+                   AND "name" LIKE (prefix || '%')
+             )
+         )
+        DELETE FROM "storage"."prefixes" WHERE name IN (SELECT prefix FROM can_delete_prefixes);
+
+        -- Add new prefixes
+        PERFORM "storage"."add_prefixes"(NEW."bucket_id", NEW."name");
+    END IF;
+    -- Set the new level
+    NEW."level" := "storage"."get_level"(NEW."name");
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION storage.objects_update_prefix_trigger() OWNER TO supabase_storage_admin;
+
+--
 -- Name: operation(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
 --
 
@@ -1681,49 +2157,124 @@ $$;
 ALTER FUNCTION storage.operation() OWNER TO supabase_storage_admin;
 
 --
+-- Name: prefixes_delete_cleanup(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.prefixes_delete_cleanup() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    v_bucket_ids text[];
+    v_names      text[];
+BEGIN
+    IF current_setting('storage.gc.prefixes', true) = '1' THEN
+        RETURN NULL;
+    END IF;
+
+    PERFORM set_config('storage.gc.prefixes', '1', true);
+
+    SELECT COALESCE(array_agg(d.bucket_id), '{}'),
+           COALESCE(array_agg(d.name), '{}')
+    INTO v_bucket_ids, v_names
+    FROM deleted AS d
+    WHERE d.name <> '';
+
+    PERFORM storage.lock_top_prefixes(v_bucket_ids, v_names);
+    PERFORM storage.delete_leaf_prefixes(v_bucket_ids, v_names);
+
+    RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION storage.prefixes_delete_cleanup() OWNER TO supabase_storage_admin;
+
+--
+-- Name: prefixes_insert_trigger(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.prefixes_insert_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    PERFORM "storage"."add_prefixes"(NEW."bucket_id", NEW."name");
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION storage.prefixes_insert_trigger() OWNER TO supabase_storage_admin;
+
+--
 -- Name: search(text, text, integer, integer, integer, text, text, text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
 --
 
 CREATE FUNCTION storage.search(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+    LANGUAGE plpgsql
+    AS $$
+declare
+    can_bypass_rls BOOLEAN;
+begin
+    SELECT rolbypassrls
+    INTO can_bypass_rls
+    FROM pg_roles
+    WHERE rolname = coalesce(nullif(current_setting('role', true), 'none'), current_user);
+
+    IF can_bypass_rls THEN
+        RETURN QUERY SELECT * FROM storage.search_v1_optimised(prefix, bucketname, limits, levels, offsets, search, sortcolumn, sortorder);
+    ELSE
+        RETURN QUERY SELECT * FROM storage.search_legacy_v1(prefix, bucketname, limits, levels, offsets, search, sortcolumn, sortorder);
+    END IF;
+end;
+$$;
+
+
+ALTER FUNCTION storage.search(prefix text, bucketname text, limits integer, levels integer, offsets integer, search text, sortcolumn text, sortorder text) OWNER TO supabase_storage_admin;
+
+--
+-- Name: search_legacy_v1(text, text, integer, integer, integer, text, text, text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.search_legacy_v1(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
     LANGUAGE plpgsql STABLE
     AS $_$
 declare
-  v_order_by text;
-  v_sort_order text;
+    v_order_by text;
+    v_sort_order text;
 begin
-  case
-    when sortcolumn = 'name' then
-      v_order_by = 'name';
-    when sortcolumn = 'updated_at' then
-      v_order_by = 'updated_at';
-    when sortcolumn = 'created_at' then
-      v_order_by = 'created_at';
-    when sortcolumn = 'last_accessed_at' then
-      v_order_by = 'last_accessed_at';
-    else
-      v_order_by = 'name';
-  end case;
+    case
+        when sortcolumn = 'name' then
+            v_order_by = 'name';
+        when sortcolumn = 'updated_at' then
+            v_order_by = 'updated_at';
+        when sortcolumn = 'created_at' then
+            v_order_by = 'created_at';
+        when sortcolumn = 'last_accessed_at' then
+            v_order_by = 'last_accessed_at';
+        else
+            v_order_by = 'name';
+        end case;
 
-  case
-    when sortorder = 'asc' then
-      v_sort_order = 'asc';
-    when sortorder = 'desc' then
-      v_sort_order = 'desc';
-    else
-      v_sort_order = 'asc';
-  end case;
+    case
+        when sortorder = 'asc' then
+            v_sort_order = 'asc';
+        when sortorder = 'desc' then
+            v_sort_order = 'desc';
+        else
+            v_sort_order = 'asc';
+        end case;
 
-  v_order_by = v_order_by || ' ' || v_sort_order;
+    v_order_by = v_order_by || ' ' || v_sort_order;
 
-  return query execute
-    'with folders as (
-       select path_tokens[$1] as folder
-       from storage.objects
-         where objects.name ilike $2 || $3 || ''%''
-           and bucket_id = $4
-           and array_length(objects.path_tokens, 1) <> $1
-       group by folder
-       order by folder ' || v_sort_order || '
+    return query execute
+        'with folders as (
+           select path_tokens[$1] as folder
+           from storage.objects
+             where objects.name ilike $2 || $3 || ''%''
+               and bucket_id = $4
+               and array_length(objects.path_tokens, 1) <> $1
+           group by folder
+           order by folder ' || v_sort_order || '
      )
      (select folder as "name",
             null as id,
@@ -1749,7 +2300,175 @@ end;
 $_$;
 
 
-ALTER FUNCTION storage.search(prefix text, bucketname text, limits integer, levels integer, offsets integer, search text, sortcolumn text, sortorder text) OWNER TO supabase_storage_admin;
+ALTER FUNCTION storage.search_legacy_v1(prefix text, bucketname text, limits integer, levels integer, offsets integer, search text, sortcolumn text, sortorder text) OWNER TO supabase_storage_admin;
+
+--
+-- Name: search_v1_optimised(text, text, integer, integer, integer, text, text, text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.search_v1_optimised(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text) RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+    LANGUAGE plpgsql STABLE
+    AS $_$
+declare
+    v_order_by text;
+    v_sort_order text;
+begin
+    case
+        when sortcolumn = 'name' then
+            v_order_by = 'name';
+        when sortcolumn = 'updated_at' then
+            v_order_by = 'updated_at';
+        when sortcolumn = 'created_at' then
+            v_order_by = 'created_at';
+        when sortcolumn = 'last_accessed_at' then
+            v_order_by = 'last_accessed_at';
+        else
+            v_order_by = 'name';
+        end case;
+
+    case
+        when sortorder = 'asc' then
+            v_sort_order = 'asc';
+        when sortorder = 'desc' then
+            v_sort_order = 'desc';
+        else
+            v_sort_order = 'asc';
+        end case;
+
+    v_order_by = v_order_by || ' ' || v_sort_order;
+
+    return query execute
+        'with folders as (
+           select (string_to_array(name, ''/''))[level] as name
+           from storage.prefixes
+             where lower(prefixes.name) like lower($2 || $3) || ''%''
+               and bucket_id = $4
+               and level = $1
+           order by name ' || v_sort_order || '
+     )
+     (select name,
+            null as id,
+            null as updated_at,
+            null as created_at,
+            null as last_accessed_at,
+            null as metadata from folders)
+     union all
+     (select path_tokens[level] as "name",
+            id,
+            updated_at,
+            created_at,
+            last_accessed_at,
+            metadata
+     from storage.objects
+     where lower(objects.name) like lower($2 || $3) || ''%''
+       and bucket_id = $4
+       and level = $1
+     order by ' || v_order_by || ')
+     limit $5
+     offset $6' using levels, prefix, search, bucketname, limits, offsets;
+end;
+$_$;
+
+
+ALTER FUNCTION storage.search_v1_optimised(prefix text, bucketname text, limits integer, levels integer, offsets integer, search text, sortcolumn text, sortorder text) OWNER TO supabase_storage_admin;
+
+--
+-- Name: search_v2(text, text, integer, integer, text, text, text, text); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE FUNCTION storage.search_v2(prefix text, bucket_name text, limits integer DEFAULT 100, levels integer DEFAULT 1, start_after text DEFAULT ''::text, sort_order text DEFAULT 'asc'::text, sort_column text DEFAULT 'name'::text, sort_column_after text DEFAULT ''::text) RETURNS TABLE(key text, name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
+    LANGUAGE plpgsql STABLE
+    AS $_$
+DECLARE
+    sort_col text;
+    sort_ord text;
+    cursor_op text;
+    cursor_expr text;
+    sort_expr text;
+BEGIN
+    -- Validate sort_order
+    sort_ord := lower(sort_order);
+    IF sort_ord NOT IN ('asc', 'desc') THEN
+        sort_ord := 'asc';
+    END IF;
+
+    -- Determine cursor comparison operator
+    IF sort_ord = 'asc' THEN
+        cursor_op := '>';
+    ELSE
+        cursor_op := '<';
+    END IF;
+    
+    sort_col := lower(sort_column);
+    -- Validate sort column  
+    IF sort_col IN ('updated_at', 'created_at') THEN
+        cursor_expr := format(
+            '($5 = '''' OR ROW(date_trunc(''milliseconds'', %I), name COLLATE "C") %s ROW(COALESCE(NULLIF($6, '''')::timestamptz, ''epoch''::timestamptz), $5))',
+            sort_col, cursor_op
+        );
+        sort_expr := format(
+            'COALESCE(date_trunc(''milliseconds'', %I), ''epoch''::timestamptz) %s, name COLLATE "C" %s',
+            sort_col, sort_ord, sort_ord
+        );
+    ELSE
+        cursor_expr := format('($5 = '''' OR name COLLATE "C" %s $5)', cursor_op);
+        sort_expr := format('name COLLATE "C" %s', sort_ord);
+    END IF;
+
+    RETURN QUERY EXECUTE format(
+        $sql$
+        SELECT * FROM (
+            (
+                SELECT
+                    split_part(name, '/', $4) AS key,
+                    name,
+                    NULL::uuid AS id,
+                    updated_at,
+                    created_at,
+                    NULL::timestamptz AS last_accessed_at,
+                    NULL::jsonb AS metadata
+                FROM storage.prefixes
+                WHERE name COLLATE "C" LIKE $1 || '%%'
+                    AND bucket_id = $2
+                    AND level = $4
+                    AND %s
+                ORDER BY %s
+                LIMIT $3
+            )
+            UNION ALL
+            (
+                SELECT
+                    split_part(name, '/', $4) AS key,
+                    name,
+                    id,
+                    updated_at,
+                    created_at,
+                    last_accessed_at,
+                    metadata
+                FROM storage.objects
+                WHERE name COLLATE "C" LIKE $1 || '%%'
+                    AND bucket_id = $2
+                    AND level = $4
+                    AND %s
+                ORDER BY %s
+                LIMIT $3
+            )
+        ) obj
+        ORDER BY %s
+        LIMIT $3
+        $sql$,
+        cursor_expr,    -- prefixes WHERE
+        sort_expr,      -- prefixes ORDER BY
+        cursor_expr,    -- objects WHERE
+        sort_expr,      -- objects ORDER BY
+        sort_expr       -- final ORDER BY
+    )
+    USING prefix, bucket_name, limits, levels, start_after, sort_column_after;
+END;
+$_$;
+
+
+ALTER FUNCTION storage.search_v2(prefix text, bucket_name text, limits integer, levels integer, start_after text, sort_order text, sort_column text, sort_column_after text) OWNER TO supabase_storage_admin;
 
 --
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
@@ -2282,6 +3001,7 @@ CREATE TABLE public.bookings (
     predefined_cost numeric(10,2),
     customer_offer numeric(10,2),
     cost_status text DEFAULT 'pending'::text NOT NULL,
+    work_completed_by_worker boolean DEFAULT false,
     CONSTRAINT check_different_users CHECK ((customer_id <> worker_id))
 );
 
@@ -2301,6 +3021,43 @@ COMMENT ON TABLE public.bookings IS 'Tracks service appointments between custome
 
 ALTER TABLE public.bookings ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.bookings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: payouts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.payouts (
+    id bigint NOT NULL,
+    wallet_id bigint NOT NULL,
+    amount numeric(10,2) NOT NULL,
+    status character varying(50) DEFAULT 'pending'::character varying NOT NULL,
+    requested_at timestamp with time zone DEFAULT now() NOT NULL,
+    processed_at timestamp with time zone
+);
+
+
+ALTER TABLE public.payouts OWNER TO postgres;
+
+--
+-- Name: TABLE payouts; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.payouts IS 'Tracks payout requests for workers.';
+
+
+--
+-- Name: payouts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.payouts ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.payouts_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2448,10 +3205,11 @@ ALTER TABLE public.sub_services ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDEN
 
 CREATE TABLE public.transactions (
     id bigint NOT NULL,
-    booking_id bigint NOT NULL,
-    customer_id bigint NOT NULL,
+    wallet_id bigint NOT NULL,
+    booking_id bigint,
+    type character varying(50) NOT NULL,
     amount numeric(10,2) NOT NULL,
-    transaction_status text NOT NULL,
+    description text,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
@@ -2459,24 +3217,24 @@ CREATE TABLE public.transactions (
 ALTER TABLE public.transactions OWNER TO postgres;
 
 --
+-- Name: TABLE transactions; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.transactions IS 'Detailed transaction history for wallets/bookings.';
+
+
+--
 -- Name: transactions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.transactions_id_seq
+ALTER TABLE public.transactions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.transactions_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.transactions_id_seq OWNER TO postgres;
-
---
--- Name: transactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
+    CACHE 1
+);
 
 
 --
@@ -2520,6 +3278,42 @@ COMMENT ON TABLE public.users IS 'Stores all users, both customers and workers.'
 
 ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: wallets; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.wallets (
+    id bigint NOT NULL,
+    worker_id bigint NOT NULL,
+    balance numeric(10,2) DEFAULT 0.00 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.wallets OWNER TO postgres;
+
+--
+-- Name: TABLE wallets; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.wallets IS 'Stores worker wallet balances for payouts.';
+
+
+--
+-- Name: wallets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.wallets ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.wallets_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2574,7 +3368,8 @@ CREATE TABLE public.worker_keys (
     access_key character varying(8) NOT NULL,
     is_used boolean DEFAULT false NOT NULL,
     used_by_worker_id bigint,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    status public.account_status DEFAULT 'active'::public.account_status NOT NULL
 );
 
 
@@ -2632,8 +3427,7 @@ COMMENT ON TABLE public.worker_profiles IS 'Stores additional details for users 
 
 CREATE TABLE public.worker_services (
     user_id bigint NOT NULL,
-    sub_service_id bigint NOT NULL,
-    price numeric(10,2)
+    sub_service_id bigint NOT NULL
 );
 
 
@@ -2645,7 +3439,8 @@ ALTER TABLE public.worker_services OWNER TO postgres;
 
 CREATE TABLE public.worker_sub_service_items (
     user_id bigint NOT NULL,
-    sub_service_item_id bigint NOT NULL
+    sub_service_item_id bigint NOT NULL,
+    price numeric(10,2) DEFAULT 0.00 NOT NULL
 );
 
 
@@ -2727,7 +3522,8 @@ CREATE TABLE storage.buckets (
     avif_autodetection boolean DEFAULT false,
     file_size_limit bigint,
     allowed_mime_types text[],
-    owner_id text
+    owner_id text,
+    type storage.buckettype DEFAULT 'STANDARD'::storage.buckettype NOT NULL
 );
 
 
@@ -2739,6 +3535,21 @@ ALTER TABLE storage.buckets OWNER TO supabase_storage_admin;
 
 COMMENT ON COLUMN storage.buckets.owner IS 'Field is deprecated, use owner_id instead';
 
+
+--
+-- Name: buckets_analytics; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TABLE storage.buckets_analytics (
+    id text NOT NULL,
+    type storage.buckettype DEFAULT 'ANALYTICS'::storage.buckettype NOT NULL,
+    format text DEFAULT 'ICEBERG'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE storage.buckets_analytics OWNER TO supabase_storage_admin;
 
 --
 -- Name: migrations; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
@@ -2770,7 +3581,8 @@ CREATE TABLE storage.objects (
     path_tokens text[] GENERATED ALWAYS AS (string_to_array(name, '/'::text)) STORED,
     version text,
     owner_id text,
-    user_metadata jsonb
+    user_metadata jsonb,
+    level integer
 );
 
 
@@ -2782,6 +3594,21 @@ ALTER TABLE storage.objects OWNER TO supabase_storage_admin;
 
 COMMENT ON COLUMN storage.objects.owner IS 'Field is deprecated, use owner_id instead';
 
+
+--
+-- Name: prefixes; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TABLE storage.prefixes (
+    bucket_id text NOT NULL,
+    name text NOT NULL COLLATE pg_catalog."C",
+    level integer GENERATED ALWAYS AS (storage.get_level(name)) STORED NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+ALTER TABLE storage.prefixes OWNER TO supabase_storage_admin;
 
 --
 -- Name: s3_multipart_uploads; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
@@ -2827,13 +3654,6 @@ ALTER TABLE storage.s3_multipart_uploads_parts OWNER TO supabase_storage_admin;
 --
 
 ALTER TABLE ONLY auth.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('auth.refresh_tokens_id_seq'::regclass);
-
-
---
--- Name: transactions id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.transactions ALTER COLUMN id SET DEFAULT nextval('public.transactions_id_seq'::regclass);
 
 
 --
@@ -3053,31 +3873,46 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, worker_latitude, worker_longitude, predefined_cost, customer_offer, cost_status) FROM stdin;
-1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N	unpaid	\N	\N	\N	\N	pending
-2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N	unpaid	\N	\N	\N	\N	pending
-3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N	unpaid	\N	\N	\N	\N	pending
-4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N	unpaid	\N	\N	\N	\N	pending
-5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N	unpaid	\N	\N	\N	\N	pending
-7	1	11	Work Details: bike repair\nAddress: Surat	2025-08-30 20:00:00+00	cancelled	2025-08-21 12:49:57.156465+00	\N	unpaid	\N	\N	\N	\N	pending
-8	1	3	Work Details: Car Washing\nAddress: Shiv Shakti Society, Bhavnagar	2025-08-25 06:30:00+00	confirmed	2025-08-21 16:40:58.668966+00	\N	unpaid	\N	\N	\N	\N	pending
-14	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 13:30:00+00	confirmed	2025-09-29 17:14:27.833622+00	\N	unpaid	\N	\N	\N	\N	pending
-9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N	unpaid	\N	\N	\N	\N	pending
-6	1	13	Work Details: Cleaning utensils and garden\nAddress: 37, Park Street, Surat	2025-08-22 09:15:00+00	confirmed	2025-08-21 12:46:12.708408+00	\N	unpaid	\N	\N	\N	\N	pending
-10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N	unpaid	\N	\N	\N	\N	pending
-20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	\N	\N	pending
-21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	\N	\N	pending
-15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	\N	\N	pending
-12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	\N	\N	pending
-13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	\N	\N	pending
-22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	\N	\N	pending
-16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	\N	\N	pending
-11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	\N	\N	pending
-17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	\N	\N	pending
-18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	\N	\N	pending
-19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	\N	\N	pending
-24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	\N	\N	pending
-23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	\N	\N	pending
+COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, worker_latitude, worker_longitude, predefined_cost, customer_offer, cost_status, work_completed_by_worker) FROM stdin;
+1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N	unpaid	\N	\N	\N	\N	pending	f
+2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N	unpaid	\N	\N	\N	\N	pending	f
+3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N	unpaid	\N	\N	\N	\N	pending	f
+4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N	unpaid	\N	\N	\N	\N	pending	f
+5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N	unpaid	\N	\N	\N	\N	pending	f
+7	1	11	Work Details: bike repair\nAddress: Surat	2025-08-30 20:00:00+00	cancelled	2025-08-21 12:49:57.156465+00	\N	unpaid	\N	\N	\N	\N	pending	f
+8	1	3	Work Details: Car Washing\nAddress: Shiv Shakti Society, Bhavnagar	2025-08-25 06:30:00+00	confirmed	2025-08-21 16:40:58.668966+00	\N	unpaid	\N	\N	\N	\N	pending	f
+14	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 13:30:00+00	confirmed	2025-09-29 17:14:27.833622+00	\N	unpaid	\N	\N	\N	\N	pending	f
+9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N	unpaid	\N	\N	\N	\N	pending	f
+6	1	13	Work Details: Cleaning utensils and garden\nAddress: 37, Park Street, Surat	2025-08-22 09:15:00+00	confirmed	2025-08-21 12:46:12.708408+00	\N	unpaid	\N	\N	\N	\N	pending	f
+10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N	unpaid	\N	\N	\N	\N	pending	f
+20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	\N	\N	pending	f
+21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	\N	\N	pending	f
+15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	\N	\N	pending	f
+12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	\N	\N	pending	f
+13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	\N	\N	pending	f
+22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	\N	\N	pending	f
+16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	\N	\N	pending	f
+11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	\N	\N	pending	f
+17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	\N	\N	pending	f
+18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	\N	\N	pending	f
+19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	\N	\N	pending	f
+24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	\N	\N	pending	f
+23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	\N	\N	pending	f
+25	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 13:30:00+00	cancelled	2025-10-02 13:04:56.354655+00	\N	unpaid	\N	\N	\N	\N	pending	f
+29	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 17:54:53.352846+00	800.00	paid	\N	\N	\N	\N	pending	t
+28	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 03:30:00+00	completed	2025-10-11 16:34:49.173792+00	400.00	paid	\N	\N	\N	\N	pending	t
+27	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-11 12:30:00+00	completed	2025-10-11 12:19:19.160657+00	300.00	paid	\N	\N	\N	\N	pending	t
+26	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-05 04:30:00+00	in_progress	2025-10-04 18:13:29.1467+00	\N	unpaid	\N	\N	\N	\N	pending	t
+30	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 18:15:17.567517+00	800.00	paid	\N	\N	\N	\N	pending	t
+\.
+
+
+--
+-- Data for Name: payouts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.payouts (id, wallet_id, amount, status, requested_at, processed_at) FROM stdin;
+1	1	1500.00	pending	2025-10-11 17:59:05.427704+00	\N
 \.
 
 
@@ -3155,10 +3990,12 @@ COPY public.sub_services (id, service_id, name, icon, slug) FROM stdin;
 -- Data for Name: transactions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.transactions (id, booking_id, customer_id, amount, transaction_status, created_at) FROM stdin;
-1	12	1	0.00	success	2025-09-29 15:12:32.925494+00
-2	11	1	0.00	success	2025-09-29 15:42:12.072299+00
-3	15	1	0.00	success	2025-09-29 20:05:18.715509+00
+COPY public.transactions (id, wallet_id, booking_id, type, amount, description, created_at) FROM stdin;
+1	1	27	credit	300.00	Payment for Booking #27	2025-10-11 15:54:18.001272+00
+2	1	28	credit	400.00	Payment for Booking #28	2025-10-11 16:41:59.316593+00
+3	1	29	credit	800.00	Payment for Booking #29	2025-10-11 17:58:18.53873+00
+4	1	\N	debit	1500.00	Payout Request #1	2025-10-11 17:59:05.427704+00
+5	1	30	credit	800.00	Payment for Booking #30	2025-10-11 18:16:11.134206+00
 \.
 
 
@@ -3170,20 +4007,29 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 7	Swayam Shah	swayam@gmail.com	$2y$10$EKVBlEHgag1sAKIl0Cmp8Oor/rLjv7OgJnjKtHzTHffBhSinsknym	9623001236	customer	\N	active	2025-08-16 09:48:01.576568+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 8	Ankit Verma	ankit@gmail.com	$2y$10$h0lmMCHM3ae9qv342gWjZ.BJQ69as.7JvPDJa5QBWjb5YOl3oFRhq	8523001456	customer	\N	active	2025-08-16 09:52:37.721337+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 9	Sushant Rajput	sushant@gmail.com	$2y$10$oWRFuH4Qgcgu6HSAPcCx1uDvV/k8qYWMvqF2dSgZz41xQHApe.jrC	9852110036	customer	\N	active	2025-08-16 09:56:45.35922+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	\N	395006	Gujarat	\N	\N
 3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	/dailyfix/worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N
 5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-1	Fenil Pastagia	17fenill@gmail.com	$2y$10$BgFO9cG.InRUoCsVyWOzfuTfVBYbRLgXT7WMu.FDon.QBkGeXmVmS	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	\N	\N
 10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	/dailyfix/customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	/dailyfix/worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	/dailyfix/customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 13	Purvi Panchal 	purvi@gmail.com	$2y$10$zPrZvJJATh7yNwJg5Z2pD.tpusOEa3rnDin/8G2MjS8oU7ysY8ufa	8520014563	worker	/dailyfix/worker/uploads/68a06aed05d049.49404600.jpg	active	2025-08-16 11:26:33.93526+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
 18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	/dailyfix/uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+1	Fenil Pastagia	17fenill@gmail.com	$2y$10$Bv9/dYNN/f5hkEAAnQ/ydePn0T3lpYCuwqvegYWKuBctloc/WRA1G	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	\N	\N
+17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	suspended	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
+21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	Surat	395006	Gujarat	\N	\N
+\.
+
+
+--
+-- Data for Name: wallets; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.wallets (id, worker_id, balance, created_at, updated_at) FROM stdin;
+1	21	800.00	2025-10-11 12:57:28.098856+00	2025-10-11 17:59:05.427704+00
 \.
 
 
@@ -3204,13 +4050,22 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 372	21	2025-10-04	19:00:00	2025-09-30 15:47:07.995331+00
 374	21	2025-09-30	20:00:00	2025-09-30 15:47:07.977515+00
 378	21	2025-10-04	20:00:00	2025-09-30 15:47:07.995331+00
+442	21	2025-10-11	10:00:00	2025-10-11 12:18:46.039766+00
+443	21	2025-10-11	11:00:00	2025-10-11 12:18:46.039766+00
 322	4	2025-09-28	09:00:00	2025-09-28 14:06:24.54987+00
+444	21	2025-10-11	14:00:00	2025-10-11 12:18:46.039766+00
 327	4	2025-09-28	11:00:00	2025-09-28 14:06:24.54987+00
 330	4	2025-09-28	20:00:00	2025-09-28 14:06:24.54987+00
 338	4	2025-09-30	09:00:00	2025-09-28 14:08:17.314321+00
 339	4	2025-09-30	11:00:00	2025-09-28 14:08:17.314321+00
 340	4	2025-09-30	15:00:00	2025-09-28 14:08:17.314321+00
 341	4	2025-09-30	20:00:00	2025-09-28 14:08:17.314321+00
+445	21	2025-10-11	17:00:00	2025-10-11 12:18:46.039766+00
+446	21	2025-10-11	18:00:00	2025-10-11 12:18:46.039766+00
+447	21	2025-10-11	19:00:00	2025-10-11 12:18:46.039766+00
+448	21	2025-10-11	20:00:00	2025-10-11 12:18:46.039766+00
+449	21	2025-10-11	21:00:00	2025-10-11 12:18:46.039766+00
+450	21	2025-10-11	22:00:00	2025-10-11 12:18:46.039766+00
 150	4	2025-09-24	09:00:00	2025-09-20 12:34:36.774442+00
 151	4	2025-09-24	10:00:00	2025-09-20 12:34:36.774442+00
 152	4	2025-09-24	11:00:00	2025-09-20 12:34:36.774442+00
@@ -3225,7 +4080,6 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 404	4	2025-10-03	11:00:00	2025-10-01 15:36:29.221974+00
 405	4	2025-10-01	11:00:00	2025-10-01 15:36:29.19684+00
 406	4	2025-10-02	11:00:00	2025-10-01 15:36:29.215619+00
-408	4	2025-10-04	09:00:00	2025-10-01 15:36:29.252714+00
 158	4	2025-09-20	11:00:00	2025-09-20 12:34:36.809386+00
 159	4	2025-09-23	10:00:00	2025-09-20 12:34:36.82439+00
 161	4	2025-09-25	11:00:00	2025-09-20 12:34:36.803045+00
@@ -3243,11 +4097,12 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 411	4	2025-10-03	17:00:00	2025-10-01 15:36:29.221974+00
 412	4	2025-10-02	17:00:00	2025-10-01 15:36:29.215619+00
 414	4	2025-10-01	20:00:00	2025-10-01 15:36:29.19684+00
-415	4	2025-10-04	11:00:00	2025-10-01 15:36:29.252714+00
 416	4	2025-10-03	20:00:00	2025-10-01 15:36:29.221974+00
 418	4	2025-10-02	20:00:00	2025-10-01 15:36:29.215619+00
-420	4	2025-10-04	17:00:00	2025-10-01 15:36:29.252714+00
-422	4	2025-10-04	20:00:00	2025-10-01 15:36:29.252714+00
+430	4	2025-10-06	11:00:00	2025-10-04 18:12:19.256617+00
+434	4	2025-10-06	18:00:00	2025-10-04 18:12:19.256617+00
+437	4	2025-10-05	11:00:00	2025-10-04 18:12:19.304729+00
+439	4	2025-10-05	18:00:00	2025-10-04 18:12:19.304729+00
 221	21	2025-09-29	10:00:00	2025-09-28 13:18:07.367208+00
 225	21	2025-09-29	11:00:00	2025-09-28 13:18:07.367208+00
 227	21	2025-09-28	10:00:00	2025-09-28 13:18:07.392457+00
@@ -3259,6 +4114,8 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 247	21	2025-09-29	20:00:00	2025-09-28 13:18:07.367208+00
 248	21	2025-09-28	18:00:00	2025-09-28 13:18:07.392457+00
 250	21	2025-09-28	19:00:00	2025-09-28 13:18:07.392457+00
+451	21	2025-10-12	09:00:00	2025-10-11 16:34:33.178052+00
+452	21	2025-10-12	10:00:00	2025-10-11 16:34:33.178052+00
 353	21	2025-10-05	10:00:00	2025-09-30 15:47:08.001006+00
 360	21	2025-10-05	11:00:00	2025-09-30 15:47:08.001006+00
 365	21	2025-10-05	17:00:00	2025-09-30 15:47:08.001006+00
@@ -3276,14 +4133,10 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 392	21	2025-10-06	18:00:00	2025-09-30 15:47:15.41401+00
 393	21	2025-10-06	19:00:00	2025-09-30 15:47:15.41401+00
 394	21	2025-10-06	20:00:00	2025-09-30 15:47:15.41401+00
-403	4	2025-10-06	09:00:00	2025-10-01 15:36:29.22781+00
-409	4	2025-10-06	11:00:00	2025-10-01 15:36:29.22781+00
-417	4	2025-10-06	17:00:00	2025-10-01 15:36:29.22781+00
-421	4	2025-10-06	20:00:00	2025-10-01 15:36:29.22781+00
-424	4	2025-10-07	09:00:00	2025-10-01 15:36:29.617553+00
-425	4	2025-10-07	11:00:00	2025-10-01 15:36:29.617553+00
-426	4	2025-10-07	17:00:00	2025-10-01 15:36:29.617553+00
-427	4	2025-10-07	20:00:00	2025-10-01 15:36:29.617553+00
+432	4	2025-10-07	11:00:00	2025-10-04 18:12:19.277736+00
+435	4	2025-10-07	18:00:00	2025-10-04 18:12:19.277736+00
+440	4	2025-10-10	11:00:00	2025-10-04 18:12:19.638402+00
+441	4	2025-10-10	18:00:00	2025-10-04 18:12:19.638402+00
 252	21	2025-09-28	20:00:00	2025-09-28 13:18:07.392457+00
 348	21	2025-10-01	10:00:00	2025-09-30 15:47:07.99174+00
 355	21	2025-10-01	11:00:00	2025-09-30 15:47:07.99174+00
@@ -3302,10 +4155,12 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 397	21	2025-10-03	17:00:00	2025-09-30 16:04:57.38118+00
 398	21	2025-10-03	18:00:00	2025-09-30 16:04:57.38118+00
 399	21	2025-10-03	19:00:00	2025-09-30 16:04:57.38118+00
-407	4	2025-10-05	09:00:00	2025-10-01 15:36:29.242878+00
-413	4	2025-10-05	11:00:00	2025-10-01 15:36:29.242878+00
-419	4	2025-10-05	17:00:00	2025-10-01 15:36:29.242878+00
-423	4	2025-10-05	20:00:00	2025-10-01 15:36:29.242878+00
+429	4	2025-10-09	11:00:00	2025-10-04 18:12:19.243589+00
+428	4	2025-10-04	11:00:00	2025-10-04 18:12:19.224749+00
+431	4	2025-10-09	18:00:00	2025-10-04 18:12:19.243589+00
+433	4	2025-10-04	18:00:00	2025-10-04 18:12:19.224749+00
+436	4	2025-10-08	11:00:00	2025-10-04 18:12:19.292737+00
+438	4	2025-10-08	18:00:00	2025-10-04 18:12:19.292737+00
 \.
 
 
@@ -3313,10 +4168,9 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 -- Data for Name: worker_keys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at) FROM stdin;
-1	F1N6MJ1O	t	18	2025-08-21 17:13:21.31666+00
-2	A2B3C4D5	t	21	2025-08-21 17:13:21.31666+00
-4	A7R5D4F3	f	\N	2025-09-29 13:45:20.645343+00
+COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at, status) FROM stdin;
+1	F1N6MJ1O	t	18	2025-08-21 17:13:21.31666+00	active
+2	A2B3C4D5	t	21	2025-08-21 17:13:21.31666+00	active
 \.
 
 
@@ -3340,13 +4194,13 @@ COPY public.worker_profiles (user_id, bio, experience_years, hourly_rate, is_ver
 -- Data for Name: worker_services; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.worker_services (user_id, sub_service_id, price) FROM stdin;
-4	10	\N
-4	9	\N
-21	1	\N
-21	21	\N
-21	5	\N
-21	7	\N
+COPY public.worker_services (user_id, sub_service_id) FROM stdin;
+4	10
+4	9
+21	1
+21	21
+21	5
+21	7
 \.
 
 
@@ -3354,13 +4208,13 @@ COPY public.worker_services (user_id, sub_service_id, price) FROM stdin;
 -- Data for Name: worker_sub_service_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.worker_sub_service_items (user_id, sub_service_item_id) FROM stdin;
-21	2
-21	1
-21	6
-21	5
-21	3
-21	4
+COPY public.worker_sub_service_items (user_id, sub_service_item_id, price) FROM stdin;
+21	3	300.00
+21	4	300.00
+21	6	400.00
+21	5	400.00
+21	2	800.00
+21	1	400.00
 \.
 
 
@@ -3448,7 +4302,15 @@ COPY realtime.subscription (id, subscription_id, entity, filters, claims, create
 -- Data for Name: buckets; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 
-COPY storage.buckets (id, name, owner, created_at, updated_at, public, avif_autodetection, file_size_limit, allowed_mime_types, owner_id) FROM stdin;
+COPY storage.buckets (id, name, owner, created_at, updated_at, public, avif_autodetection, file_size_limit, allowed_mime_types, owner_id, type) FROM stdin;
+\.
+
+
+--
+-- Data for Name: buckets_analytics; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+
+COPY storage.buckets_analytics (id, type, format, created_at, updated_at) FROM stdin;
 \.
 
 
@@ -3483,6 +4345,24 @@ COPY storage.migrations (id, name, hash, executed_at) FROM stdin;
 23	optimize-search-function	9d7e604cddc4b56a5422dc68c9313f4a1b6f132c	2025-08-09 08:23:13.401899
 24	operation-function	8312e37c2bf9e76bbe841aa5fda889206d2bf8aa	2025-08-09 08:23:13.407521
 25	custom-metadata	d974c6057c3db1c1f847afa0e291e6165693b990	2025-08-09 08:23:13.412779
+26	objects-prefixes	ef3f7871121cdc47a65308e6702519e853422ae2	2025-10-02 12:44:15.581428
+27	search-v2	33b8f2a7ae53105f028e13e9fcda9dc4f356b4a2	2025-10-02 12:44:15.668845
+28	object-bucket-name-sorting	ba85ec41b62c6a30a3f136788227ee47f311c436	2025-10-02 12:44:15.675039
+29	create-prefixes	a7b1a22c0dc3ab630e3055bfec7ce7d2045c5b7b	2025-10-02 12:44:15.684737
+30	update-object-levels	6c6f6cc9430d570f26284a24cf7b210599032db7	2025-10-02 12:44:15.688664
+31	objects-level-index	33f1fef7ec7fea08bb892222f4f0f5d79bab5eb8	2025-10-02 12:44:15.692282
+32	backward-compatible-index-on-objects	2d51eeb437a96868b36fcdfb1ddefdf13bef1647	2025-10-02 12:44:15.696079
+33	backward-compatible-index-on-prefixes	fe473390e1b8c407434c0e470655945b110507bf	2025-10-02 12:44:15.699766
+34	optimize-search-function-v1	82b0e469a00e8ebce495e29bfa70a0797f7ebd2c	2025-10-02 12:44:15.700777
+35	add-insert-trigger-prefixes	63bb9fd05deb3dc5e9fa66c83e82b152f0caf589	2025-10-02 12:44:15.704847
+36	optimise-existing-functions	81cf92eb0c36612865a18016a38496c530443899	2025-10-02 12:44:15.707469
+37	add-bucket-name-length-trigger	3944135b4e3e8b22d6d4cbb568fe3b0b51df15c1	2025-10-02 12:44:15.717166
+38	iceberg-catalog-flag-on-buckets	19a8bd89d5dfa69af7f222a46c726b7c41e462c5	2025-10-02 12:44:15.720464
+39	add-search-v2-sort-support	39cf7d1e6bf515f4b02e41237aba845a7b492853	2025-10-02 12:44:15.735108
+40	fix-prefix-race-conditions-optimized	fd02297e1c67df25a9fc110bf8c8a9af7fb06d1f	2025-10-02 12:44:15.73918
+41	add-object-level-update-trigger	44c22478bf01744b2129efc480cd2edc9a7d60e9	2025-10-02 12:44:15.746802
+42	rollback-prefix-triggers	f2ab4f526ab7f979541082992593938c05ee4b47	2025-10-02 12:44:15.750833
+43	fix-object-level	ab837ad8f1c7d00cc0b7310e989a23388ff29fc6	2025-10-02 12:44:15.757465
 \.
 
 
@@ -3490,7 +4370,15 @@ COPY storage.migrations (id, name, hash, executed_at) FROM stdin;
 -- Data for Name: objects; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 
-COPY storage.objects (id, bucket_id, name, owner, created_at, updated_at, last_accessed_at, metadata, version, owner_id, user_metadata) FROM stdin;
+COPY storage.objects (id, bucket_id, name, owner, created_at, updated_at, last_accessed_at, metadata, version, owner_id, user_metadata, level) FROM stdin;
+\.
+
+
+--
+-- Data for Name: prefixes; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+
+COPY storage.prefixes (bucket_id, name, created_at, updated_at) FROM stdin;
 \.
 
 
@@ -3529,7 +4417,14 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 24, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 30, true);
+
+
+--
+-- Name: payouts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.payouts_id_seq', 1, true);
 
 
 --
@@ -3564,7 +4459,7 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 22, true);
 -- Name: transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transactions_id_seq', 3, true);
+SELECT pg_catalog.setval('public.transactions_id_seq', 5, true);
 
 
 --
@@ -3575,17 +4470,24 @@ SELECT pg_catalog.setval('public.users_id_seq', 21, true);
 
 
 --
+-- Name: wallets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.wallets_id_seq', 1, true);
+
+
+--
 -- Name: worker_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_availability_id_seq', 427, true);
+SELECT pg_catalog.setval('public.worker_availability_id_seq', 452, true);
 
 
 --
 -- Name: worker_keys_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_keys_id_seq', 4, true);
+SELECT pg_catalog.setval('public.worker_keys_id_seq', 6, true);
 
 
 --
@@ -3796,6 +4698,14 @@ ALTER TABLE ONLY public.bookings
 
 
 --
+-- Name: payouts payouts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payouts
+    ADD CONSTRAINT payouts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: reviews reviews_booking_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3892,6 +4802,14 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: wallets wallets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.wallets
+    ADD CONSTRAINT wallets_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: worker_availability worker_availability_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3972,6 +4890,14 @@ ALTER TABLE ONLY realtime.schema_migrations
 
 
 --
+-- Name: buckets_analytics buckets_analytics_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
+
+ALTER TABLE ONLY storage.buckets_analytics
+    ADD CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: buckets buckets_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
 --
 
@@ -4001,6 +4927,14 @@ ALTER TABLE ONLY storage.migrations
 
 ALTER TABLE ONLY storage.objects
     ADD CONSTRAINT objects_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: prefixes prefixes_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
+
+ALTER TABLE ONLY storage.prefixes
+    ADD CONSTRAINT prefixes_pkey PRIMARY KEY (bucket_id, level, name);
 
 
 --
@@ -4363,10 +5297,31 @@ CREATE INDEX idx_multipart_uploads_list ON storage.s3_multipart_uploads USING bt
 
 
 --
+-- Name: idx_name_bucket_level_unique; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE UNIQUE INDEX idx_name_bucket_level_unique ON storage.objects USING btree (name COLLATE "C", bucket_id, level);
+
+
+--
 -- Name: idx_objects_bucket_id_name; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
 --
 
 CREATE INDEX idx_objects_bucket_id_name ON storage.objects USING btree (bucket_id, name COLLATE "C");
+
+
+--
+-- Name: idx_objects_lower_name; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE INDEX idx_objects_lower_name ON storage.objects USING btree ((path_tokens[level]), lower(name) text_pattern_ops, bucket_id, level);
+
+
+--
+-- Name: idx_prefixes_lower_name; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE INDEX idx_prefixes_lower_name ON storage.prefixes USING btree (bucket_id, level, ((string_to_array(name, '/'::text))[level]), lower(name) text_pattern_ops);
 
 
 --
@@ -4377,10 +5332,59 @@ CREATE INDEX name_prefix_search ON storage.objects USING btree (name text_patter
 
 
 --
+-- Name: objects_bucket_id_level_idx; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE UNIQUE INDEX objects_bucket_id_level_idx ON storage.objects USING btree (bucket_id, level, name COLLATE "C");
+
+
+--
 -- Name: subscription tr_check_filters; Type: TRIGGER; Schema: realtime; Owner: supabase_admin
 --
 
 CREATE TRIGGER tr_check_filters BEFORE INSERT OR UPDATE ON realtime.subscription FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
+
+
+--
+-- Name: buckets enforce_bucket_name_length_trigger; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TRIGGER enforce_bucket_name_length_trigger BEFORE INSERT OR UPDATE OF name ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_bucket_name_length();
+
+
+--
+-- Name: objects objects_delete_delete_prefix; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TRIGGER objects_delete_delete_prefix AFTER DELETE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.delete_prefix_hierarchy_trigger();
+
+
+--
+-- Name: objects objects_insert_create_prefix; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TRIGGER objects_insert_create_prefix BEFORE INSERT ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.objects_insert_prefix_trigger();
+
+
+--
+-- Name: objects objects_update_create_prefix; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TRIGGER objects_update_create_prefix BEFORE UPDATE ON storage.objects FOR EACH ROW WHEN (((new.name <> old.name) OR (new.bucket_id <> old.bucket_id))) EXECUTE FUNCTION storage.objects_update_prefix_trigger();
+
+
+--
+-- Name: prefixes prefixes_create_hierarchy; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TRIGGER prefixes_create_hierarchy BEFORE INSERT ON storage.prefixes FOR EACH ROW WHEN ((pg_trigger_depth() < 1)) EXECUTE FUNCTION storage.prefixes_insert_trigger();
+
+
+--
+-- Name: prefixes prefixes_delete_hierarchy; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
+
+CREATE TRIGGER prefixes_delete_hierarchy AFTER DELETE ON storage.prefixes FOR EACH ROW EXECUTE FUNCTION storage.delete_prefix_hierarchy_trigger();
 
 
 --
@@ -4519,6 +5523,14 @@ ALTER TABLE ONLY public.worker_services
 
 
 --
+-- Name: payouts payouts_wallet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.payouts
+    ADD CONSTRAINT payouts_wallet_id_fkey FOREIGN KEY (wallet_id) REFERENCES public.wallets(id) ON DELETE CASCADE;
+
+
+--
 -- Name: reviews reviews_booking_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4563,15 +5575,23 @@ ALTER TABLE ONLY public.sub_services
 --
 
 ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id);
+    ADD CONSTRAINT transactions_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE SET NULL;
 
 
 --
--- Name: transactions transactions_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: transactions transactions_wallet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.users(id);
+    ADD CONSTRAINT transactions_wallet_id_fkey FOREIGN KEY (wallet_id) REFERENCES public.wallets(id) ON DELETE CASCADE;
+
+
+--
+-- Name: wallets wallets_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.wallets
+    ADD CONSTRAINT wallets_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -4612,6 +5632,14 @@ ALTER TABLE ONLY public.worker_sub_service_items
 
 ALTER TABLE ONLY storage.objects
     ADD CONSTRAINT "objects_bucketId_fkey" FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
+
+
+--
+-- Name: prefixes prefixes_bucketId_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
+
+ALTER TABLE ONLY storage.prefixes
+    ADD CONSTRAINT "prefixes_bucketId_fkey" FOREIGN KEY (bucket_id) REFERENCES storage.buckets(id);
 
 
 --
@@ -4741,6 +5769,12 @@ ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: payouts; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.payouts ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: reviews; Type: ROW SECURITY; Schema: public; Owner: postgres
 --
 
@@ -4765,10 +5799,22 @@ ALTER TABLE public.sub_service_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sub_services ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: transactions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: users; Type: ROW SECURITY; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: wallets; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: worker_availability; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -4813,6 +5859,12 @@ ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE storage.buckets ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: buckets_analytics; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
+
+ALTER TABLE storage.buckets_analytics ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: migrations; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
 --
 
@@ -4823,6 +5875,12 @@ ALTER TABLE storage.migrations ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: prefixes; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
+
+ALTER TABLE storage.prefixes ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: s3_multipart_uploads; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
@@ -5787,6 +6845,24 @@ GRANT ALL ON SEQUENCE public.bookings_id_seq TO service_role;
 
 
 --
+-- Name: TABLE payouts; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.payouts TO anon;
+GRANT ALL ON TABLE public.payouts TO authenticated;
+GRANT ALL ON TABLE public.payouts TO service_role;
+
+
+--
+-- Name: SEQUENCE payouts_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.payouts_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.payouts_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.payouts_id_seq TO service_role;
+
+
+--
 -- Name: TABLE reviews; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -5892,6 +6968,24 @@ GRANT ALL ON TABLE public.users TO service_role;
 GRANT ALL ON SEQUENCE public.users_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.users_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.users_id_seq TO service_role;
+
+
+--
+-- Name: TABLE wallets; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.wallets TO anon;
+GRANT ALL ON TABLE public.wallets TO authenticated;
+GRANT ALL ON TABLE public.wallets TO service_role;
+
+
+--
+-- Name: SEQUENCE wallets_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.wallets_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.wallets_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.wallets_id_seq TO service_role;
 
 
 --
@@ -6015,6 +7109,15 @@ GRANT ALL ON TABLE storage.buckets TO postgres WITH GRANT OPTION;
 
 
 --
+-- Name: TABLE buckets_analytics; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
+
+GRANT ALL ON TABLE storage.buckets_analytics TO service_role;
+GRANT ALL ON TABLE storage.buckets_analytics TO authenticated;
+GRANT ALL ON TABLE storage.buckets_analytics TO anon;
+
+
+--
 -- Name: TABLE objects; Type: ACL; Schema: storage; Owner: supabase_storage_admin
 --
 
@@ -6022,6 +7125,15 @@ GRANT ALL ON TABLE storage.objects TO anon;
 GRANT ALL ON TABLE storage.objects TO authenticated;
 GRANT ALL ON TABLE storage.objects TO service_role;
 GRANT ALL ON TABLE storage.objects TO postgres WITH GRANT OPTION;
+
+
+--
+-- Name: TABLE prefixes; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
+
+GRANT ALL ON TABLE storage.prefixes TO service_role;
+GRANT ALL ON TABLE storage.prefixes TO authenticated;
+GRANT ALL ON TABLE storage.prefixes TO anon;
 
 
 --

@@ -1163,3 +1163,163 @@ main.page-content {
     border: 1px solid var(--border-color);
     z-index: 1;
 }
+
+/* --- Add to Section 12.0 in admin_style.css --- */
+
+.data-table .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.data-table .action-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    text-decoration: none; /* For the <a> tag */
+}
+
+.data-table .action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.data-table .action-btn.cancel-btn:hover {
+    background: var(--danger-color);
+}
+
+/* --- 15.0 IMPROVED BOOKING DETAILS MODAL UI --- */
+.booking-details-modal .modal-content {
+    max-width: 800px; /* Wider for more content */
+    text-align: left;
+    padding: 0; /* We'll control padding inside */
+    
+    /* --- THIS IS THE SCROLLING FIX --- */
+    max-height: 90vh; /* Limit height to 90% of the viewport */
+    overflow-y: auto; /* Add a vertical scrollbar ONLY if content overflows */
+}
+
+.booking-details-modal .modal-header-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--background-secondary); /* Light background for header */
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+    
+    /* Keep header visible when scrolling */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.booking-details-modal .modal-header-custom h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-primary);
+}
+
+.booking-details-modal .modal-body {
+    padding: 2rem; /* Consistent padding for content */
+}
+
+.details-section {
+    margin-bottom: 2rem;
+}
+.details-section:last-child {
+    margin-bottom: 0;
+}
+
+/* --- NEW CARD STYLING --- */
+.details-section h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.details-grid {
+    display: grid;
+    /* This creates the responsive 2-column grid */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 1.5rem; /* Increased gap for a cleaner look */
+}
+
+.detail-item {
+    background-color: var(--background-secondary); /* Use a slightly different background for the card effect */
+    padding: 1.25rem;
+    border-radius: var(--radius-lg); /* Softer corners */
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease-in-out;
+}
+
+.detail-item:hover {
+    border-color: var(--primary-color); /* Highlight on hover */
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.detail-item strong {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.detail-item span {
+    display: block;
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    word-break: break-word; /* Prevents long text like emails from overflowing */
+}
+
+.service-details-box {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    white-space: pre-line; /* Preserve formatting */
+    font-family: 'Inter', sans-serif; /* Maintain consistent font */
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+@media (max-width: 600px) {
+    .details-grid {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+    }
+    .booking-details-modal .modal-header-custom {
+        padding: 1rem 1.5rem;
+    }
+    .booking-details-modal .modal-header-custom h2 {
+        font-size: 1.25rem;
+    }
+    .booking-details-modal .modal-body {
+        padding: 1.5rem;
+    }
+}

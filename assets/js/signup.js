@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const subServicesContainer = document.getElementById('sub-services-container');
     const subServiceItemsContainer = document.getElementById('sub-service-items-container');
+    const priceSettingContainer = document.getElementById('price-setting-container');
     const accountDetailsNextBtn = document.getElementById('account-details-next-btn');
 
     // --- Location-related elements ---
@@ -91,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     }
 
-    // --- FIX APPLIED FOR CHECKMARK BUG ---
     function updateStepIndicator(currentStepId) {
         const role = roleHiddenInput.value;
         const indicatorWrapper = role === 'worker' ? workerIndicator : customerIndicator;
@@ -112,17 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!span) return;
 
                 if (index < currentStepIndex) {
-                    // Completed Step
                     item.classList.add('completed');
                     item.classList.remove('active');
-                    span.innerHTML = '&#x2713;'; // Directly set checkmark HTML entity
+                    span.innerHTML = '&#x2713;'; 
                 } else if (index === currentStepIndex) {
-                    // Active Step
                     item.classList.add('active');
                     item.classList.remove('completed');
                     span.textContent = index + 1;
                 } else {
-                    // Future Step
                     item.classList.remove('active', 'completed');
                     span.textContent = index + 1;
                 }
@@ -197,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 accountDetailsNextBtn.dataset.target = 'step-register-part2';
                 registerBackBtn.dataset.target = 'step-key';
-                locationBackBtn.dataset.target = 'step-sub-service-items';
+                locationBackBtn.dataset.target = 'step-set-prices'; // CORRECTED
                 showStep('step-key');
             }
         });
@@ -209,12 +206,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentStep = btn.closest('.step').id;
         if (!validateStep(currentStep)) return;
         const targetStep = btn.dataset.target;
+
         if (targetStep === 'step-sub-services') populateSubServices();
         if (targetStep === 'step-sub-service-items') populateSubServiceItems();
+        if (targetStep === 'step-set-prices') populatePriceSettings();
+        
         showStep(targetStep);
     }));
     
-     function populateSubServices() {
+    function populateSubServices() {
         subServicesContainer.innerHTML = '';
         const selectedMainServices = Array.from(document.querySelectorAll('input[name="main_services[]"]:checked')).map(cb => cb.value);
         let content = '';
@@ -254,6 +254,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         subServiceItemsContainer.innerHTML = content || '<p>No service items found for the selected sub-services.</p>';
+    }
+
+    function populatePriceSettings() {
+        priceSettingContainer.innerHTML = '';
+        const selectedSubServiceItems = Array.from(document.querySelectorAll('#sub-service-items-container input[type="checkbox"]:checked'));
+        
+        if (selectedSubServiceItems.length === 0) {
+            priceSettingContainer.innerHTML = '<p>Please go back and select at least one service item to set prices.</p>';
+            return;
+        }
+
+        let content = '';
+        selectedSubServiceItems.forEach(checkbox => {
+            const itemId = checkbox.value;
+            const itemName = checkbox.nextElementSibling.textContent;
+            
+            content += `
+                <div class="form-group">
+                    <label class="form-label">Price for ${itemName} (₹)</label>
+                    <div class="input-wrapper">
+                         <i class="fas fa-indian-rupee-sign input-icon"></i>
+                        <input type="number" step="0.01" class="form-control" name="prices[${itemId}]" placeholder="e.g., 50.00" required>
+                    </div>
+                </div>
+            `;
+        });
+        priceSettingContainer.innerHTML = content;
     }
 
     if (verifyKeyBtn) {
@@ -368,6 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
             this.classList.toggle('fa-eye-slash');
         });
     }

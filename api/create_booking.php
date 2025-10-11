@@ -27,9 +27,10 @@ $service_item_name = trim($_POST['service_item_name'] ?? '');
 $address = trim($_POST['address'] ?? '');
 $booking_date = $_POST['booking_date'] ?? '';
 $booking_time = $_POST['booking_time'] ?? '';
+$price = filter_input(INPUT_POST, 'price', FILTER_VALIDATE_FLOAT); // NEW: Get the price
 
-if (!$worker_id || !$customer_id || empty($sub_service_name) || empty($service_item_name) || empty($address) || empty($booking_date) || empty($booking_time)) {
-    echo json_encode(['status' => 'error', 'message' => 'Missing required fields.']);
+if (!$worker_id || !$customer_id || empty($sub_service_name) || empty($service_item_name) || empty($address) || empty($booking_date) || empty($booking_time) || $price === null) {
+    echo json_encode(['status' => 'error', 'message' => 'Missing required fields, including price.']);
     exit;
 }
 
@@ -41,14 +42,9 @@ if ($userId != $customer_id) {
 // --- Time Processing ---
 try {
     $datetime_string = $booking_date . ' ' . $booking_time;
-    // Set the timezone to IST first to interpret the user's input correctly
     $timezone = new DateTimeZone('Asia/Kolkata');
     $booking_datetime = new DateTime($datetime_string, $timezone);
-    
-    // Now convert it to UTC for storage
     $booking_datetime->setTimezone(new DateTimeZone('UTC'));
-    
-    // Format for storage without offset, as the database column should be `timestamp without time zone` or similar
     $formatted_for_db = $booking_datetime->format('Y-m-d H:i:s');
 } catch (Exception $e) {
     error_log("Booking time processing error: " . $e->getMessage());
@@ -58,19 +54,19 @@ try {
 
 // --- Database Operation ---
 try {
-    // Construct the service details string from the passed parameters
     $full_service_details = "Service: {$sub_service_name}\nItem: {$service_item_name}\nAddress: {$address}";
 
     $stmt = $conn->prepare(
-        "INSERT INTO public.bookings (customer_id, worker_id, service_details, booking_time, status) 
-         VALUES (?, ?, ?, ?, 'pending')"
+        "INSERT INTO public.bookings (customer_id, worker_id, service_details, booking_time, status, final_cost) 
+         VALUES (?, ?, ?, ?, 'pending', ?)"
     );
 
     $stmt->execute([
         $customer_id,
         $worker_id,
         $full_service_details,
-        $formatted_for_db
+        $formatted_for_db,
+        $price // NEW: Save the price
     ]);
 
     echo json_encode(['status' => 'success']);
