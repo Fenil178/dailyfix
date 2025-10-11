@@ -1,0 +1,7 @@
+{
+    "inter": {
+        "normal": "C:\\xampp\\htdocs\\dailyfix\\vendor\\dompdf\\dompdf\/lib\/fonts\/inter_normal_5a66f8ceb794f00a7f54c797a21283b3",
+        "600": "C:\\xampp\\htdocs\\dailyfix\\vendor\\dompdf\\dompdf\/lib\/fonts\/inter_600_3604d9d49b61fc3b7c29c4259c86ff89",
+        "800": "inter_800_43e268268a3801a5ec2cf116ab01b114"
+    }
+}

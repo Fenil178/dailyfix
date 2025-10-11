@@ -16,7 +16,7 @@ function format_time_ago($timestamp_str) {
     $diff = time() - $time;
     if ($diff < 60) return 'just now';
     if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
-    if ($diff < 86400) return floor($diff / 86400) . ' days ago';
+    if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
     if ($diff < 604800) return floor($diff / 86400) . ' days ago';
     return date('M j, Y', $time);
 }
@@ -37,7 +37,7 @@ try {
         $worker_lon = $worker_location['longitude'];
     }
 
-    // Fetch new job requests (status = 'pending')
+    // Fetch new job requests (status = 'pending'), ordered by the latest booking time first
     $sql_pending = "
         SELECT b.id, b.service_details, b.booking_time, b.created_at, u.full_name as customer_name, u.profile_image as customer_avatar, u.latitude as customer_lat, u.longitude as customer_lon, u.address_line1, u.address_line2, u.city, u.state, u.pincode
         ";
@@ -48,7 +48,7 @@ try {
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
         WHERE b.worker_id = ? AND b.status = 'pending'
-        ORDER BY b.created_at DESC
+        ORDER BY b.booking_time DESC
     ";
     
     $params_pending = [$userId];
@@ -60,7 +60,7 @@ try {
     $stmt->execute($params_pending);
     $pendingJobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch upcoming jobs (status = 'confirmed' or 'in_progress')
+    // Fetch upcoming jobs (status = 'confirmed' or 'in_progress'), ordered by the latest booking time first
     $sql_upcoming = "
         SELECT b.*, u.full_name as customer_name, u.profile_image as customer_avatar, u.latitude as customer_lat, u.longitude as customer_lon, u.address_line1, u.address_line2, u.city, u.state, u.pincode
         ";
@@ -71,7 +71,7 @@ try {
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
         WHERE b.worker_id = ? AND b.status IN ('confirmed', 'in_progress')
-        ORDER BY b.booking_time ASC
+        ORDER BY b.booking_time DESC
     ";
     
     $params_upcoming = [$userId];
@@ -152,7 +152,6 @@ try {
                                     ?></p>
                                     <p><strong>Details:</strong></p>
                                     <?php 
-                                        // FIXED: Extract and display only the service and item details
                                         $details = explode("\n", $job['service_details']);
                                         foreach ($details as $line) {
                                             if (strpos($line, 'Address:') === false) {
@@ -231,6 +230,15 @@ try {
                                     <?php endif; ?>
                                     <p><strong>Status:</strong> <span class="item-status <?php echo htmlspecialchars($job['status']); ?>"><?php echo str_replace('_', ' ', htmlspecialchars($job['status'])); ?></span></p>
                                 </div>
+                                <div class="job-card-actions">
+                                    <?php if ($job['status'] === 'confirmed'): ?>
+                                    <button onclick="handleJobAction(<?php echo $job['id']; ?>, 'in_progress', null, this)" class="btn btn-main" style="background-color: #f59e0b; color: #fff;">Start Job</button>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($job['status'] === 'in_progress'): ?>
+                                    <a href="/dailyfix/booking-details.php?id=<?php echo $job['id']; ?>" class="btn accept">View Details & Complete</a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -259,62 +267,46 @@ try {
             });
         });
 
-        // --- NEW: Job Action Handler ---
+        // --- Job Action Handler ---
         function handleJobAction(bookingId, status, bookingTime, buttonElement) {
-            // Disable both buttons to prevent double-clicking
+            const originalText = buttonElement.textContent;
+            
             buttonElement.parentElement.querySelectorAll('.btn').forEach(btn => {
                 btn.disabled = true;
                 btn.textContent = '...';
             });
             
-            // Call the API using Fetch
             let url = `/dailyfix/api/update_booking_status.php?id=${bookingId}&status=${status}`;
             if (bookingTime) {
                 url += `&booking_time=${encodeURIComponent(bookingTime)}`;
             }
 
             fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Server responded with an error.');
-                    }
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        return response.json();
-                    } else {
-                        return response.text().then(text => {
-                            throw new Error('Did not receive a JSON response. Received: ' + text);
-                        });
-                    }
-                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // On success, fade out the card and then reload the page
                         const card = document.getElementById(`job-card-${bookingId}`);
                         if(card) {
                             card.style.transition = 'opacity 0.5s ease';
                             card.style.opacity = '0';
                         }
                         setTimeout(() => {
-                            window.location.reload(); // Reload to update both tabs
+                            window.location.reload();
                         }, 500);
                     } else {
-                        // On a valid JSON response with an error status
                         alert(`Error: ${data.message}`);
-                        buttonElement.parentElement.querySelector('.btn.accept').disabled = false;
-                        buttonElement.parentElement.querySelector('.btn.accept').textContent = 'Accept';
-                        buttonElement.parentElement.querySelector('.btn.decline').disabled = false;
-                        buttonElement.parentElement.querySelector('.btn.decline').textContent = 'Decline';
+                        buttonElement.parentElement.querySelectorAll('.btn').forEach(btn => {
+                             btn.disabled = false;
+                             if(btn.classList.contains('accept')) btn.textContent = 'Accept';
+                             if(btn.classList.contains('decline')) btn.textContent = 'Decline';
+                             if(btn.classList.contains('btn-main') && btn.textContent === '...') btn.textContent = 'Start Job';
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Fetch error:', error);
                     alert('A network error occurred. Please try again.');
-                    // Re-enable buttons
-                     buttonElement.parentElement.querySelector('.btn.accept').disabled = false;
-                     buttonElement.parentElement.querySelector('.btn.accept').textContent = 'Accept';
-                     buttonElement.parentElement.querySelector('.btn.decline').disabled = false;
-                     buttonElement.parentElement.querySelector('.btn.decline').textContent = 'Decline';
+                    window.location.reload();
                 });
         }
     </script>

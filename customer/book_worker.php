@@ -90,7 +90,6 @@ try {
     $subServiceName = $stmt->fetchColumn();
 
     // 2. Fetch the specific sub-service items AND THEIR PRICES for this worker
-    // MODIFIED: Added wssi.price to the SELECT statement
     $stmt = $conn->prepare("
         SELECT ssi.id, ssi.name, ssi.icon, wssi.price
         FROM public.worker_sub_service_items wssi
@@ -226,13 +225,14 @@ try {
                     <input type="hidden" id="booking_date" name="booking_date">
                     <input type="hidden" id="booking_time_combined" name="booking_time">
                     <input type="hidden" id="service_item_name" name="service_item_name">
+                    <input type="hidden" id="price" name="price">
 
                     <div class="form-group">
                         <label>Services for "<?php echo htmlspecialchars($subServiceName); ?>"</label>
                         <div id="service-selection-grid" class="services-grid">
                             <?php if (!empty($subServiceItems)): ?>
                                 <?php foreach ($subServiceItems as $item): ?>
-                                    <div class="service-option" data-item-name="<?php echo htmlspecialchars($item['name']); ?>">
+                                    <div class="service-option" data-item-name="<?php echo htmlspecialchars($item['name']); ?>" data-price="<?php echo htmlspecialchars($item['price']); ?>">
                                         <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
                                         <span><?php echo htmlspecialchars($item['name']); ?></span>
                                         <span class="service-price">₹<?php echo htmlspecialchars($item['price']); ?></span>
@@ -307,6 +307,7 @@ try {
         document.addEventListener('DOMContentLoaded', function() {
             const serviceSelectionGrid = document.getElementById('service-selection-grid');
             const hiddenServiceItemInput = document.getElementById('service_item_name');
+            const hiddenPriceInput = document.getElementById('price');
             const bookingForm = document.getElementById('booking-form');
             const submitButton = document.getElementById('submit-booking-btn');
             const successModal = document.getElementById('successModal');
@@ -323,6 +324,7 @@ try {
 
                     clickedService.classList.add('selected');
                     hiddenServiceItemInput.value = clickedService.dataset.itemName;
+                    hiddenPriceInput.value = clickedService.dataset.price;
                 });
             }
 

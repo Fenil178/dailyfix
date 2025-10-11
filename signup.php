@@ -57,9 +57,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $fileExtension = pathinfo($profile_image['name'], PATHINFO_EXTENSION);
             $newFileName = uniqid() . '.' . $fileExtension;
-            $profile_imagePath = "/dailyfix/uploads/profile_images/" . $newFileName;
+            $profile_imagePath = "uploads/profile_images/" . $newFileName;
             
-            if (!move_uploaded_file($profile_image['tmp_name'], __DIR__ . "/uploads/profile_images/" . $newFileName)) {
+            if (!move_uploaded_file($profile_image['tmp_name'], $uploadDir . $newFileName)) {
                 $conn->rollBack();
                 echo json_encode(['status' => 'error', 'message' => 'Failed to upload profile image. Please check server permissions.']);
                 exit;
@@ -102,22 +102,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_key_update = $conn->prepare("UPDATE public.worker_keys SET is_used = true, used_by_worker_id = ? WHERE access_key = ?");
             $stmt_key_update->execute([$new_user_id, $worker_key]);
 
-            // Link services to worker with their prices
+            // Link services to worker
             if (!empty($selected_services)) {
-                $sql_worker_services = "INSERT INTO public.worker_services (user_id, sub_service_id, price) VALUES (?, ?, ?)";
+                $sql_worker_services = "INSERT INTO public.worker_services (user_id, sub_service_id) VALUES (?, ?)";
                 $stmt_services = $conn->prepare($sql_worker_services);
                 foreach ($selected_services as $service_id) {
-                    $price = $item_prices[$service_id] ?? 0.00;
-                    $stmt_services->execute([$new_user_id, $service_id, $price]);
+                    $stmt_services->execute([$new_user_id, $service_id]);
                 }
             }
             
-            // Link sub-service items to worker
+            // Link sub-service items to worker with their prices
             if (!empty($selected_sub_service_items)) {
-                $sql_worker_items = "INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id) VALUES (?, ?)";
+                $sql_worker_items = "INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id, price) VALUES (?, ?, ?)";
                 $stmt_items = $conn->prepare($sql_worker_items);
                 foreach ($selected_sub_service_items as $item_id) {
-                    $stmt_items->execute([$new_user_id, $item_id]);
+                    $price = $item_prices[$item_id] ?? 0.00;
+                    $stmt_items->execute([$new_user_id, $item_id, $price]);
                 }
             }
         }

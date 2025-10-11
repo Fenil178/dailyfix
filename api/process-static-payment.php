@@ -22,7 +22,8 @@ try {
     $conn->beginTransaction();
 
     // 1. Fetch booking details to get amount and worker_id
-    $stmt = $conn->prepare("SELECT worker_id, final_cost FROM public.bookings WHERE id = ? AND customer_id = ?");
+    // Added SELECT FOR UPDATE to prevent race conditions during the payment processing
+    $stmt = $conn->prepare("SELECT worker_id, final_cost FROM public.bookings WHERE id = ? AND customer_id = ? FOR UPDATE");
     $stmt->execute([$booking_id, $userId]);
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -32,6 +33,15 @@ try {
 
     $worker_id = $booking['worker_id'];
     $amount = $booking['final_cost'];
+
+    // --- CRITICAL FIX: Ensure the final_cost is a valid, positive number ---
+    if (!is_numeric($amount) || $amount <= 0) {
+        $conn->rollBack();
+        error_log("Payment failed for booking $booking_id: Final cost is invalid ($amount).");
+        // Throw a user-friendly error explaining the problem
+        throw new Exception("The cost for this service (₹" . number_format($amount, 2) . ") is invalid. Contact the administrator.");
+    }
+    // --- END CRITICAL FIX ---
 
     // 2. Update booking status to 'completed' and payment_status to 'paid'
     $stmt = $conn->prepare("UPDATE public.bookings SET payment_status = 'paid', status = 'completed' WHERE id = ?");
@@ -64,6 +74,6 @@ try {
     $conn->rollBack();
     error_log("Static Payment Error: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'An error occurred during payment processing.']);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ?>

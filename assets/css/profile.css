@@ -601,3 +601,66 @@ body.dark-mode .service-card-selectable input[type="checkbox"]:checked + label {
 body.dark-mode .service-card-selectable input[type="checkbox"]:checked + label::after {
     color: #111; /* Dark check icon for the yellow background */
 }
+
+/* ==================================================================== */
+/* === PRICING STEP STYLES (New additions) ============================ */
+/* ==================================================================== */
+
+/* Container for individual item+price groups */
+.sub-service-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Individual container for an item checkbox + its price input */
+.item-and-price-group {
+    background-color: var(--background-secondary);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+    transition: all 0.2s ease;
+}
+
+.item-and-price-group:hover {
+    border-color: var(--primary-color);
+}
+
+/* Ensure the selectable card inside is stacked */
+.item-and-price-group .service-card-selectable label {
+    padding: 10px; /* Reduced padding for compact look */
+    min-height: 40px; /* Ensure a minimum clickable area */
+    font-size: 0.9rem;
+}
+
+/* Styling for the price input within this group */
+.item-and-price-group input[type="number"] {
+    padding: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    border-color: #ced4da;
+    /* Reset background color to distinguish from default form inputs */
+    background-color: var(--background-color-card); 
+}
+
+/* Highlight the whole group if the item is selected */
+.item-and-price-group .service-card-selectable input[type="checkbox"]:checked + label {
+    /* No need to define styles here, they are inherited from .service-card-selectable */
+}
+.item-and-price-group .service-card-selectable input[type="checkbox"]:checked ~ .form-group input[type="number"] {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+/* Hide spin buttons on number inputs for cleaner UI */
+.item-and-price-group input[type=number]::-webkit-inner-spin-button, 
+.item-and-price-group input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    margin: 0;
+}
+.item-and-price-group input[type=number] {
+    -moz-appearance: textfield;
+}

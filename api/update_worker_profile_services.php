@@ -25,7 +25,7 @@ if (!isset($userId) || $role !== 'worker') {
 
 // Get the arrays of selected IDs from the form.
 $selected_sub_services = $_POST['services'] ?? [];
-$prices = $_POST['prices'] ?? []; // ADDED: Get the prices array from the form
+$prices = $_POST['prices'] ?? [];
 $selected_sub_service_items = $_POST['sub_service_items'] ?? [];
 
 try {
@@ -36,34 +36,30 @@ try {
     $stmt_delete_services = $conn->prepare("DELETE FROM public.worker_services WHERE user_id = ?");
     $stmt_delete_services->execute([$userId]);
 
-    // 2. Insert the new set of selected sub-services with their prices.
+    // 2. Insert the new set of selected sub-services.
     if (!empty($selected_sub_services)) {
-        // MODIFIED: The SQL query now includes the 'price' column.
-        $stmt_insert_services = $conn->prepare("INSERT INTO public.worker_services (user_id, sub_service_id, price) VALUES (?, ?, ?)");
-        
+        $stmt_insert_services = $conn->prepare("INSERT INTO public.worker_services (user_id, sub_service_id) VALUES (?, ?)");
         foreach ($selected_sub_services as $service_id) {
             $sanitized_service_id = filter_var($service_id, FILTER_VALIDATE_INT);
             if ($sanitized_service_id) {
-                // MODIFIED: Get the corresponding price from the submitted array, default to 0 if not set.
-                $price = isset($prices[$sanitized_service_id]) ? filter_var($prices[$sanitized_service_id], FILTER_VALIDATE_FLOAT) : 0.00;
-                // MODIFIED: Execute with the price.
-                $stmt_insert_services->execute([$userId, $sanitized_service_id, $price]);
+                $stmt_insert_services->execute([$userId, $sanitized_service_id]);
             }
         }
     }
 
-    // 3. Delete all existing sub-service items for this worker. (This part was incorrectly removed before)
+    // 3. Delete all existing sub-service items for this worker.
     $stmt_delete_items = $conn->prepare("DELETE FROM public.worker_sub_service_items WHERE user_id = ?");
     $stmt_delete_items->execute([$userId]);
 
-    // 4. Insert the new set of selected sub-service items. (This part was incorrectly removed before)
+    // 4. Insert the new set of selected sub-service items with their prices.
     if (!empty($selected_sub_service_items)) {
-        $stmt_insert_items = $conn->prepare("INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id) VALUES (?, ?)");
+        $stmt_insert_items = $conn->prepare("INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id, price) VALUES (?, ?, ?)");
         
         foreach ($selected_sub_service_items as $item_id) {
             $sanitized_item_id = filter_var($item_id, FILTER_VALIDATE_INT);
             if ($sanitized_item_id) {
-                $stmt_insert_items->execute([$userId, $sanitized_item_id]);
+                $price = isset($prices[$sanitized_item_id]) ? filter_var($prices[$sanitized_item_id], FILTER_VALIDATE_FLOAT) : 0.00;
+                $stmt_insert_items->execute([$userId, $sanitized_item_id, $price]);
             }
         }
     }

@@ -3,7 +3,7 @@
 // Set headers for JSON response
 header('Content-Type: application/json');
 include_once __DIR__ . "/connect.php"; 
-include_once __DIR__ . "/user_session.php"; // FIX: Use the logic-only session file
+include_once __DIR__ . "/user_session.php";
 
 // 1. Ensure user is a logged-in worker
 if (!isset($userId) || $role !== 'worker') {
@@ -13,7 +13,6 @@ if (!isset($userId) || $role !== 'worker') {
 }
 
 // FIX: Release the session lock immediately if sessions are auto-started on the server.
-// This prevents concurrent requests from blocking each other and causing timeouts.
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
 }
@@ -39,8 +38,8 @@ if ($new_status === 'confirmed') {
     $booking_time = $_GET['booking_time'];
 }
 
-// 3. Validate the status value
-$allowed_statuses = ['confirmed', 'cancelled'];
+// 3. Validate the status value: ADDED 'in_progress'
+$allowed_statuses = ['confirmed', 'cancelled', 'in_progress'];
 if (!$booking_id || !in_array($new_status, $allowed_statuses)) {
     http_response_code(400); // Bad Request
     echo json_encode(['status' => 'error', 'message' => 'Invalid input provided.']);
@@ -49,7 +48,7 @@ if (!$booking_id || !in_array($new_status, $allowed_statuses)) {
 
 // --- Database Operation ---
 try {
-    // START NEW CONFLICT CHECK LOGIC
+    // START CONFLICT CHECK LOGIC (only for 'confirmed')
     if ($new_status === 'confirmed') {
         $stmt_check = $conn->prepare("
             SELECT COUNT(*) FROM public.bookings
@@ -66,12 +65,12 @@ try {
             exit;
         }
     }
-    // END NEW CONFLICT CHECK LOGIC
+    // END CONFLICT CHECK LOGIC
 
     $stmt = $conn->prepare(
         "UPDATE public.bookings 
          SET status = ? 
-         WHERE id = ? AND worker_id = ?" // Extra check to ensure worker owns this job
+         WHERE id = ? AND worker_id = ?"
     );
     
     $stmt->execute([$new_status, $booking_id, $userId]);
@@ -90,4 +89,3 @@ try {
     http_response_code(500); // Internal Server Error
     echo json_encode(['status' => 'error', 'message' => 'A database error occurred.']);
 }
-?>
