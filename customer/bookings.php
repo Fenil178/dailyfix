@@ -46,12 +46,24 @@ try {
                     <?php foreach ($bookings as $booking): ?>
                         <div class="list-item">
                             <div class="item-details">
-                                <p><strong>Booking with <?php echo htmlspecialchars($booking['worker_name']); ?></strong></p>
-<small>Scheduled for <?php 
-    $bookingTime = new DateTime($booking['booking_time']);
-    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
-    echo htmlspecialchars($bookingTime->format("D, M d, Y g:i A")); 
-?></small>
+                                <?php
+                                $serviceName = 'Service'; // Default value
+                                $itemName = ''; // Default value
+                                if (!empty($booking['service_details'])) {
+                                    if (preg_match('/Service: (.*)/', $booking['service_details'], $service_matches)) {
+                                        $serviceName = trim($service_matches[1]);
+                                    }
+                                    if (preg_match('/Item: (.*)/', $booking['service_details'], $item_matches)) {
+                                        $itemName = trim($item_matches[1]);
+                                    }
+                                }
+                                ?>
+                                <p><strong>Booking for <?php echo htmlspecialchars($serviceName); ?><?php if ($itemName) echo " - " . htmlspecialchars($itemName); ?></strong></p>
+                                <small>Scheduled for <?php 
+                                    $bookingTime = new DateTime($booking['booking_time']);
+                                    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                    echo htmlspecialchars($bookingTime->format("D, M d, Y g:i A")); 
+                                ?></small>
                             </div>
                             <div class="item-status <?php echo htmlspecialchars($booking['status']); ?>">
                                 <?php echo str_replace('_', ' ', htmlspecialchars($booking['status'])); ?>

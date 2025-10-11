@@ -35,7 +35,7 @@
 .activity-card-details p { 
     margin: 0; 
     font-weight: 500;
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 .activity-card-details small { 
     color: var(--text-color-light); 

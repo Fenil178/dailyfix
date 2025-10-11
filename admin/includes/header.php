@@ -30,12 +30,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </button>
             
             <ul class="nav-links" id="navLinks">
-                <li><a href="index.php" class="<?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>"><i class="fas fa-chart-dashboard"></i> Dashboard</a></li>
-                <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>"><i class="fas fa-users"></i> Users</a></li>
-                <li><a href="view_bookings.php" class="<?php echo ($currentPage == 'view_bookings.php') ? 'active' : ''; ?>"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+                <li><a href="index.php" class="<?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">Dashboard</a></li>
+                <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a></li>
+                <li><a href="view_bookings.php" class="<?php echo ($currentPage == 'view_bookings.php') ? 'active' : ''; ?>">Bookings</a></li>
                 <li class="nav-item-dropdown">
     <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php' || $currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">
-        <i class="fas fa-layer-group"></i> Services <i class="fas fa-caret-down dropdown-arrow"></i>
+        Services <i class="fas fa-caret-down dropdown-arrow"></i>
     </a>
     <ul class="dropdown-nav-menu">
         <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
@@ -43,7 +43,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <li><a href="manage_sub_service_items.php" class="<?php echo ($currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">Manage Service Items</a></li>
     </ul>
 </li>
-                <li><a href="manage_admins.php" class="<?php echo ($currentPage == 'manage_admins.php') ? 'active' : ''; ?>"><i class="fas fa-user-shield"></i> Admins</a></li>
+                <li><a href="manage_worker_keys.php" class="<?php echo ($currentPage == 'manage_worker_keys.php') ? 'active' : ''; ?>">Worker Keys</a></li>
+                <li><a href="manage_admins.php" class="<?php echo ($currentPage == 'manage_admins.php') ? 'active' : ''; ?>">Admins</a></li>
             </ul>
             
             <div class="user-menu">
@@ -57,13 +58,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </div>
     </nav>
 
-    <div id="custom-logout-modal" class="modal" role="dialog" aria-hidden="true">
+    <div id="custom-logout-modal" class="modal confirmation-modal modal-danger" role="dialog" aria-hidden="true">
         <div class="modal-content">
             <button class="close-button" aria-label="Close modal"><i class="fas fa-times"></i></button>
+            <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
             <h2 id="modal-title">Confirm Logout</h2>
             <p>Are you sure you want to log out?</p>
             <div class="modal-buttons">
-                <button id="confirm-logout-btn" class="btn btn-danger">Yes, Log Out</button>
+                <button id="confirm-logout-btn" class="btn btn-confirm">Yes, Log Out</button>
                 <button id="cancel-logout-btn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>

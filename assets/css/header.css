@@ -52,6 +52,8 @@ header {
     padding: 0;
 }
 
+/* Find and REPLACE the .nav-links a styles in header.css (around line 52-77) */
+
 /* 1. Base style for the navigation links */
 .nav-links a {
     color: var(--text-color);
@@ -65,33 +67,44 @@ header {
     background-color: transparent; /* Ensure no background color by default */
 }
 
-/* 2. Create the hidden underline pseudo-element */
+/* 2. Create the hidden underline pseudo-element - EXPANDS FROM CENTER */
 .nav-links a::after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 0;
-    width: 0; /* Initially hidden */
+    left: 50%; /* Start from center */
+    transform: translateX(-50%) scaleX(0); /* Initially hidden, centered */
+    width: 80%; /* Slightly narrower than full width for better look */
     height: 2px;
     background: var(--primary-color); /* Uses blue in light mode, yellow in dark mode */
-    transition: width 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
-/* 3. Define the style for BOTH hover and active states */
-.nav-links a:hover,
-.nav-links a.active {
+/* 3. Hover effect - expand underline from center */
+.nav-links a:hover {
     color: var(--primary-color); /* Change text color to blue/yellow */
 }
 
-/* 4. Animate the underline's width on BOTH hover and active states */
-.nav-links a:hover::after,
-.nav-links a.active::after {
-    width: 100%; /* Make the underline visible */
+.nav-links a:hover::after {
+    transform: translateX(-50%) scaleX(1); /* Expand from center */
 }
 
-/* =================================
-   User Profile Dropdown
-   ================================= */
+/* 4. Active state - bold text, NO underline */
+.nav-links a.active {
+    color: var(--primary-color);
+    font-weight: 700; /* Make active link bold */
+}
+
+.nav-links a.active::after {
+    transform: translateX(-50%) scaleX(0); /* No underline for active */
+}
+
+/* Remove underline on hover when link is active */
+.nav-links a.active:hover::after {
+    transform: translateX(-50%) scaleX(0);
+}
+
+/*User Profile Dropdown*/
 .user-menu {
     position: relative;
     display: flex;

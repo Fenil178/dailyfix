@@ -101,7 +101,6 @@ try {
 </head>
 <body>
     <main class="dashboard-container-v4">
-        <!-- Welcome Banner -->
         <div class="welcome-banner">
             <div class="welcome-content">
                 <div class="welcome-text">
@@ -122,7 +121,6 @@ try {
             </div>
         </div>
 
-        <!-- Stats Grid -->
         <div class="stats-grid-v4">
             <?php if ($role === 'customer'): ?>
                 <div class="stat-card-v4 stat-primary">
@@ -199,7 +197,6 @@ try {
             <?php endif; ?>
         </div>
         
-        <!-- Content Columns -->
         <div class="<?php echo ($role === 'worker') ? 'dashboard-columns-v4' : ''; ?>">
             <div class="main-column-v4">
                 <div class="section-card-v4">
@@ -224,8 +221,23 @@ try {
                                     </div>
                                     <div class="activity-content">
                                         <p class="activity-title">
-                                            <strong>Booking Request</strong> 
-                                            <?php echo ($role === 'customer') ? 'with ' . htmlspecialchars($activity['worker_name']) : 'from ' . htmlspecialchars($activity['customer_name']); ?>
+                                            <?php
+                                            if ($role === 'customer') {
+                                                $serviceName = 'Service'; // Default value
+                                                $itemName = ''; // Default value
+                                                if (!empty($activity['service_details'])) {
+                                                    if (preg_match('/Service: (.*)/', $activity['service_details'], $service_matches)) {
+                                                        $serviceName = trim($service_matches[1]);
+                                                    }
+                                                    if (preg_match('/Item: (.*)/', $activity['service_details'], $item_matches)) {
+                                                        $itemName = trim($item_matches[1]);
+                                                    }
+                                                }
+                                                echo "<strong>Booking Request</strong> for <strong>" . htmlspecialchars($serviceName) . ($itemName ? ' - ' . htmlspecialchars($itemName) : '') . "</strong>";
+                                            } else {
+                                                echo "<strong>Booking Request</strong> from " . htmlspecialchars($activity['customer_name']);
+                                            }
+                                            ?>
                                         </p>
                                         <span class="activity-status status-<?php echo strtolower($activity['status']); ?>">
                                             <i class="fas fa-circle"></i> <?php echo ucfirst($activity['status']); ?>

@@ -7,7 +7,7 @@ $allActivities = [];
 try {
     if ($role === 'customer') {
         $stmt = $conn->prepare("
-            SELECT b.id, b.status, b.booking_time, u.full_name as worker_name
+            SELECT b.id, b.status, b.booking_time, u.full_name as worker_name, b.service_details
             FROM public.bookings b
             JOIN public.users u ON b.worker_id = u.id
             WHERE b.customer_id = ? ORDER BY b.created_at DESC
@@ -53,12 +53,23 @@ try {
                         <div class="activity-card">
                             <div class="activity-card-details">
                                 <p>
-                                    Booking Request 
-                                    <?php if ($role === 'customer'): ?>
-                                        with <strong><?php echo htmlspecialchars($activity['worker_name']); ?></strong>
-                                    <?php else: ?>
-                                        from <strong><?php echo htmlspecialchars($activity['customer_name']); ?></strong>
-                                    <?php endif; ?>
+                                    <?php
+                                    if ($role === 'customer') {
+                                        $serviceName = 'Service'; // Default value
+                                        $itemName = ''; // Default value
+                                        if (!empty($activity['service_details'])) {
+                                            if (preg_match('/Service: (.*)/', $activity['service_details'], $service_matches)) {
+                                                $serviceName = trim($service_matches[1]);
+                                            }
+                                            if (preg_match('/Item: (.*)/', $activity['service_details'], $item_matches)) {
+                                                $itemName = trim($item_matches[1]);
+                                            }
+                                        }
+                                        echo "Booking for <strong>" . htmlspecialchars($serviceName) . ($itemName ? " - " . htmlspecialchars($itemName) : "") . "</strong>";
+                                    } else {
+                                        echo "Booking Request from <strong>" . htmlspecialchars($activity['customer_name']) . "</strong>";
+                                    }
+                                    ?>
                                 </p>
                                 <small>
                                     Scheduled for <?php echo date("M d, Y", strtotime($activity['booking_time'])); ?>

@@ -8,17 +8,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['worker_key'])) {
     // Standardize the key format: uppercase, no hyphens.
     $worker_key = trim(strtoupper(str_replace('-', '', $_POST['worker_key'])));
 
-    if (strlen($worker_key) !== 8) {
-        $response['message'] = 'Key must be 8 characters long.';
+    if (strlen($worker_key) !== 6) {
+        $response['message'] = 'Key must be 6 characters long.';
     } else {
         try {
-            $stmt = $conn->prepare("SELECT id FROM public.worker_keys WHERE access_key = ? AND is_used = false");
+            $stmt = $conn->prepare("SELECT id FROM public.worker_keys WHERE access_key = ? AND is_used = false AND status = 'active' AND deleted_at IS NULL");
             $stmt->execute([$worker_key]);
 
             if ($stmt->fetch()) {
                 $response = ['status' => 'success', 'message' => 'Key is valid!'];
             } else {
-                $response = ['status' => 'error', 'message' => 'This key is invalid or has already been used.'];
+                $response = ['status' => 'error', 'message' => 'This key is invalid, has already been used, or is currently suspended.'];
             }
         } catch (PDOException $e) {
             error_log("Key verification failed: " . $e->getMessage());

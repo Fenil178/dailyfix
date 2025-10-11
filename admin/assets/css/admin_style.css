@@ -120,21 +120,55 @@ body {
     gap: 0.5rem;
 }
 
+/* Find and REPLACE the .nav-links a styles in admin_style.css (around line 140-152) */
+
 .nav-links a {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
+    padding-bottom: calc(0.75rem - 2px); /* Adjust for underline */
     color: var(--text-secondary);
     text-decoration: none;
     font-weight: 500;
     border-radius: var(--radius-lg);
     transition: all var(--transition-normal);
+    position: relative; /* Required for ::after pseudo-element */
 }
 
-.nav-links a:hover, .nav-links a.active {
+/* Create the animated underline using ::after pseudo-element */
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.25rem; /* Match the left padding */
+    right: 1.25rem; /* Match the right padding */
+    width: calc(100% - 2.5rem); /* Account for both paddings */
+    height: 2px;
+    background: var(--primary-color);
+    transform: scaleX(0); /* Initially hidden */
+    transition: transform 0.3s ease;
+}
+
+/* Hover effect - show underline */
+.nav-links a:hover::after {
+    transform: scaleX(1); /* Expand underline on hover */
+}
+
+/* Active state - bold text, NO underline */
+.nav-links a.active {
     color: var(--primary-color);
-    background-color: var(--background-tertiary);
+    background-color: transparent;
+    font-weight: 700; /* Make active link bold */
+}
+
+.nav-links a.active::after {
+    transform: scaleX(0); /* No underline for active state */
+}
+
+/* Remove underline on hover when link is active */
+.nav-links a.active:hover::after {
+    transform: scaleX(0);
 }
 
 .user-menu { position: relative; }

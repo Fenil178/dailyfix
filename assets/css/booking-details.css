@@ -87,7 +87,7 @@
     border-radius: 8px;
     border: 1px solid var(--border-color);
     white-space: pre-wrap;
-    color: var(--text-color-dark);
+    color: var(--text-color);
     margin-top: 0.5rem;
 }
 
@@ -129,7 +129,7 @@
 }
 .participant-profile .name {
     font-weight: 500;
-    color: var(--text-color-dark);
+    color: var(--text-color);
 }
 
 /* Responsive stacking */
