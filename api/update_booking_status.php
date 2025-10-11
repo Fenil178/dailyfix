@@ -3,12 +3,7 @@
 // Set headers for JSON response
 header('Content-Type: application/json');
 include_once __DIR__ . "/connect.php"; 
-include_once __DIR__ . "/header.php"; // Provides $userId and $role
-
-$booking_id_from_url = $_GET['id'];
-
-error_log('Debug: GET parameters -> ' . json_encode($_GET));
-error_log('Debug: Session User ID -> ' . $userId);
+include_once __DIR__ . "/user_session.php"; // FIX: Use the logic-only session file
 
 // 1. Ensure user is a logged-in worker
 if (!isset($userId) || $role !== 'worker') {
@@ -17,9 +12,11 @@ if (!isset($userId) || $role !== 'worker') {
     exit;
 }
 
-// THIS IS THE FIX: Release the session lock immediately.
-// This allows concurrent requests to proceed without blocking.
-session_write_close();
+// FIX: Release the session lock immediately if sessions are auto-started on the server.
+// This prevents concurrent requests from blocking each other and causing timeouts.
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 
 // 2. Check for required parameters
 if (!isset($_GET['id']) || !isset($_GET['status'])) {
@@ -93,3 +90,4 @@ try {
     http_response_code(500); // Internal Server Error
     echo json_encode(['status' => 'error', 'message' => 'A database error occurred.']);
 }
+?>

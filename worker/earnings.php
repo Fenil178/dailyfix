@@ -54,7 +54,11 @@ try {
 <body>
     <main class="page-content">
         <div class="management-container">
-            <h1 class="page-title">My Earnings</h1>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+                <h1 class="page-title" style="margin-bottom: 0;">My Earnings</h1>
+                <a href="/dailyfix/worker/wallet.php" class="btn btn-main" style="text-decoration:none;">Go to My Wallet</a>
+            </div>
+            
             <div class="summary-grid">
                 <div class="summary-card">
                     <h4>Total Earnings (All Time)</h4>

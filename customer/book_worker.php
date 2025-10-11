@@ -80,7 +80,6 @@ if (!$worker) {
     exit;
 }
 
-// NEW: Fetch sub-service and its items provided by the worker
 $subServiceItems = [];
 $subServiceName = '';
 
@@ -90,9 +89,10 @@ try {
     $stmt->execute([$subServiceId]);
     $subServiceName = $stmt->fetchColumn();
 
-    // 2. Fetch the specific sub-service items for this worker and this sub-service
+    // 2. Fetch the specific sub-service items AND THEIR PRICES for this worker
+    // MODIFIED: Added wssi.price to the SELECT statement
     $stmt = $conn->prepare("
-        SELECT ssi.id, ssi.name, ssi.icon
+        SELECT ssi.id, ssi.name, ssi.icon, wssi.price
         FROM public.worker_sub_service_items wssi
         JOIN public.sub_service_items ssi ON wssi.sub_service_item_id = ssi.id
         WHERE wssi.user_id = ? AND ssi.sub_service_id = ?
@@ -121,78 +121,34 @@ try {
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/book_worker_availability.js"></script>
     <style>
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-            margin-top: 0.5rem;
+        :root {
+          /* === Light Mode Variables === */
+          --primary-color: #3b82f6;
+          --accent-color: #ffc107;
+          --background-color-body: #f9f9f9;
+          --background-color-card: #ffffff;
+          --hover-color: #f0f0f0;
+          --border-color: #e2e8f0;
+          --text-color-dark: #1e293b;
+          --text-color-light: #64748b;
+          --text-color-white: #ffffff;
+          --box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.1);
         }
 
-        .service-option {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem 1rem;
-            background-color: var(--hover-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        body.dark-mode {
+          /* === Dark Mode Variables === */
+          --primary-color: #fbbf24;
+          --accent-color: #ffc107;
+          --background-color-body: #121212;
+          --background-color-card: #1f1f1f;
+          --hover-color: #2c2c2c;
+          --border-color: #334155;
+          --text-color-dark: #f1f5f9;
+          --text-color-light: #94a3b8;
+          --text-color-white: #000000;
+          --box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.3);
         }
 
-        .service-option:hover {
-            background-color: #e9ecef;
-            border-color: var(--primary-color);
-        }
-
-        .service-option.selected {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .service-option.selected i,
-        .service-option.selected span {
-            color: white;
-        }
-
-        .service-option i {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-        }
-
-        .service-option span {
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-align: center;
-            color: var(--text-color-dark);
-        }
-
-        body.dark-mode .service-option {
-            background-color: #2c2c2c;
-            border-color: #444;
-        }
-
-        body.dark-mode .service-option:hover {
-            background-color: #3a3a3a;
-            border-color: #ffc107;
-        }
-
-        body.dark-mode .service-option.selected {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: #000;
-        }
-
-        body.dark-mode .service-option i {
-            color: #ffc107;
-        }
-
-        body.dark-mode .service-option.selected i {
-            color: #000;
-        }
         /* Modal Styles */
         .modal {
             display: none;
@@ -206,14 +162,15 @@ try {
             background-color: rgba(0,0,0,0.5);
         }
         .modal-content {
-            background-color: #fefefe;
+            background-color: var(--background-color-card);
             margin: 15% auto;
             padding: 20px;
-            border: 1px solid #888;
+            border: 1px solid var(--border-color);
             width: 80%;
             max-width: 500px;
             text-align: center;
             border-radius: 10px;
+            color: var(--text-color-dark);
         }
     </style>
 
@@ -278,6 +235,7 @@ try {
                                     <div class="service-option" data-item-name="<?php echo htmlspecialchars($item['name']); ?>">
                                         <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
                                         <span><?php echo htmlspecialchars($item['name']); ?></span>
+                                        <span class="service-price">₹<?php echo htmlspecialchars($item['price']); ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             <?php else: ?>

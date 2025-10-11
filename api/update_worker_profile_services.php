@@ -11,7 +11,7 @@ include_once __DIR__ . "/header.php"; // Provides $userId and $role
 
 // Ensure this is a POST request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: /dailyfix/profile.php?error=invalid_request");
+    header("Location: /dailyfix/profile.php?error=invalid_request#services");
     exit;
 }
 
@@ -25,6 +25,7 @@ if (!isset($userId) || $role !== 'worker') {
 
 // Get the arrays of selected IDs from the form.
 $selected_sub_services = $_POST['services'] ?? [];
+$prices = $_POST['prices'] ?? []; // ADDED: Get the prices array from the form
 $selected_sub_service_items = $_POST['sub_service_items'] ?? [];
 
 try {
@@ -35,23 +36,27 @@ try {
     $stmt_delete_services = $conn->prepare("DELETE FROM public.worker_services WHERE user_id = ?");
     $stmt_delete_services->execute([$userId]);
 
-    // 2. Insert the new set of selected sub-services.
+    // 2. Insert the new set of selected sub-services with their prices.
     if (!empty($selected_sub_services)) {
-        $stmt_insert_services = $conn->prepare("INSERT INTO public.worker_services (user_id, sub_service_id) VALUES (?, ?)");
+        // MODIFIED: The SQL query now includes the 'price' column.
+        $stmt_insert_services = $conn->prepare("INSERT INTO public.worker_services (user_id, sub_service_id, price) VALUES (?, ?, ?)");
         
         foreach ($selected_sub_services as $service_id) {
             $sanitized_service_id = filter_var($service_id, FILTER_VALIDATE_INT);
             if ($sanitized_service_id) {
-                $stmt_insert_services->execute([$userId, $sanitized_service_id]);
+                // MODIFIED: Get the corresponding price from the submitted array, default to 0 if not set.
+                $price = isset($prices[$sanitized_service_id]) ? filter_var($prices[$sanitized_service_id], FILTER_VALIDATE_FLOAT) : 0.00;
+                // MODIFIED: Execute with the price.
+                $stmt_insert_services->execute([$userId, $sanitized_service_id, $price]);
             }
         }
     }
 
-    // 3. Delete all existing sub-service items for this worker.
+    // 3. Delete all existing sub-service items for this worker. (This part was incorrectly removed before)
     $stmt_delete_items = $conn->prepare("DELETE FROM public.worker_sub_service_items WHERE user_id = ?");
     $stmt_delete_items->execute([$userId]);
 
-    // 4. Insert the new set of selected sub-service items.
+    // 4. Insert the new set of selected sub-service items. (This part was incorrectly removed before)
     if (!empty($selected_sub_service_items)) {
         $stmt_insert_items = $conn->prepare("INSERT INTO public.worker_sub_service_items (user_id, sub_service_item_id) VALUES (?, ?)");
         
@@ -78,6 +83,7 @@ try {
     error_log("Worker profile services update failed: " . $e->getMessage());
     
     // Redirect back with a user-friendly error message.
-        header("Location: /dailyfix/profile.php?error=update_failed#services");
+    header("Location: /dailyfix/profile.php?error=update_failed#services");
     exit;
 }
+?>

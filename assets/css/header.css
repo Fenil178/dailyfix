@@ -1,302 +1,302 @@
 :root {
-    /* Light Mode Variables */
-    --background-color: #ffffff;
-    --text-color: #333;
-    --primary-color: #007bff;
-    --hover-color: #f2f2f2;
-    --border-color: #ddd;
+  /* Light Mode Variables */
+  --background-color: #ffffff;
+  --text-color: #333;
+  --primary-color: #007bff;
+  --hover-color: #f2f2f2;
+  --border-color: #ddd;
 }
 
 body.dark-mode {
-    /* Dark Mode Variables */
-    --background-color: #1f1f1f;
-    --text-color: #e0e0e0;
-    --primary-color: #ffc107;
-    --hover-color: #3c3c3c;
-    --border-color: #444;
+  /* Dark Mode Variables */
+  --background-color: #1f1f1f;
+  --text-color: #e0e0e0;
+  --primary-color: #ffc107;
+  --hover-color: #3c3c3c;
+  --border-color: #444;
 }
 
 header {
-    background-color: var(--background-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    transition: background-color 0.3s ease;
-    border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: background-color 0.3s ease;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 2rem;
-    max-width: 100%;
-    margin: 0 auto;
-    min-height: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 64px;
 }
 
 /* Logo */
 .navbar .logo img {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
 /* Main Navigation Links Container */
 .navbar .nav-links {
-    flex-grow: 1;
-    justify-content: center;
-    display: flex;
-    gap: 1.5rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  flex-grow: 1;
+  justify-content: center;
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* 1. Base style for the navigation links */
 .nav-links a {
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 500;
-    padding: 8px 12px;
-    padding-bottom: 6px; /* Added space for the underline */
-    border-radius: 4px;
-    transition: color 0.3s ease;
-    position: relative; /* Crucial for positioning the pseudo-element */
-    background-color: transparent; /* Ensure no background color by default */
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 12px;
+  padding-bottom: 6px; /* Added space for the underline */
+  border-radius: 4px;
+  transition: color 0.3s ease;
+  position: relative; /* Crucial for positioning the pseudo-element */
+  background-color: transparent; /* Ensure no background color by default */
 }
 
 /* 2. Create the hidden underline pseudo-element */
 .nav-links a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0; /* Initially hidden */
-    height: 2px;
-    background: var(--primary-color); /* Uses blue in light mode, yellow in dark mode */
-    transition: width 0.3s ease;
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0; /* Initially hidden */
+  height: 2px;
+  background: var(--primary-color); /* Uses blue in light mode, yellow in dark mode */
+  transition: width 0.3s ease;
 }
 
 /* 3. Define the style for BOTH hover and active states */
 .nav-links a:hover,
 .nav-links a.active {
-    color: var(--primary-color); /* Change text color to blue/yellow */
+  color: var(--primary-color); /* Change text color to blue/yellow */
 }
 
 /* 4. Animate the underline's width on BOTH hover and active states */
 .nav-links a:hover::after,
 .nav-links a.active::after {
-    width: 100%; /* Make the underline visible */
+  width: 100%; /* Make the underline visible */
 }
 
 /* =================================
-   User Profile Dropdown
-   ================================= */
+ User Profile Dropdown
+ ================================= */
 .user-menu {
-    position: relative;
-    display: flex;
-    align-items: center;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .profile-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .profile-btn {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background-color: #007bff; /* Stays blue in light mode */
-    border: 2px solid #fff;
-    cursor: pointer;
-    overflow: hidden;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.2s ease;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff; /* Stays blue in light mode */
+  border: 2px solid #fff;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease;
 }
 
 .profile-btn:hover {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 .profile-btn .fas {
-    font-size: 1.5rem;
-    color: #fff;
+  font-size: 1.5rem;
+  color: #fff;
 }
 
 .dropdown-menu {
-    position: absolute;
-    top: 60px;
-    right: 0;
-    background-color: var(--background-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    width: 200px;
-    overflow: hidden;
-    display: none;
-    z-index: 1001;
-    border: 1px solid var(--border-color);
+  position: absolute;
+  top: 60px;
+  right: 0;
+  background-color: var(--background-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 200px;
+  overflow: hidden;
+  display: none;
+  z-index: 1001;
+  border: 1px solid var(--border-color);
 }
 
 .dropdown-menu.active {
-    display: block;
+  display: block;
 }
 
 .dropdown-menu a,
 .dropdown-menu button {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    text-decoration: none;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    width: 100%;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
 }
 
 .dropdown-menu a:hover,
 .dropdown-menu button:hover {
-    background-color: var(--hover-color);
-    color: var(--primary-color);
+  background-color: var(--hover-color);
+  color: var(--primary-color);
 }
 
 .dropdown-menu .fas {
-    width: 20px;
-    text-align: center;
-    color: #888;
-    transition: color 0.2s ease;
+  width: 20px;
+  text-align: center;
+  color: #888;
+  transition: color 0.2s ease;
 }
 
 .dropdown-menu a:hover .fas,
 .dropdown-menu button:hover .fas {
-    color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 /* =================================
-   Custom Logout Modal Styling
-   ================================= */
+ Custom Logout Modal Styling
+ ================================= */
 .modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+overflow: auto;
+background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+backdrop-filter: blur(5px);
+-webkit-backdrop-filter: blur(5px);
 }
 
 .modal-content {
-  background-color: #f0f8ff;
-  color: #2c3e50;
-  margin: 15% auto;
-  padding: 30px;
-  border: none;
-  width: 90%;
-  max-width: 450px;
-  text-align: center;
-  border-radius: 12px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-  animation: fadeIn 0.3s ease-out;
+background-color: #f0f8ff;
+color: #2c3e50;
+margin: 15% auto;
+padding: 30px;
+border: none;
+width: 90%;
+max-width: 450px;
+text-align: center;
+border-radius: 12px;
+box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+animation: fadeIn 0.3s ease-out;
 }
 
 .modal-content h2 {
-  font-size: 1.5rem;
-  margin-top: 0;
-  color: #2c3e50;
-  font-weight: 600;
+font-size: 1.5rem;
+margin-top: 0;
+color: #2c3e50;
+font-weight: 600;
 }
 
 .modal-content p {
-  font-size: 1rem;
-  color: #34495e;
+font-size: 1rem;
+color: #34495e;
 }
 
 .modal-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 25px;
+display: flex;
+justify-content: center;
+gap: 15px;
+margin-top: 25px;
 }
 
 .modal-buttons button {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+padding: 12px 25px;
+border: none;
+border-radius: 6px;
+cursor: pointer;
+font-size: 1rem;
+font-weight: 500;
+transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .modal-buttons button:hover {
-  transform: translateY(-2px);
+transform: translateY(-2px);
 }
 
 #confirm-logout-btn {
-  background-color: #ffc107;
-  color: #fff;
+background-color: #ffc107;
+color: #fff;
 }
 
 #confirm-logout-btn:hover {
-  background-color: #e0a800;
+background-color: #e0a800;
 }
 
 #cancel-logout-btn {
-  background-color: #007bff;
-  color: #fff;
+background-color: #007bff;
+color: #fff;
 }
 
 #cancel-logout-btn:hover {
-  background-color: #0056b3;
+background-color: #0056b3;
 }
 
 .close-button {
-  color: #2c3e50;
-  font-size: 2rem;
-  font-weight: normal;
-  line-height: 1;
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  transition: color 0.2s ease;
+color: #2c3e50;
+font-size: 2rem;
+font-weight: normal;
+line-height: 1;
+position: absolute;
+top: 10px;
+right: 15px;
+transition: color 0.2s ease;
 }
 
 .close-button:hover,
 .close-button:focus {
-  color: #ffc107;
+color: #ffc107;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+from { opacity: 0; transform: scale(0.95); }
+to { opacity: 1; transform: scale(1); }
 }
 
 /* =================================
-   Dark Mode Specific Overrides
-   ================================= */
+ Dark Mode Specific Overrides
+ ================================= */
 body.dark-mode .profile-btn {
-    background-color: var(--primary-color); /* Uses yellow from dark var */
-    border-color: #444;
+  background-color: var(--primary-color); /* Uses yellow from dark var */
+  border-color: #444;
 }
 
 body.dark-mode .profile-btn .fas {
-    color: #1f1f1f; /* Dark icon on yellow button for contrast */
+  color: #1f1f1f; /* Dark icon on yellow button for contrast */
 }
 
 body.dark-mode .dropdown-menu .fas {
-    color: #9e9e9e;
+  color: #9e9e9e;
 }

@@ -154,58 +154,6 @@ sort($states);
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/worker_availability.js"></script>
-    <style>
-        /* Additional CSS for the multi-step service form */
-        .step { display: none; }
-        .step.active { display: block; }
-        .services-category-group { margin-bottom: 1.5rem; }
-        .service-category-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 1rem;
-        }
-        .sub-service-group { margin-left: 1.5rem; }
-        .sub-service-items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        .form-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 2rem;
-        }
-        .form-actions .btn {
-            width: 48%;
-        }
-        .services-list-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 1rem;
-        }
-
-        /* Improved Button Styles */
-        .btn-primary.disabled,
-        .btn-primary:disabled {
-            background-color: #a0a0a0;
-            cursor: not-allowed;
-            color: #e0e0e0;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .btn-primary.disabled:hover,
-        .btn-primary:disabled:hover {
-            background-color: #a0a0a0;
-            color: #e0e0e0;
-        }
-    </style>
 </head>
 
 <body>
@@ -495,25 +443,29 @@ sort($states);
 
             function populateMainServices() {
                 if (!mainServicesContainer) return;
+                // Use our new, non-conflicting grid class
+                mainServicesContainer.className = 'service-selection-grid';
                 mainServicesContainer.innerHTML = '';
                 
-                // Get the main service IDs corresponding to the worker's selected sub-services
                 const workerMainServiceIds = [...new Set(allSubServices
                     .filter(sub => workerServiceIds.includes(sub.id))
                     .map(sub => sub.service_id))];
 
                 allServices.forEach(service => {
                     const isChecked = workerMainServiceIds.includes(service.id) ? 'checked' : '';
+                    // Generate HTML using the new card structure
                     const serviceHtml = `
-                        <div class="checkbox-item">
+                        <div class="service-card-selectable">
                             <input type="checkbox" id="main-service-${service.id}" name="main_services[]" value="${service.id}" ${isChecked}>
-                            <label for="main-service-${service.id}"><i class="${service.icon}"></i> ${service.name}</label>
+                            <label for="main-service-${service.id}">
+                                <i class="${service.icon}"></i>
+                                <span>${service.name}</span>
+                            </label>
                         </div>
                     `;
                     mainServicesContainer.innerHTML += serviceHtml;
                 });
                 
-                // Attach event listener and update button state
                 const checkboxes = mainServicesContainer.querySelectorAll('input[type="checkbox"]');
                 const nextBtn = serviceStep1.querySelector('.next-btn');
                 const updateButtonState = () => {
@@ -538,14 +490,18 @@ sort($states);
                             content += `
                                 <div class="services-category-group">
                                     <h4 class="service-category-title"><i class="${service.icon}"></i> ${service.name}</h4>
-                                    <div class="services-checkbox-grid">
-                            `;
+                                    <div class="service-selection-grid">
+                            `; // <-- Use new class here
                             relatedSubServices.forEach(sub => {
                                 const isChecked = workerServiceIds.includes(sub.id) ? 'checked' : '';
+                                // Generate HTML using the new card structure
                                 content += `
-                                    <div class="checkbox-item">
+                                    <div class="service-card-selectable">
                                         <input type="checkbox" id="sub-service-${sub.id}" name="services[]" value="${sub.id}" ${isChecked}>
-                                        <label for="sub-service-${sub.id}"><i class="${sub.icon}"></i> ${sub.name}</label>
+                                        <label for="sub-service-${sub.id}">
+                                            <i class="${sub.icon}"></i>
+                                            <span>${sub.name}</span>
+                                        </label>
                                     </div>
                                 `;
                             });
@@ -555,7 +511,6 @@ sort($states);
                 });
                 subServicesContainer.innerHTML = content || '<p>No sub-services found for selected categories.</p>';
                  
-                // Update button state for step 2
                 const checkboxes = subServicesContainer.querySelectorAll('input[type="checkbox"]');
                 const nextBtn = serviceStep2.querySelector('.next-btn');
                 const updateButtonState = () => {
@@ -580,14 +535,17 @@ sort($states);
                              content += `
                                 <div class="services-category-group">
                                     <h4 class="service-category-title"><i class="${subService.icon}"></i> ${subService.name}</h4>
-                                    <div class="sub-service-items-grid">
-                            `;
+                                    <div class="service-selection-grid">
+                            `; // <-- Use new class here
                             relatedItems.forEach(item => {
                                 const isChecked = workerSubServiceItemIds.includes(item.id) ? 'checked' : '';
+                                // Generate HTML using the new card structure (without icon for items)
                                 content += `
-                                     <div class="checkbox-item">
+                                     <div class="service-card-selectable">
                                         <input type="checkbox" id="item-${item.id}" name="sub_service_items[]" value="${item.id}" ${isChecked}>
-                                        <label for="item-${item.id}">${item.name}</label>
+                                        <label for="item-${item.id}">
+                                            <span>${item.name}</span>
+                                        </label>
                                     </div>
                                 `;
                             });
