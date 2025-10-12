@@ -2,19 +2,18 @@
 include_once __DIR__ . "/../api/connect.php";
 include_once __DIR__ . "/../api/header.php";
 
-// Security: Ensure the user is a customer
-if ($role !== 'customer') {
-    header("Location: /dailyfix/dashboard.php");
-    exit;
-}
-
-// Fetch all bookings for the customer
+// Fetch customer's bookings
 $bookings = [];
 try {
     $stmt = $conn->prepare("
-        SELECT b.*, u.full_name as worker_name
+        SELECT
+            b.*,
+            w.full_name as worker_name,
+            w.profile_image as worker_avatar,
+            r.id as review_id
         FROM public.bookings b
-        JOIN public.users u ON b.worker_id = u.id
+        JOIN public.users w ON b.worker_id = w.id
+        LEFT JOIN public.reviews r ON b.id = r.booking_id
         WHERE b.customer_id = ?
         ORDER BY b.booking_time DESC
     ");
@@ -24,6 +23,7 @@ try {
     error_log("Customer bookings fetch error: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,49 +41,168 @@ try {
     <main class="page-content">
         <div class="management-container">
             <h1 class="page-title">My Bookings</h1>
-            <div class="item-list">
-                 <?php if (count($bookings) > 0): ?>
-                    <?php foreach ($bookings as $booking): ?>
-                        <div class="list-item">
-                            <div class="item-details">
-                                <?php
-                                $serviceName = 'Service'; // Default value
-                                $itemName = ''; // Default value
-                                if (!empty($booking['service_details'])) {
-                                    if (preg_match('/Service: (.*)/', $booking['service_details'], $service_matches)) {
-                                        $serviceName = trim($service_matches[1]);
-                                    }
-                                    if (preg_match('/Item: (.*)/', $booking['service_details'], $item_matches)) {
-                                        $itemName = trim($item_matches[1]);
-                                    }
-                                }
-                                ?>
-                                <p><strong>Booking for <?php echo htmlspecialchars($serviceName); ?><?php if ($itemName) echo " - " . htmlspecialchars($itemName); ?></strong></p>
-                                <small>Scheduled for <?php 
-                                    $bookingTime = new DateTime($booking['booking_time']);
-                                    $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
-                                    echo htmlspecialchars($bookingTime->format("D, M d, Y g:i A")); 
-                                ?></small>
+            <?php if (count($bookings) > 0) : ?>
+                <div class="job-card-grid">
+                    <?php foreach ($bookings as $booking) : ?>
+                        <div class="job-card">
+                            <div class="job-card-header">
+                                <img src="/dailyfix/<?php echo htmlspecialchars($booking['worker_avatar'] ?: 'assets/images/default-avatar.png'); ?>" alt="Worker" class="job-card-avatar">
+                                <div class="job-card-customer-info">
+                                    <h3><?php echo htmlspecialchars($booking['worker_name']); ?></h3>
+                                    <p>Booked for: <?php echo (new DateTime($booking['booking_time']))->format("D, M j, Y, g:i A"); ?></p>
+                                </div>
                             </div>
-                            <div class="item-status <?php echo htmlspecialchars($booking['status']); ?>">
-                                <?php echo str_replace('_', ' ', htmlspecialchars($booking['status'])); ?>
+                            <div class="job-card-body">
+                                <p><strong>Details:</strong> <?php echo nl2br(htmlspecialchars($booking['service_details'])); ?></p>
+                                <p><strong>Status:</strong> <span class="item-status <?php echo $booking['status']; ?>"><?php echo ucfirst($booking['status']); ?></span></p>
                             </div>
-                            <div class="item-value">
-                                <i class="fa-solid fa-indian-rupee-sign"></i><?php echo number_format($booking['final_cost'], 2); ?>
+                            <div class="job-card-actions">
+                                <a href="/dailyfix/booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-main">View Details</a>
+                                <?php if ($booking['status'] === 'completed' && $booking['payment_status'] === 'paid' && !$booking['review_id']) : ?>
+                                    <button class="btn accept" onclick="openReviewModal(<?php echo $booking['id']; ?>)">Leave a Review</button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                <?php else: ?>
-                     <div class="empty-state">
-                        <i class="fas fa-file-invoice"></i>
-                        <h3>You Haven't Booked Any Services</h3>
-                        <p>Your past and upcoming bookings will appear here.</p>
-                        <a href="/dailyfix/customer/services.php" style="margin-top: 1rem; display:inline-block;" class="btn-main">Browse Services</a>
-                    </div>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php else : ?>
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Bookings Yet</h3>
+                    <p>You haven't booked any services. <a href="/dailyfix/customer/services.php">Find a service</a>.</p>
+                </div>
+            <?php endif; ?>
         </div>
     </main>
+
+    <div id="reviewModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeReviewModal()">&times;</span>
+            <h2>Leave a Review</h2>
+            <form id="reviewForm">
+                <input type="hidden" id="bookingId" name="booking_id">
+                <div class="rating">
+                    <i class="fas fa-star" data-rating="1"></i>
+                    <i class="fas fa-star" data-rating="2"></i>
+                    <i class="fas fa-star" data-rating="3"></i>
+                    <i class="fas fa-star" data-rating="4"></i>
+                    <i class="fas fa-star" data-rating="5"></i>
+                </div>
+                <input type="hidden" id="ratingValue" name="rating">
+                <textarea name="comment" placeholder="Share your experience..." rows="4"></textarea>
+                <button type="submit">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="messageModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeMessageModal()">&times;</span>
+            <h2 id="messageModalTitle"></h2>
+            <p id="messageModalText"></p>
+            <button id="messageModalButton" class="btn btn-main">OK</button>
+        </div>
+    </div>
+
+    <script>
+    // --- Review Modal Functions ---
+    function openReviewModal(bookingId) {
+        document.getElementById('bookingId').value = bookingId;
+        document.getElementById('reviewModal').style.display = 'flex';
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').style.display = 'none';
+        // Reset form for next time
+        document.getElementById('reviewForm').reset();
+        stars.forEach(s => s.classList.remove('selected'));
+        document.getElementById('ratingValue').value = '';
+    }
+
+    const stars = document.querySelectorAll('#reviewModal .rating .fa-star');
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const rating = star.getAttribute('data-rating');
+            document.getElementById('ratingValue').value = rating;
+            stars.forEach(s => {
+                s.classList.toggle('selected', s.getAttribute('data-rating') <= rating);
+            });
+        });
+    });
+
+    // --- NEW Message Modal Functions ---
+    const messageModal = document.getElementById('messageModal');
+    const messageModalTitle = document.getElementById('messageModalTitle');
+    const messageModalText = document.getElementById('messageModalText');
+    const messageModalButton = document.getElementById('messageModalButton');
+    const messageModalContent = messageModal.querySelector('.modal-content');
+
+    function showMessageModal(title, message, type = 'error') {
+        messageModalTitle.textContent = title;
+        messageModalText.textContent = message;
+
+        messageModalContent.classList.remove('success', 'error');
+        messageModalContent.classList.add(type); // 'success' or 'error'
+
+        messageModal.style.display = 'flex';
+
+        // Set button behavior
+        messageModalButton.onclick = () => {
+            closeMessageModal();
+            if (type === 'success') {
+                window.location.reload(); // Reload only on success
+            }
+        };
+    }
+
+    function closeMessageModal() {
+        messageModal.style.display = 'none';
+    }
+
+
+    // --- UPDATED Form Submit Event Listener ---
+    document.getElementById('reviewForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = this;
+        const submitButton = form.querySelector('button[type="submit"]');
+        const data = Object.fromEntries(new FormData(form).entries());
+
+        if (!data.rating) {
+            showMessageModal('Validation Error', 'Please select a star rating to submit your review.');
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+
+        fetch('/dailyfix/api/submit_review.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                return response.json().then(body => ({ ok: response.ok, body }));
+            })
+            .then(({ ok, body }) => {
+                closeReviewModal();
+                if (ok) {
+                    showMessageModal('Success!', body.message, 'success');
+                } else {
+                    throw new Error(body.message || 'An unknown error occurred.');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting review:', error);
+                closeReviewModal();
+                showMessageModal('Submission Failed', error.message, 'error');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Review';
+            });
+    });
+    </script>
     <?php include_once __DIR__ . "/../api/footer.php"; ?>
 </body>
 </html>

@@ -38,7 +38,9 @@ $subServices = [];
 $subServiceItems = [];
 $workerServiceIds = [];
 $workerSubServiceItemIds = [];
-$workerItemPrices = []; // NEW: Array to hold existing item prices
+$workerItemPrices = []; 
+$reviews = [];
+$avg_rating = 0;
 
 try {
     // Handle form submissions
@@ -88,15 +90,24 @@ try {
         $workerServiceIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         // Fetch worker's selected sub-service items AND their custom price
-        // MODIFIED QUERY: Fetch price along with item ID
         $stmt = $conn->prepare("SELECT sub_service_item_id, price FROM public.worker_sub_service_items WHERE user_id = ?");
         $stmt->execute([$userId]);
         
         $itemResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $workerSubServiceItemIds = array_column($itemResults, 'sub_service_item_id');
 
-        // NEW: Map item IDs to their prices for easy lookup in JS
+        // Map item IDs to their prices for easy lookup in JS
         $workerItemPrices = array_column($itemResults, 'price', 'sub_service_item_id');
+    
+        // Fetch worker reviews and average rating
+        $stmt = $conn->prepare("SELECT r.*, c.full_name as customer_name, c.profile_image as customer_avatar FROM public.reviews r JOIN public.users c ON r.reviewer_id = c.id WHERE r.worker_id = ? ORDER BY r.created_at DESC");
+        $stmt->execute([$userId]);
+        $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($reviews) > 0) {
+            $total_rating = array_sum(array_column($reviews, 'rating'));
+            $avg_rating = $total_rating / count($reviews);
+        }    
     }
 
 } catch (PDOException $e) {
@@ -184,6 +195,7 @@ sort($states);
                 <?php if ($role === 'worker'): ?>
                 <button class="tab-link" data-tab="professional">Professional Profile</button>
                 <button class="tab-link" data-tab="availability">My Availability</button>
+                <button class="tab-link" data-tab="reviews">Reviews</button>
                 <button class="tab-link" data-tab="services">My Services</button>
                 <?php else: // Customer ?>
                 <button class="tab-link" data-tab="history">Booking History</button>
@@ -258,7 +270,7 @@ sort($states);
 
             <div id="availability" class="tab-content">
                 <div class="form-section">
-                     <?php if ($successMessage && strpos($_GET['success'], 'availability') !== false): ?>
+                    <?php if ($successMessage && strpos($_GET['success'], 'availability') !== false): ?>
                     <div id="success-alert" class="form-success-message">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
@@ -284,6 +296,54 @@ sort($states);
                         <button class="submit-btn" id="save-final-btn" style="width: 30%; margin-top: 2rem;">Save
                             Availability</button>
                     </div>
+                </div>
+            </div>
+
+            <div id="reviews" class="tab-content">
+                <div class="form-section">
+                    <h2>Your Reviews</h2>
+                    <div class="rating-summary-header">
+                        <i class="fas fa-star"></i>
+                        <strong><?php echo number_format($avg_rating, 1); ?></strong>
+                        <span> based on <?php echo count($reviews); ?> reviews</span>
+                    </div>
+
+                    <?php if (count($reviews) > 0) : ?>
+                        <div class="review-list">
+                            <?php foreach ($reviews as $review) : ?>
+                                <div class="review-card">
+                                    <div class="review-header">
+                                        <?php
+                                            // Determine the correct avatar path for the reviewer
+                                            $reviewAvatarPath = '/dailyfix/assets/images/default-avatar.png'; // Set a default path
+                                            if (!empty($review['customer_avatar'])) {
+                                                // Check if the path from the database is already an absolute path (starts with '/')
+                                                if (strpos($review['customer_avatar'], '/') === 0) {
+                                                    $reviewAvatarPath = $review['customer_avatar'];
+                                                } else {
+                                                    // Otherwise, it's a relative path, so prepend the base directory
+                                                    $reviewAvatarPath = '/dailyfix/' . $review['customer_avatar'];
+                                                }
+                                            }
+                                        ?>
+                                        <img src="<?php echo htmlspecialchars($reviewAvatarPath); ?>" alt="Customer" class="review-avatar">
+                                        <div class="review-customer-info">
+                                            <strong><?php echo htmlspecialchars($review['customer_name']); ?></strong>
+                                            <span><?php echo (new DateTime($review['created_at']))->format('M j, Y'); ?></span>
+                                        </div>
+                                        <div class="rating">
+                                            <?php for ($i = 0; $i < 5; $i++) : ?>
+                                                <i class="fas fa-star <?php echo $i < $review['rating'] ? 'selected' : ''; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <p><?php echo nl2br(htmlspecialchars($review['comment'])); ?></p>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else : ?>
+                        <p class="no-reviews">You have not received any reviews yet.</p>
+                    <?php endif; ?>
                 </div>
             </div>
 

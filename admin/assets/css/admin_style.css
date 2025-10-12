@@ -1323,3 +1323,11 @@ main.page-content {
         padding: 1.5rem;
     }
 }
+
+/* Review Stars */
+.rating .fa-star {
+    color: #e0e0e0;
+}
+.rating .fa-star.selected {
+    color: #ffc107;
+}

@@ -11,7 +11,8 @@ if ($role !== 'worker') {
 /**
  * Function to format a timestamp into a relative time string.
  */
-function format_time_ago($timestamp_str) {
+function format_time_ago($timestamp_str)
+{
     $time = strtotime($timestamp_str);
     $diff = time() - $time;
     if ($diff < 60) return 'just now';
@@ -21,9 +22,11 @@ function format_time_ago($timestamp_str) {
     return date('M j, Y', $time);
 }
 
-// Fetch pending and upcoming jobs for the worker
+// Initialize arrays for jobs
 $pendingJobs = [];
 $upcomingJobs = [];
+$inProgressJobs = [];
+$completedJobs = [];
 $worker_lat = null;
 $worker_lon = null;
 
@@ -37,68 +40,79 @@ try {
         $worker_lon = $worker_location['longitude'];
     }
 
-    // Fetch new job requests (status = 'pending'), ordered by the latest booking time first
+    // --- Fetch Pending Jobs ---
     $sql_pending = "
         SELECT b.id, b.service_details, b.booking_time, b.created_at, u.full_name as customer_name, u.profile_image as customer_avatar, u.latitude as customer_lat, u.longitude as customer_lon, u.address_line1, u.address_line2, u.city, u.state, u.pincode
-        ";
-    if ($worker_lat && $worker_lon) {
-        $sql_pending .= ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance";
-    }
-    $sql_pending .= "
+        " . ($worker_lat && $worker_lon ? ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance" : "") . "
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
         WHERE b.worker_id = ? AND b.status = 'pending'
         ORDER BY b.booking_time DESC
     ";
-    
-    $params_pending = [$userId];
-    if ($worker_lat && $worker_lon) {
-        array_unshift($params_pending, $worker_lat, $worker_lon, $worker_lat);
-    }
-    
+    $params_pending = $worker_lat && $worker_lon ? [$worker_lat, $worker_lon, $worker_lat, $userId] : [$userId];
     $stmt = $conn->prepare($sql_pending);
     $stmt->execute($params_pending);
     $pendingJobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch upcoming jobs (status = 'confirmed' or 'in_progress'), ordered by the latest booking time first
+    // --- Fetch Upcoming Jobs (Confirmed for today or in the future) ---
     $sql_upcoming = "
         SELECT b.*, u.full_name as customer_name, u.profile_image as customer_avatar, u.latitude as customer_lat, u.longitude as customer_lon, u.address_line1, u.address_line2, u.city, u.state, u.pincode
-        ";
-    if ($worker_lat && $worker_lon) {
-        $sql_upcoming .= ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance";
-    }
-    $sql_upcoming .= "
+        " . ($worker_lat && $worker_lon ? ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance" : "") . "
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
-        WHERE b.worker_id = ? AND b.status IN ('confirmed', 'in_progress')
-        ORDER BY b.booking_time DESC
+        WHERE b.worker_id = ? AND b.status = 'confirmed' AND b.booking_time >= CURRENT_DATE
+        ORDER BY b.booking_time ASC
     ";
-    
-    $params_upcoming = [$userId];
-    if ($worker_lat && $worker_lon) {
-        array_unshift($params_upcoming, $worker_lat, $worker_lon, $worker_lat);
-    }
-    
+    $params_upcoming = $worker_lat && $worker_lon ? [$worker_lat, $worker_lon, $worker_lat, $userId] : [$userId];
     $stmt = $conn->prepare($sql_upcoming);
     $stmt->execute($params_upcoming);
     $upcomingJobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // --- Fetch In-Progress Jobs ---
+    $sql_in_progress = "
+        SELECT b.*, u.full_name as customer_name, u.profile_image as customer_avatar, u.latitude as customer_lat, u.longitude as customer_lon, u.address_line1, u.address_line2, u.city, u.state, u.pincode
+        FROM public.bookings b
+        JOIN public.users u ON b.customer_id = u.id
+        WHERE b.worker_id = ? AND b.status = 'in_progress'
+        ORDER BY b.booking_time DESC
+    ";
+    $stmt = $conn->prepare($sql_in_progress);
+    $stmt->execute([$userId]);
+    $inProgressJobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+    // --- Fetch Completed Jobs ---
+    $sql_completed = "
+        SELECT 
+            b.*, 
+            u.full_name as customer_name, 
+            u.profile_image as customer_avatar,
+            r.rating,
+            r.comment
+        FROM public.bookings b
+        JOIN public.users u ON b.customer_id = u.id
+        LEFT JOIN public.reviews r ON b.id = r.booking_id
+        WHERE b.worker_id = ? AND b.status = 'completed'
+        ORDER BY b.booking_time DESC
+    ";
+    $stmt = $conn->prepare($sql_completed);
+    $stmt->execute([$userId]);
+    $completedJobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Worker jobs fetch error: " . $e->getMessage());
-    $pendingJobs = [];
-    $upcomingJobs = [];
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Job Requests - DailyFix</title>
+    <title>Job Management - DailyFix</title>
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/management.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <style>
@@ -107,12 +121,19 @@ try {
             width: 100%;
             border-radius: 8px;
             margin-top: 1rem;
-            z-index: 1; /* Ensure map markers are clickable */
+            z-index: 1;
+            /* Ensure map markers are clickable */
+        }
+        .review-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
         }
     </style>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
+
 <body>
     <main class="page-content">
         <div class="management-container">
@@ -120,23 +141,25 @@ try {
                 <h1 class="page-title">Job Management</h1>
                 <a href="/dailyfix/profile.php#availability" class="btn btn-main" style="text-decoration:none;">Manage Availability</a>
             </div>
-            
+
             <div class="tab-nav">
                 <button class="tab-link active" data-tab="new-requests">New Requests (<?php echo count($pendingJobs); ?>)</button>
                 <button class="tab-link" data-tab="upcoming-jobs">Upcoming Jobs (<?php echo count($upcomingJobs); ?>)</button>
+                <button class="tab-link" data-tab="current-jobs">Current Jobs (<?php echo count($inProgressJobs); ?>)</button>
+                <button class="tab-link" data-tab="completed-jobs">Completed Jobs (<?php echo count($completedJobs); ?>)</button>
             </div>
 
             <div id="new-requests" class="tab-content active">
-                <?php if (count($pendingJobs) > 0): ?>
+                <?php if (count($pendingJobs) > 0) : ?>
                     <div class="job-card-grid">
-                        <?php foreach ($pendingJobs as $job): ?>
+                        <?php foreach ($pendingJobs as $job) : ?>
                             <div class="job-card" id="job-card-<?php echo $job['id']; ?>">
                                 <div class="job-card-header">
                                     <?php
-                                        $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
-                                        if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
-                                            $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
-                                        }
+                                    $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                    if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
+                                        $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
+                                    }
                                     ?>
                                     <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer" class="job-card-avatar">
                                     <div class="job-card-customer-info">
@@ -145,35 +168,37 @@ try {
                                     </div>
                                 </div>
                                 <div class="job-card-body">
-                                    <p><strong>Appointment:</strong> <?php 
-                                        $bookingTime = new DateTime($job['booking_time']);
-                                        $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
-                                        echo htmlspecialchars($bookingTime->format("D, M j, Y, g:i A")); 
-                                    ?></p>
+                                    <p><strong>Appointment:</strong> <?php
+                                                                        $bookingTime = new DateTime($job['booking_time']);
+                                                                        $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                                                        echo htmlspecialchars($bookingTime->format("D, M j, Y, g:i A"));
+                                                                        ?></p>
                                     <p><strong>Details:</strong></p>
-                                    <?php 
-                                        $details = explode("\n", $job['service_details']);
-                                        foreach ($details as $line) {
-                                            if (strpos($line, 'Address:') === false) {
-                                                echo '<p>' . htmlspecialchars($line) . '</p>';
-                                            }
+                                    <?php
+                                    $details = explode("\n", $job['service_details']);
+                                    foreach ($details as $line) {
+                                        if (strpos($line, 'Address:') === false) {
+                                            echo '<p>' . htmlspecialchars($line) . '</p>';
                                         }
+                                    }
                                     ?>
                                     <p><strong>Location:</strong> <?php echo htmlspecialchars($job['address_line1'] . ', ' . $job['address_line2'] . ', ' . $job['city'] . ', ' . $job['state'] . ' - ' . $job['pincode']); ?></p>
-                                    <?php if (isset($job['distance'])): ?>
+                                    <?php if (isset($job['distance'])) : ?>
                                         <p><strong>Distance:</strong> <?php echo round($job['distance'], 2); ?> km away</p>
                                     <?php endif; ?>
-                                    
-                                    <?php if ($job['customer_lat'] && $job['customer_lon'] && $worker_lat && $worker_lon): ?>
-                                    <div id="map-<?php echo $job['id']; ?>" class="map-container"></div>
-                                    <script>
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            var map = L.map('map-<?php echo $job['id']; ?>').setView([<?php echo $job['customer_lat']; ?>, <?php echo $job['customer_lon']; ?>], 13);
-                                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-                                            L.marker([<?php echo $job['customer_lat']; ?>, <?php echo $job['customer_lon']; ?>]).addTo(map).bindPopup("Customer's Location").openPopup();
-                                            L.marker([<?php echo $worker_lat; ?>, <?php echo $worker_lon; ?>]).addTo(map).bindPopup("Your Location");
-                                        });
-                                    </script>
+
+                                    <?php if ($job['customer_lat'] && $job['customer_lon'] && $worker_lat && $worker_lon) : ?>
+                                        <div id="map-<?php echo $job['id']; ?>" class="map-container"></div>
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                var map = L.map('map-<?php echo $job['id']; ?>').setView([<?php echo $job['customer_lat']; ?>, <?php echo $job['customer_lon']; ?>], 13);
+                                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                                    attribution: '&copy; OpenStreetMap contributors'
+                                                }).addTo(map);
+                                                L.marker([<?php echo $job['customer_lat']; ?>, <?php echo $job['customer_lon']; ?>]).addTo(map).bindPopup("Customer's Location").openPopup();
+                                                L.marker([<?php echo $worker_lat; ?>, <?php echo $worker_lon; ?>]).addTo(map).bindPopup("Your Location");
+                                            });
+                                        </script>
                                     <?php endif; ?>
                                 </div>
                                 <div class="job-card-actions">
@@ -183,7 +208,7 @@ try {
                             </div>
                         <?php endforeach; ?>
                     </div>
-                <?php else: ?>
+                <?php else : ?>
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <h3>No New Job Requests</h3>
@@ -193,56 +218,56 @@ try {
             </div>
 
             <div id="upcoming-jobs" class="tab-content">
-                 <?php if (count($upcomingJobs) > 0): ?>
+                <?php if (count($upcomingJobs) > 0) : ?>
                     <div class="job-card-grid">
-                        <?php foreach ($upcomingJobs as $job): ?>
-                             <div class="job-card">
+                        <?php foreach ($upcomingJobs as $job) : ?>
+                            <div class="job-card">
                                 <div class="job-card-header">
                                     <?php
-                                        $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
-                                        if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
-                                            $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
-                                        }
+                                    $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                    if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
+                                        $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
+                                    }
                                     ?>
                                     <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer" class="job-card-avatar">
                                     <div class="job-card-customer-info">
                                         <h3><?php echo htmlspecialchars($job['customer_name']); ?></h3>
-                                        <p>Scheduled for: <?php 
-                                            $bookingTime = new DateTime($job['booking_time']);
-                                            $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
-                                            echo htmlspecialchars($bookingTime->format("D, M j, Y, g:i A")); 
-                                        ?></p>
+                                        <p>Scheduled for: <?php
+                                                            $bookingTime = new DateTime($job['booking_time']);
+                                                            $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                                            echo htmlspecialchars($bookingTime->format("D, M j, Y, g:i A"));
+                                                            ?></p>
                                     </div>
                                 </div>
                                 <div class="job-card-body">
                                     <p><strong>Details:</strong></p>
-                                    <?php 
-                                        $details = explode("\n", $job['service_details']);
-                                        foreach ($details as $line) {
-                                            if (strpos($line, 'Address:') === false) {
-                                                echo '<p>' . htmlspecialchars($line) . '</p>';
-                                            }
+                                    <?php
+                                    $details = explode("\n", $job['service_details']);
+                                    foreach ($details as $line) {
+                                        if (strpos($line, 'Address:') === false) {
+                                            echo '<p>' . htmlspecialchars($line) . '</p>';
                                         }
+                                    }
                                     ?>
                                     <p><strong>Location:</strong> <?php echo htmlspecialchars($job['address_line1'] . ', ' . $job['address_line2'] . ', ' . $job['city'] . ', ' . $job['state'] . ' - ' . $job['pincode']); ?></p>
-                                     <?php if (isset($job['distance'])): ?>
+                                    <?php if (isset($job['distance'])) : ?>
                                         <p><strong>Distance:</strong> <?php echo round($job['distance'], 2); ?> km away</p>
                                     <?php endif; ?>
                                     <p><strong>Status:</strong> <span class="item-status <?php echo htmlspecialchars($job['status']); ?>"><?php echo str_replace('_', ' ', htmlspecialchars($job['status'])); ?></span></p>
                                 </div>
                                 <div class="job-card-actions">
-                                    <?php if ($job['status'] === 'confirmed'): ?>
-                                    <button onclick="handleJobAction(<?php echo $job['id']; ?>, 'in_progress', null, this)" class="btn btn-main" style="background-color: #f59e0b; color: #fff;">Start Job</button>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($job['status'] === 'in_progress'): ?>
-                                    <a href="/dailyfix/booking-details.php?id=<?php echo $job['id']; ?>" class="btn accept">View Details & Complete</a>
+                                    <?php
+                                    $bookingTimestamp = strtotime($job['booking_time']);
+                                    $currentTimestamp = time();
+                                    if ($job['status'] === 'confirmed' && $currentTimestamp >= $bookingTimestamp) :
+                                    ?>
+                                        <button onclick="handleJobAction(<?php echo $job['id']; ?>, 'in_progress', null, this)" class="btn btn-main" style="background-color: #f59e0b; color: #fff;">Start Job</button>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                <?php else: ?>
+                <?php else : ?>
                     <div class="empty-state">
                         <i class="fas fa-calendar-alt"></i>
                         <h3>No Upcoming Jobs</h3>
@@ -250,6 +275,127 @@ try {
                     </div>
                 <?php endif; ?>
             </div>
+
+            <div id="current-jobs" class="tab-content">
+                <?php if (count($inProgressJobs) > 0) : ?>
+                    <div class="job-card-grid">
+                        <?php foreach ($inProgressJobs as $job) : ?>
+                            <div class="job-card">
+                                <div class="job-card-header">
+                                    <?php
+                                    $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                    if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
+                                        $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
+                                    }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer" class="job-card-avatar">
+                                    <div class="job-card-customer-info">
+                                        <h3><?php echo htmlspecialchars($job['customer_name']); ?></h3>
+                                        <p>Status: <span class="item-status in_progress">In Progress</span></p>
+                                    </div>
+                                </div>
+                                <div class="job-card-body">
+                                    <p><strong>Appointment:</strong> <?php
+                                                                        $bookingTime = new DateTime($job['booking_time']);
+                                                                        $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                                                        echo htmlspecialchars($bookingTime->format("D, M j, Y, g:i A"));
+                                                                        ?></p>
+                                    <p><strong>Details:</strong></p>
+                                    <?php
+                                    $details = explode("\n", $job['service_details']);
+                                    foreach ($details as $line) {
+                                        if (strpos($line, 'Address:') === false) {
+                                            echo '<p>' . htmlspecialchars($line) . '</p>';
+                                        }
+                                    }
+                                    ?>
+                                    <p><strong>Location:</strong> <?php echo htmlspecialchars($job['address_line1'] . ', ' . $job['address_line2'] . ', ' . $job['city'] . ', ' . $job['state'] . ' - ' . $job['pincode']); ?></p>
+
+                                </div>
+                                <div class="job-card-actions">
+                                    <a href="/dailyfix/booking-details.php?id=<?php echo $job['id']; ?>" class="btn accept">View Details & Complete</a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else : ?>
+                    <div class="empty-state">
+                        <i class="fas fa-clock"></i>
+                        <h3>No Jobs In Progress</h3>
+                        <p>You are not currently working on any job.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div id="completed-jobs" class="tab-content">
+                <?php if (count($completedJobs) > 0) : ?>
+                    <div class="job-card-grid">
+                        <?php foreach ($completedJobs as $job) : ?>
+                            <div class="job-card">
+                                <div class="job-card-header">
+                                    <?php
+                                    $customerAvatar = $job['customer_avatar'] ?: '/dailyfix/assets/images/default-avatar.png';
+                                    if ($job['customer_avatar'] && strpos($job['customer_avatar'], '/') !== 0) {
+                                        $customerAvatar = '/dailyfix/' . $job['customer_avatar'];
+                                    }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($customerAvatar); ?>" alt="Customer" class="job-card-avatar">
+                                    <div class="job-card-customer-info">
+                                        <h3><?php echo htmlspecialchars($job['customer_name']); ?></h3>
+                                        <p>Completed on: <?php
+                                                            $bookingTime = new DateTime($job['booking_time']);
+                                                            $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                                            echo htmlspecialchars($bookingTime->format("D, M j, Y"));
+                                                            ?></p>
+                                    </div>
+                                </div>
+                                <div class="job-card-body">
+                                    <p><strong>Details:</strong></p>
+                                    <?php
+                                    $details = explode("\n", $job['service_details']);
+                                    foreach ($details as $line) {
+                                        echo '<p>' . htmlspecialchars($line) . '</p>';
+                                    }
+                                    ?>
+                                    <?php if (!empty($job['final_cost'])) : ?>
+                                        <p><strong>Final Cost:</strong> ₹<?php echo htmlspecialchars(number_format($job['final_cost'], 2)); ?></p>
+                                    <?php endif; ?>
+                                    <p><strong>Status:</strong> <span class="item-status completed">Completed</span></p>
+
+                                    <?php if ($job['rating']): ?>
+                                    <div class="review-section">
+                                        <strong>Customer Review:</strong>
+                                        <div class="rating">
+                                            <?php for ($i = 0; $i < 5; $i++): ?>
+                                                <i class="fas fa-star" style="color: <?php echo $i < $job['rating'] ? '#ffc107' : '#e0e0e0'; ?>;"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <?php if ($job['comment']): ?>
+                                        <p><em>"<?php echo htmlspecialchars($job['comment']); ?>"</em></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="job-card-actions">
+                                    <a href="/dailyfix/booking-details.php?id=<?php echo $job['id']; ?>" class="btn btn-secondary">
+                                        <i class="fas fa-info-circle"></i> See Details
+                                    </a>
+                                    <a href="/dailyfix/generate_invoice.php?id=<?php echo $job['id']; ?>" class="btn btn-main-custom" target="_blank">
+                                        <i class="fas fa-download"></i> Download Invoice
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else : ?>
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>No Completed Jobs</h3>
+                        <p>You haven't completed any jobs yet.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
         </div>
     </main>
 
@@ -270,12 +416,12 @@ try {
         // --- Job Action Handler ---
         function handleJobAction(bookingId, status, bookingTime, buttonElement) {
             const originalText = buttonElement.textContent;
-            
+
             buttonElement.parentElement.querySelectorAll('.btn').forEach(btn => {
                 btn.disabled = true;
                 btn.textContent = '...';
             });
-            
+
             let url = `/dailyfix/api/update_booking_status.php?id=${bookingId}&status=${status}`;
             if (bookingTime) {
                 url += `&booking_time=${encodeURIComponent(bookingTime)}`;
@@ -286,7 +432,7 @@ try {
                 .then(data => {
                     if (data.status === 'success') {
                         const card = document.getElementById(`job-card-${bookingId}`);
-                        if(card) {
+                        if (card) {
                             card.style.transition = 'opacity 0.5s ease';
                             card.style.opacity = '0';
                         }
@@ -296,10 +442,10 @@ try {
                     } else {
                         alert(`Error: ${data.message}`);
                         buttonElement.parentElement.querySelectorAll('.btn').forEach(btn => {
-                             btn.disabled = false;
-                             if(btn.classList.contains('accept')) btn.textContent = 'Accept';
-                             if(btn.classList.contains('decline')) btn.textContent = 'Decline';
-                             if(btn.classList.contains('btn-main') && btn.textContent === '...') btn.textContent = 'Start Job';
+                            btn.disabled = false;
+                            if (btn.classList.contains('accept')) btn.textContent = 'Accept';
+                            if (btn.classList.contains('decline')) btn.textContent = 'Decline';
+                            if (btn.classList.contains('btn-main') && btn.textContent === '...') btn.textContent = 'Start Job';
                         });
                     }
                 })
@@ -310,7 +456,8 @@ try {
                 });
         }
     </script>
-    
+
     <?php include_once __DIR__ . "/../api/footer.php"; ?>
 </body>
+
 </html>

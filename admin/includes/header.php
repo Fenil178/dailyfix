@@ -33,6 +33,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <li><a href="index.php" class="<?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">Dashboard</a></li>
                 <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a></li>
                 <li><a href="view_bookings.php" class="<?php echo ($currentPage == 'view_bookings.php') ? 'active' : ''; ?>">Bookings</a></li>
+                <li><a href="manage_reviews.php" class="<?php echo ($currentPage == 'manage_reviews.php') ? 'active' : ''; ?>">Reviews</a></li>
                 <li class="nav-item-dropdown">
     <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php' || $currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">
         Services <i class="fas fa-caret-down dropdown-arrow"></i>

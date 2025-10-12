@@ -18,36 +18,12 @@
 }
 
 /* --- Tab Navigation --- */
-/* assets/css/management.css */
-
-/* --- Tab Navigation --- */
 .tab-nav {
     display: flex;
     gap: 2.5rem; /* Adds spacing between the large titles */
     border-bottom: none; /* Removes the underline */
     margin-bottom: 2rem;
 }
-
-.tab-link {
-    padding: 0;
-    cursor: pointer;
-    background: none;
-    border: none;
-    font-size: 2.5rem;     /* MATCHED: Same size as .page-title */
-    font-weight: 700;       /* MATCHED: Same boldness as .page-title */
-    color: var(--primary-color); /* MATCHED: Same color as .page-title */
-    border-bottom: none;    /* Remove underline */
-    opacity: 0.6;           /* Make inactive tabs slightly faded */
-    transition: opacity 0.3s ease;
-}
-
-.tab-link.active {
-    opacity: 1; /* Make the active tab fully visible */
-}
-
-body.dark-mode .tab-nav { border-color: #333; }
-
-/* assets/css/management.css */
 
 .tab-link {
     padding: 1rem 1.5rem;
@@ -67,6 +43,7 @@ body.dark-mode .tab-nav { border-color: #333; }
     color: var(--primary-color); /* Active tab color */
     border-bottom: 3px solid var(--primary-color); /* Bolder underline for active tab */
 }
+
 
 .tab-content {
     display: none;
@@ -137,7 +114,6 @@ body.dark-mode .job-card-header { border-color: #333; }
     margin-top: 1.5rem;
 }
 
-/* assets/css/management.css */
 .job-card-actions .btn {
     flex-grow: 1;
     padding: 12px 10px; /* Increased vertical padding for a better feel */
@@ -150,13 +126,13 @@ body.dark-mode .job-card-header { border-color: #333; }
     cursor: pointer;
 }
 
-.btn.accept { 
+.btn.accept {
     background-color: #28a745; /* Green for accept */
-    color: #fff; 
+    color: #fff;
 }
-.btn.decline { 
+.btn.decline {
     background-color: #dc3545; /* Red for decline */
-    color: #fff; 
+    color: #fff;
 }
 
 /* --- Summary Cards & Lists (Earnings/Bookings) --- */
@@ -234,7 +210,7 @@ body.dark-mode .item-list .list-item { border-color: #333; }
 
 
 /* --- Empty State --- */
-.empty-state {  
+.empty-state {
     text-align: center;
     padding: 4rem 2rem;
     background-color: var(--background-color-card);
@@ -253,4 +229,221 @@ body.dark-mode .empty-state { border-color: #444; }
 }
 .empty-state p {
     color: var(--text-color-light);
+}
+
+.btn-main-custom {
+    background-color: #fff;
+    color: #007bff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: font-size 0.3s, background-color 0.3s, color 0.3s;
+    font-size: 1rem;
+}
+
+body.dark-mode .btn-main-custom {
+    background-color: #333;
+    color: #ffc107;
+}
+
+
+/* --- Review Modal (Enhanced UI) --- */
+:root {
+    /* Light Theme (Default) */
+    --review-modal-bg: #ffffff;
+    --review-modal-text: #1f2937;
+    --review-modal-text-light: #6b7280;
+    --review-modal-close-icon: #9ca3af;
+    --review-modal-close-icon-hover: #374151;
+    --review-border-color: #e5e7eb;
+    --star-default-color: #d1d5db;
+    --star-selected-color: #3b82f6; /* CHANGED: Star color is now blue in light mode */
+    --review-btn-bg: #3b82f6; /* Blue button */
+    --review-btn-text: #ffffff;
+    --review-btn-bg-hover: #2563eb;
+    --review-textarea-bg: #f9fafb;
+    --review-textarea-focus-ring: #a5b4fc;
+}
+
+body.dark-mode {
+    /* Dark Theme Overrides */
+    --review-modal-bg: #1f2937;
+    --review-modal-text: #f3f4f6;
+    --review-modal-text-light: #9ca3af;
+    --review-modal-close-icon: #6b7280;
+    --review-modal-close-icon-hover: #d1d5db;
+    --review-border-color: #374155;
+    --star-default-color: #4b5563;
+    --star-selected-color: #f59e0b; /* ADDED: Star color is yellow in dark mode */
+    --review-btn-bg: #f59e0b; /* Yellow button */
+    --review-btn-text: #111827;
+    --review-btn-bg-hover: #d97706;
+    --review-textarea-bg: #374155;
+    --review-textarea-focus-ring: #f59e0b;
+}
+
+/* Modal Backdrop */
+#reviewModal {
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(5px);
+    display: flex; /* Changed from none */
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+@keyframes modal-content-animation {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Modal Content Box */
+#reviewModal .modal-content {
+    max-width: 440px;
+    width: 100%;
+    background-color: var(--review-modal-bg);
+    border-radius: 16px;
+    padding: 2.5rem;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--review-border-color);
+    animation: modal-content-animation 0.3s ease-out forwards;
+}
+
+#reviewModal .close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--review-modal-close-icon);
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#reviewModal .close:hover {
+    color: var(--review-modal-close-icon-hover);
+    transform: rotate(90deg);
+}
+
+#reviewModal h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--review-modal-text);
+}
+
+/* Star Rating */
+#reviewModal .rating {
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+#reviewModal .rating .fa-star {
+    font-size: 2.25rem;
+    color: var(--star-default-color);
+    cursor: pointer;
+    transition: color 0.2s ease-in-out, transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+#reviewModal .rating .fa-star:hover {
+    transform: scale(1.2);
+    color: var(--star-selected-color);
+}
+
+#reviewModal .rating .fa-star.selected {
+    color: var(--star-selected-color);
+    transform: scale(1.1);
+}
+
+/* Text Area */
+#reviewModal textarea {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--review-border-color);
+    padding: 1rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    resize: vertical;
+    background-color: var(--review-textarea-bg);
+    color: var(--review-modal-text);
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#reviewModal textarea::placeholder {
+    color: var(--review-modal-text-light);
+}
+
+#reviewModal textarea:focus {
+    outline: none;
+    border-color: var(--review-btn-bg);
+    box-shadow: 0 0 0 3px var(--review-textarea-focus-ring);
+}
+
+/* Submit Button */
+#reviewModal button[type="submit"] {
+    background-color: var(--review-btn-bg);
+    color: var(--review-btn-text);
+    border: none;
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#reviewModal button[type="submit"]:hover {
+    background-color: var(--review-btn-bg-hover);
+}
+
+#reviewModal button[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+/* Custom Message Modal Styling */
+.modal-content #messageModalTitle {
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.modal-content.success #messageModalTitle {
+    color: #28a745; /* Green */
+}
+
+.modal-content.error #messageModalTitle {
+    color: #dc3545; /* Red */
+}
+
+.modal-content #messageModalButton {
+    margin-top: 20px;
+    align-self: flex-end;
+    width: 80px;
 }

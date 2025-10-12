@@ -27,8 +27,10 @@ try {
     $stats['total_revenue'] = $conn->query("SELECT COALESCE(SUM(final_cost), 0) FROM public.bookings WHERE status = 'completed'")->fetchColumn();
 
     // Fetch average rating, returning 0 if the reviews table is empty
-    $stats['average_rating'] = round($conn->query("SELECT COALESCE(AVG(rating), 0) FROM public.reviews")->fetchColumn(), 2);
-
+    $avg_query = "SELECT COALESCE(AVG(rating::numeric), 0) FROM public.reviews";
+    $average_rating_from_db = $conn->query($avg_query)->fetchColumn();
+    $stats['average_rating'] = round((float)$average_rating_from_db, 1);
+    
     // Fetch recent bookings
     $recent_bookings_stmt = $conn->query("
         SELECT b.service_details, b.status, u.full_name as customer_name
@@ -200,6 +202,47 @@ try {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // --- START: Number Animation Script (Updated for 1 decimal place) ---
+    document.querySelectorAll('.stat-number').forEach(statNumber => {
+        const target = parseFloat(statNumber.dataset.target);
+        const duration = 1500; // Animation duration in milliseconds
+
+        // Exit if the target is not a valid number
+        if (isNaN(target)) {
+            statNumber.textContent = statNumber.dataset.target || '0';
+            return;
+        }
+        
+        // Determine if the target number has decimals
+        const hasDecimals = target % 1 !== 0;
+
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const currentValue = progress * target;
+
+            if (hasDecimals) {
+                // For decimals, show one decimal place during animation
+                statNumber.textContent = currentValue.toFixed(1);
+            } else {
+                // For integers, show the whole number
+                statNumber.textContent = Math.floor(currentValue);
+            }
+
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                // At the end, set the exact target value, formatted to ONE decimal place if needed
+                statNumber.textContent = hasDecimals ? target.toFixed(1) : target;
+            }
+        };
+        window.requestAnimationFrame(step);
+    });
+    // --- END: Number Animation Script ---
+
+
+    // --- Your Existing Bookings Chart Script ---
     const ctx = document.getElementById('bookingsChart');
     if (ctx) {
         const chartLabels = <?php echo json_encode($chart_data['labels']); ?>;
@@ -238,6 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Your Existing User Map Script ---
     const userMap = document.getElementById('user-map');
     if (userMap) {
         const map = L.map('user-map').setView([21.1702, 72.8311], 10);

@@ -36,9 +36,19 @@ try {
         $serviceId = $service['id'];
         $serviceName = $service['name'];
 
-        // 2. Find all workers linked to this sub-service ID and calculate distance
+        // 2. Find all workers linked to this sub-service ID and calculate distance and average rating
         $sql = "
-            SELECT u.id, u.full_name, u.profile_image, u.latitude, u.longitude, wp.bio, wp.hourly_rate, wp.experience_years";
+            SELECT 
+                u.id, 
+                u.full_name, 
+                u.profile_image, 
+                u.latitude, 
+                u.longitude, 
+                wp.bio, 
+                wp.hourly_rate, 
+                wp.experience_years,
+                (SELECT AVG(rating) FROM public.reviews WHERE worker_id = u.id) as avg_rating,
+                (SELECT COUNT(id) FROM public.reviews WHERE worker_id = u.id) as review_count";
         
         if ($customer_lat && $customer_lon) {
             $sql .= ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance";
@@ -107,7 +117,7 @@ try {
                         <h3 class="worker-name"><?php echo htmlspecialchars($worker['full_name']); ?></h3>
                         <p class="worker-bio"><?php echo htmlspecialchars(substr($worker['bio'], 0, 100)) . '...'; ?></p>
                         <div class="worker-meta">
-                            <span><i class="fas fa-star"></i> 4.8 (120 reviews)</span>
+                            <span><i class="fas fa-star"></i> <?php echo $worker['avg_rating'] ? number_format($worker['avg_rating'], 1) : 'New'; ?> (<?php echo $worker['review_count']; ?> reviews)</span>
                             <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($worker['experience_years']); ?>+ years</span>
                             <?php if (isset($worker['distance'])): ?>
                                 <span><i class="fas fa-map-marker-alt"></i> <?php echo round($worker['distance'], 2); ?> km away</span>
