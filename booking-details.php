@@ -225,15 +225,7 @@ $workerAvatar = strpos($booking['worker_avatar'], '/') === 0 ? $booking['worker_
                                 <strong>Payment Status</strong>
                                 <span class="item-status <?php echo $booking['payment_status']; ?>"><?php echo ucfirst(htmlspecialchars($booking['payment_status'])); ?></span>
                             </div>
-                        </div>
-
-                        <div class="card-section">
-                             <div class="detail-item">
-                                <strong>Full Service Request Details</strong>
-                                <div class="service-details-box"><?php echo htmlspecialchars($booking['service_details']); ?></div>
-                            </div>
-                        </div>
-                        
+                        </div>   
                     </div>
                 </div>
 

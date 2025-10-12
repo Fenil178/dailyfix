@@ -52,37 +52,35 @@ header {
   padding: 0;
 }
 
-/* Find and REPLACE the .nav-links a styles in header.css (around line 52-77) */
-
 /* 1. Base style for the navigation links */
 .nav-links a {
-  color: var(--text-color);
-  text-decoration: none;
-  font-weight: 500;
-  padding: 8px 12px;
-  padding-bottom: 6px; /* Added space for the underline */
-  border-radius: 4px;
-  transition: color 0.3s ease;
-  position: relative; /* Crucial for positioning the pseudo-element */
-  background-color: transparent; /* Ensure no background color by default */
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 12px;
+    padding-bottom: 6px; /* Added space for the underline */
+    border-radius: 4px;
+    transition: color 0.3s ease;
+    position: relative; /* Crucial for positioning the pseudo-element */
+    background-color: transparent; /* Ensure no background color by default */
 }
 
 /* 2. Create the hidden underline pseudo-element - EXPANDS FROM CENTER */
 .nav-links a::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0; /* Initially hidden */
-  height: 2px;
-  background: var(--primary-color); /* Uses blue in light mode, yellow in dark mode */
-  transition: width 0.3s ease;
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%; /* Start from center */
+    transform: translateX(-50%) scaleX(0); /* Initially hidden, centered */
+    width: 80%; /* Slightly narrower than full width for better look */
+    height: 2px;
+    background: var(--primary-color); /* Uses blue in light mode, yellow in dark mode */
+    transition: transform 0.3s ease;
 }
 
-/* 3. Define the style for BOTH hover and active states */
-.nav-links a:hover,
-.nav-links a.active {
-  color: var(--primary-color); /* Change text color to blue/yellow */
+/* 3. Hover effect - expand underline from center */
+.nav-links a:hover {
+    color: var(--primary-color); /* Change text color to blue/yellow */
 }
 
 .nav-links a:hover::after {
@@ -96,7 +94,7 @@ header {
 }
 
 .nav-links a.active::after {
-  width: 100%; /* Make the underline visible */
+    transform: translateX(-50%) scaleX(0); /* No underline for active */
 }
 
 /* Remove underline on hover when link is active */
