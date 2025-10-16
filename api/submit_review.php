@@ -1,12 +1,6 @@
 <?php
-// submit_review.php
-
-// The session MUST be started before any output and before accessing $_SESSION.
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 include_once __DIR__ . "/connect.php";
+include_once __DIR__ . "/encryption.php"; // Include for the decrypt_id function
 
 header('Content-Type: application/json');
 
@@ -16,9 +10,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Now, get user data from the session we just started.
-$userId = $_SESSION['user_id'] ?? null;
-$role = $_SESSION['role'] ?? null;
+// --- Get user data from cookies ---
+$userId = null;
+$role = null;
+
+if (isset($_COOKIE['encrypted_user_id'])) {
+    $userId = decrypt_id($_COOKIE['encrypted_user_id']);
+}
+if (isset($_COOKIE['encrypted_user_role'])) {
+    $role = decrypt_id($_COOKIE['encrypted_user_role']);
+}
+// --- End of cookie check ---
 
 if (!$userId || $role !== 'customer') {
     http_response_code(403);
@@ -40,7 +42,7 @@ if (!$bookingId || !$rating) {
 try {
     // Check if the booking exists, is completed, paid, and belongs to the current user
     $stmt = $conn->prepare("
-        SELECT worker_id FROM public.bookings 
+        SELECT worker_id FROM public.bookings
         WHERE id = ? AND customer_id = ? AND status = 'completed' AND payment_status = 'paid'
     ");
     $stmt->execute([$bookingId, $userId]);
