@@ -13,22 +13,36 @@ $totalEarnings = 0;
 $monthEarnings = 0;
 $completedJobs = [];
 try {
-    // Total earnings
-    $stmt = $conn->prepare("SELECT SUM(final_cost) FROM public.bookings WHERE worker_id = ? AND status = 'completed'");
+    // Calculate sum of (final_cost - discount_amount)
+    $stmt = $conn->prepare("
+        SELECT SUM(COALESCE(final_cost, 0) - COALESCE(discount_amount, 0))
+        FROM public.bookings
+        WHERE worker_id = ? AND status = 'completed' AND payment_status = 'paid'
+    ");
     $stmt->execute([$userId]);
     $totalEarnings = $stmt->fetchColumn() ?: 0;
 
-    // This month's earnings
-    $stmt = $conn->prepare("SELECT SUM(final_cost) FROM public.bookings WHERE worker_id = ? AND status = 'completed' AND booking_time >= date_trunc('month', current_date)");
+    // Calculate sum of (final_cost - discount_amount) for the current month
+    $stmt = $conn->prepare("
+        SELECT SUM(COALESCE(final_cost, 0) - COALESCE(discount_amount, 0))
+        FROM public.bookings
+        WHERE worker_id = ?
+          AND status = 'completed'
+          AND payment_status = 'paid'
+          AND created_at >= date_trunc('month', current_date) -- Use created_at or booking_time based on preference
+    ");
     $stmt->execute([$userId]);
     $monthEarnings = $stmt->fetchColumn() ?: 0;
-    
-    // List of completed jobs
+
+    // Fetch individual job earnings after discount
     $stmt = $conn->prepare("
-        SELECT b.*, u.full_name as customer_name
+        SELECT
+            b.id, b.booking_time, b.service_details,
+            u.full_name as customer_name,
+            (COALESCE(b.final_cost, 0) - COALESCE(b.discount_amount, 0)) AS amount_earned
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
-        WHERE b.worker_id = ? AND b.status = 'completed'
+        WHERE b.worker_id = ? AND b.status = 'completed' AND b.payment_status = 'paid'
         ORDER BY b.booking_time DESC
     ");
     $stmt->execute([$userId]);
@@ -36,6 +50,7 @@ try {
 
 } catch (PDOException $e) {
     error_log("Worker earnings fetch error: " . $e->getMessage());
+    // Optionally set an error message to display
 }
 ?>
 <!DOCTYPE html>
@@ -58,7 +73,7 @@ try {
                 <h1 class="page-title" style="margin-bottom: 0;">My Earnings</h1>
                 <a href="/dailyfix/worker/wallet.php" class="btn btn-main" style="text-decoration:none;">Go to My Wallet</a>
             </div>
-            
+
             <div class="summary-grid">
                 <div class="summary-card">
                     <h4>Total Earnings (All Time)</h4>
@@ -69,22 +84,22 @@ try {
                     <p><i class="fa-solid fa-indian-rupee-sign"></i><?php echo number_format($monthEarnings, 2); ?></p>
                 </div>
                 <div class="summary-card">
-                    <h4>Completed Jobs</h4>
+                    <h4>Completed Jobs (Paid)</h4>
                     <p><?php echo count($completedJobs); ?></p>
                 </div>
             </div>
-            
+
             <h2 class="item-list-header">Payout History</h2>
             <div class="item-list">
                  <?php if (count($completedJobs) > 0): ?>
                     <?php foreach ($completedJobs as $job): ?>
                         <div class="list-item">
                             <div class="item-details">
-                                <p><strong>Job with <?php echo htmlspecialchars($job['customer_name']); ?></strong></p>
+                                <p><strong>Job #<?php echo htmlspecialchars($job['id']); ?> with <?php echo htmlspecialchars($job['customer_name']); ?></strong></p>
                                 <small>Completed on <?php echo date("M d, Y", strtotime($job['booking_time'])); ?></small>
                             </div>
                             <div class="item-value">
-                                +<i class="fa-solid fa-indian-rupee-sign"></i><?php echo number_format($job['final_cost'], 2); ?>
+                                +<i class="fa-solid fa-indian-rupee-sign"></i><?php echo number_format($job['amount_earned'], 2); ?>
                             </div>
                         </div>
                     <?php endforeach; ?>

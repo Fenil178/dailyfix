@@ -820,3 +820,40 @@ body.dark-mode .no-reviews {
     background-color: #2a2a2f;
     border-color: #3a3a40;
 }
+
+/* Add to profile.css or similar */
+#offers .form-card {
+    background-color: var(--background-secondary); /* Slightly different bg */
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+#offers-list-container .offer-item {
+    background-color: var(--background-secondary);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    gap: 1rem;
+}
+ .offer-details { flex-grow: 1; }
+ .offer-details strong { font-size: 1.1em; color: var(--primary-color); }
+ .offer-details p { font-size: 0.9em; color: var(--text-color-light); margin: 0.2rem 0; }
+ .offer-actions { display: flex; gap: 0.5rem; }
+ .offer-actions button { /* Style toggle/delete buttons */
+    padding: 5px 10px; font-size: 0.8em; cursor: pointer; border-radius: 5px; border: 1px solid;
+ }
+ .offer-actions .toggle-btn.active { background-color: var(--success-color); color: white; border-color: var(--success-color); }
+ .offer-actions .toggle-btn.inactive { background-color: var(--text-color-light); color: white; border-color: var(--text-color-light); }
+ .offer-actions .delete-btn { background-color: var(--danger-color); color: white; border-color: var(--danger-color); }
+
+ #offer-form-message.success { color: green; }
+ #offer-form-message.error { color: red; }
+
+ input[type=datetime-local] { /* Basic styling for datetime input */
+    padding: 11px; /* Adjust padding if needed */
+ }

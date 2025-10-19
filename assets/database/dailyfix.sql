@@ -210,6 +210,32 @@ CREATE TYPE auth.factor_type AS ENUM (
 ALTER TYPE auth.factor_type OWNER TO supabase_auth_admin;
 
 --
+-- Name: oauth_authorization_status; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TYPE auth.oauth_authorization_status AS ENUM (
+    'pending',
+    'approved',
+    'denied',
+    'expired'
+);
+
+
+ALTER TYPE auth.oauth_authorization_status OWNER TO supabase_auth_admin;
+
+--
+-- Name: oauth_client_type; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TYPE auth.oauth_client_type AS ENUM (
+    'public',
+    'confidential'
+);
+
+
+ALTER TYPE auth.oauth_client_type OWNER TO supabase_auth_admin;
+
+--
 -- Name: oauth_registration_type; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -220,6 +246,17 @@ CREATE TYPE auth.oauth_registration_type AS ENUM (
 
 
 ALTER TYPE auth.oauth_registration_type OWNER TO supabase_auth_admin;
+
+--
+-- Name: oauth_response_type; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TYPE auth.oauth_response_type AS ENUM (
+    'code'
+);
+
+
+ALTER TYPE auth.oauth_response_type OWNER TO supabase_auth_admin;
 
 --
 -- Name: one_time_token_type; Type: TYPE; Schema: auth; Owner: supabase_auth_admin
@@ -2672,13 +2709,45 @@ COMMENT ON TABLE auth.mfa_factors IS 'auth: stores metadata about factors';
 
 
 --
+-- Name: oauth_authorizations; Type: TABLE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TABLE auth.oauth_authorizations (
+    id uuid NOT NULL,
+    authorization_id text NOT NULL,
+    client_id uuid NOT NULL,
+    user_id uuid,
+    redirect_uri text NOT NULL,
+    scope text NOT NULL,
+    state text,
+    resource text,
+    code_challenge text,
+    code_challenge_method auth.code_challenge_method,
+    response_type auth.oauth_response_type DEFAULT 'code'::auth.oauth_response_type NOT NULL,
+    status auth.oauth_authorization_status DEFAULT 'pending'::auth.oauth_authorization_status NOT NULL,
+    authorization_code text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone DEFAULT (now() + '00:03:00'::interval) NOT NULL,
+    approved_at timestamp with time zone,
+    CONSTRAINT oauth_authorizations_authorization_code_length CHECK ((char_length(authorization_code) <= 255)),
+    CONSTRAINT oauth_authorizations_code_challenge_length CHECK ((char_length(code_challenge) <= 128)),
+    CONSTRAINT oauth_authorizations_expires_at_future CHECK ((expires_at > created_at)),
+    CONSTRAINT oauth_authorizations_redirect_uri_length CHECK ((char_length(redirect_uri) <= 2048)),
+    CONSTRAINT oauth_authorizations_resource_length CHECK ((char_length(resource) <= 2048)),
+    CONSTRAINT oauth_authorizations_scope_length CHECK ((char_length(scope) <= 4096)),
+    CONSTRAINT oauth_authorizations_state_length CHECK ((char_length(state) <= 4096))
+);
+
+
+ALTER TABLE auth.oauth_authorizations OWNER TO supabase_auth_admin;
+
+--
 -- Name: oauth_clients; Type: TABLE; Schema: auth; Owner: supabase_auth_admin
 --
 
 CREATE TABLE auth.oauth_clients (
     id uuid NOT NULL,
-    client_id text NOT NULL,
-    client_secret_hash text NOT NULL,
+    client_secret_hash text,
     registration_type auth.oauth_registration_type NOT NULL,
     redirect_uris text NOT NULL,
     grant_types text NOT NULL,
@@ -2688,6 +2757,7 @@ CREATE TABLE auth.oauth_clients (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    client_type auth.oauth_client_type DEFAULT 'confidential'::auth.oauth_client_type NOT NULL,
     CONSTRAINT oauth_clients_client_name_length CHECK ((char_length(client_name) <= 1024)),
     CONSTRAINT oauth_clients_client_uri_length CHECK ((char_length(client_uri) <= 2048)),
     CONSTRAINT oauth_clients_logo_uri_length CHECK ((char_length(logo_uri) <= 2048))
@@ -2695,6 +2765,25 @@ CREATE TABLE auth.oauth_clients (
 
 
 ALTER TABLE auth.oauth_clients OWNER TO supabase_auth_admin;
+
+--
+-- Name: oauth_consents; Type: TABLE; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE TABLE auth.oauth_consents (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    client_id uuid NOT NULL,
+    scopes text NOT NULL,
+    granted_at timestamp with time zone DEFAULT now() NOT NULL,
+    revoked_at timestamp with time zone,
+    CONSTRAINT oauth_consents_revoked_after_granted CHECK (((revoked_at IS NULL) OR (revoked_at >= granted_at))),
+    CONSTRAINT oauth_consents_scopes_length CHECK ((char_length(scopes) <= 2048)),
+    CONSTRAINT oauth_consents_scopes_not_empty CHECK ((char_length(TRIM(BOTH FROM scopes)) > 0))
+);
+
+
+ALTER TABLE auth.oauth_consents OWNER TO supabase_auth_admin;
 
 --
 -- Name: one_time_tokens; Type: TABLE; Schema: auth; Owner: supabase_auth_admin
@@ -2849,7 +2938,8 @@ CREATE TABLE auth.sessions (
     refreshed_at timestamp without time zone,
     user_agent text,
     ip inet,
-    tag text
+    tag text,
+    oauth_client_id uuid
 );
 
 
@@ -3002,6 +3092,9 @@ CREATE TABLE public.bookings (
     customer_offer numeric(10,2),
     cost_status text DEFAULT 'pending'::text NOT NULL,
     work_completed_by_worker boolean DEFAULT false,
+    rejection_reason text,
+    applied_offer_id integer,
+    discount_amount numeric(10,2),
     CONSTRAINT check_different_users CHECK ((customer_id <> worker_id))
 );
 
@@ -3021,6 +3114,36 @@ COMMENT ON TABLE public.bookings IS 'Tracks service appointments between custome
 
 ALTER TABLE public.bookings ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.bookings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: notifications; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.notifications (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    message text NOT NULL,
+    link text,
+    is_read boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.notifications OWNER TO postgres;
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.notifications ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.notifications_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -3259,7 +3382,8 @@ CREATE TABLE public.users (
     pincode character varying(10),
     state character varying(100),
     otp_code character varying(6),
-    otp_expires_at timestamp without time zone
+    otp_expires_at timestamp without time zone,
+    auth_user_id uuid
 );
 
 
@@ -3365,11 +3489,12 @@ ALTER SEQUENCE public.worker_availability_id_seq OWNED BY public.worker_availabi
 
 CREATE TABLE public.worker_keys (
     id integer NOT NULL,
-    access_key character varying(8) NOT NULL,
+    access_key character varying(6) NOT NULL,
     is_used boolean DEFAULT false NOT NULL,
     used_by_worker_id bigint,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    status public.account_status DEFAULT 'active'::public.account_status NOT NULL
+    status public.account_status DEFAULT 'active'::public.account_status NOT NULL,
+    deleted_at timestamp with time zone
 );
 
 
@@ -3395,6 +3520,52 @@ ALTER SEQUENCE public.worker_keys_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.worker_keys_id_seq OWNED BY public.worker_keys.id;
+
+
+--
+-- Name: worker_offers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.worker_offers (
+    id integer NOT NULL,
+    worker_id bigint NOT NULL,
+    coupon_code character varying(50) NOT NULL,
+    discount_type character varying(20) NOT NULL,
+    discount_value numeric(10,2) NOT NULL,
+    min_booking_amount numeric(10,2) DEFAULT 0.00,
+    valid_from timestamp with time zone,
+    valid_until timestamp with time zone,
+    max_uses integer,
+    uses_count integer DEFAULT 0 NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT worker_offers_discount_type_check CHECK (((discount_type)::text = ANY ((ARRAY['percentage'::character varying, 'fixed'::character varying])::text[]))),
+    CONSTRAINT worker_offers_discount_value_check CHECK ((discount_value > (0)::numeric))
+);
+
+
+ALTER TABLE public.worker_offers OWNER TO postgres;
+
+--
+-- Name: worker_offers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.worker_offers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.worker_offers_id_seq OWNER TO postgres;
+
+--
+-- Name: worker_offers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.worker_offers_id_seq OWNED BY public.worker_offers.id;
 
 
 --
@@ -3671,6 +3842,13 @@ ALTER TABLE ONLY public.worker_keys ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
+-- Name: worker_offers id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_offers ALTER COLUMN id SET DEFAULT nextval('public.worker_offers_id_seq'::regclass);
+
+
+--
 -- Data for Name: audit_log_entries; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -3727,10 +3905,26 @@ COPY auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_
 
 
 --
+-- Data for Name: oauth_authorizations; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+
+COPY auth.oauth_authorizations (id, authorization_id, client_id, user_id, redirect_uri, scope, state, resource, code_challenge, code_challenge_method, response_type, status, authorization_code, created_at, expires_at, approved_at) FROM stdin;
+\.
+
+
+--
 -- Data for Name: oauth_clients; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-COPY auth.oauth_clients (id, client_id, client_secret_hash, registration_type, redirect_uris, grant_types, client_name, client_uri, logo_uri, created_at, updated_at, deleted_at) FROM stdin;
+COPY auth.oauth_clients (id, client_secret_hash, registration_type, redirect_uris, grant_types, client_name, client_uri, logo_uri, created_at, updated_at, deleted_at, client_type) FROM stdin;
+\.
+
+
+--
+-- Data for Name: oauth_consents; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+
+COPY auth.oauth_consents (id, user_id, client_id, scopes, granted_at, revoked_at) FROM stdin;
 \.
 
 
@@ -3834,6 +4028,10 @@ COPY auth.schema_migrations (version) FROM stdin;
 20241009103726
 20250717082212
 20250731150234
+20250804100000
+20250901200500
+20250903112500
+20250904133000
 \.
 
 
@@ -3841,7 +4039,7 @@ COPY auth.schema_migrations (version) FROM stdin;
 -- Data for Name: sessions; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_after, refreshed_at, user_agent, ip, tag) FROM stdin;
+COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_after, refreshed_at, user_agent, ip, tag, oauth_client_id) FROM stdin;
 \.
 
 
@@ -3873,37 +4071,54 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, worker_latitude, worker_longitude, predefined_cost, customer_offer, cost_status, work_completed_by_worker) FROM stdin;
-1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N	unpaid	\N	\N	\N	\N	pending	f
-2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N	unpaid	\N	\N	\N	\N	pending	f
-3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N	unpaid	\N	\N	\N	\N	pending	f
-4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N	unpaid	\N	\N	\N	\N	pending	f
-5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N	unpaid	\N	\N	\N	\N	pending	f
-7	1	11	Work Details: bike repair\nAddress: Surat	2025-08-30 20:00:00+00	cancelled	2025-08-21 12:49:57.156465+00	\N	unpaid	\N	\N	\N	\N	pending	f
-8	1	3	Work Details: Car Washing\nAddress: Shiv Shakti Society, Bhavnagar	2025-08-25 06:30:00+00	confirmed	2025-08-21 16:40:58.668966+00	\N	unpaid	\N	\N	\N	\N	pending	f
-14	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 13:30:00+00	confirmed	2025-09-29 17:14:27.833622+00	\N	unpaid	\N	\N	\N	\N	pending	f
-9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N	unpaid	\N	\N	\N	\N	pending	f
-6	1	13	Work Details: Cleaning utensils and garden\nAddress: 37, Park Street, Surat	2025-08-22 09:15:00+00	confirmed	2025-08-21 12:46:12.708408+00	\N	unpaid	\N	\N	\N	\N	pending	f
-10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N	unpaid	\N	\N	\N	\N	pending	f
-20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	\N	\N	pending	f
-21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	\N	\N	pending	f
-15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	\N	\N	pending	f
-12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	\N	\N	pending	f
-13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	\N	\N	pending	f
-22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	\N	\N	pending	f
-16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	\N	\N	pending	f
-11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	\N	\N	pending	f
-17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	\N	\N	pending	f
-18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	\N	\N	pending	f
-19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	\N	\N	pending	f
-24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	\N	\N	pending	f
-23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	\N	\N	pending	f
-25	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 13:30:00+00	cancelled	2025-10-02 13:04:56.354655+00	\N	unpaid	\N	\N	\N	\N	pending	f
-29	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 17:54:53.352846+00	800.00	paid	\N	\N	\N	\N	pending	t
-28	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 03:30:00+00	completed	2025-10-11 16:34:49.173792+00	400.00	paid	\N	\N	\N	\N	pending	t
-27	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-11 12:30:00+00	completed	2025-10-11 12:19:19.160657+00	300.00	paid	\N	\N	\N	\N	pending	t
-26	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-05 04:30:00+00	in_progress	2025-10-04 18:13:29.1467+00	\N	unpaid	\N	\N	\N	\N	pending	t
-30	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 18:15:17.567517+00	800.00	paid	\N	\N	\N	\N	pending	t
+COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, worker_latitude, worker_longitude, predefined_cost, customer_offer, cost_status, work_completed_by_worker, rejection_reason, applied_offer_id, discount_amount) FROM stdin;
+1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+7	1	11	Work Details: bike repair\nAddress: Surat	2025-08-30 20:00:00+00	cancelled	2025-08-21 12:49:57.156465+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+8	1	3	Work Details: Car Washing\nAddress: Shiv Shakti Society, Bhavnagar	2025-08-25 06:30:00+00	confirmed	2025-08-21 16:40:58.668966+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+14	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 13:30:00+00	confirmed	2025-09-29 17:14:27.833622+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+32	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 05:30:00+00	completed	2025-10-18 05:14:52.199154+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	\N	\N	pending	f	\N	\N	\N
+12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	\N	\N	pending	f	\N	\N	\N
+13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	\N	\N	pending	f	\N	\N	\N
+17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+25	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 13:30:00+00	cancelled	2025-10-02 13:04:56.354655+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+29	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 17:54:53.352846+00	800.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+31	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-13 06:30:00+00	completed	2025-10-13 06:29:36.977952+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+28	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 03:30:00+00	completed	2025-10-11 16:34:49.173792+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+27	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-11 12:30:00+00	completed	2025-10-11 12:19:19.160657+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+30	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 18:15:17.567517+00	800.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+33	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	cancelled	2025-10-18 06:34:40.502885+00	400.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
+34	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	completed	2025-10-18 06:35:50.741859+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
+35	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 08:30:00+00	completed	2025-10-18 08:01:33.651839+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+39	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 12:07:00.161281+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00
+36	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 05:30:00+00	completed	2025-10-19 04:58:43.913505+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+37	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 06:30:00+00	completed	2025-10-19 05:27:12.849197+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+40	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:31:39.210274+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+41	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:38:05.403527+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00
+38	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 10:59:09.456605+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00
+\.
+
+
+--
+-- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.notifications (id, user_id, message, link, is_read, created_at) FROM stdin;
 \.
 
 
@@ -3913,6 +4128,7 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 
 COPY public.payouts (id, wallet_id, amount, status, requested_at, processed_at) FROM stdin;
 1	1	1500.00	pending	2025-10-11 17:59:05.427704+00	\N
+2	1	1200.00	pending	2025-10-13 06:33:06.608701+00	\N
 \.
 
 
@@ -3924,6 +4140,17 @@ COPY public.reviews (id, booking_id, reviewer_id, worker_id, rating, comment, cr
 1	11	1	21	4	very good experience	2025-09-29 15:44:35.054064+00
 2	12	1	4	3	nice	2025-09-29 19:55:02.589242+00
 3	15	1	21	4	good	2025-09-29 20:05:28.223525+00
+4	29	1	21	3	nice	2025-10-12 11:23:34.40741+00
+5	30	1	21	4	good	2025-10-12 11:59:16.754601+00
+6	31	1	21	3		2025-10-16 17:51:47.331622+00
+7	27	1	21	5		2025-10-16 17:52:32.582185+00
+8	28	1	21	2	wrost	2025-10-16 17:52:42.501835+00
+9	32	1	21	5		2025-10-18 05:18:04.685782+00
+10	34	1	21	4		2025-10-18 06:39:09.241874+00
+11	35	1	21	4	Great Service\nPolite behavior 	2025-10-19 04:59:19.750675+00
+12	36	1	21	3	Worker wasn't co-operative and rude. Overall his service was fabulous.	2025-10-19 05:28:26.189014+00
+13	37	1	21	4		2025-10-19 12:07:13.066105+00
+14	38	1	21	5	Worker came on time and completed work before time, his speed and dedication towards work was tremendous.	2025-10-19 12:10:30.596446+00
 \.
 
 
@@ -3955,6 +4182,8 @@ COPY public.sub_service_items (id, sub_service_id, name, icon, slug) FROM stdin;
 4	1	Washing Utensils	fa-solid fa-utensils	washing-utensils
 5	21	Washing	fa-solid fa-soap	washing
 6	21	Dry Clean	fa-solid fa-wind	dry-clean
+7	22	Sneakers	fa-solid fa-shoe-prints	sneakers
+8	22	Running	fa-solid fa-shoe-prints	running
 \.
 
 
@@ -3996,6 +4225,18 @@ COPY public.transactions (id, wallet_id, booking_id, type, amount, description, 
 3	1	29	credit	800.00	Payment for Booking #29	2025-10-11 17:58:18.53873+00
 4	1	\N	debit	1500.00	Payout Request #1	2025-10-11 17:59:05.427704+00
 5	1	30	credit	800.00	Payment for Booking #30	2025-10-11 18:16:11.134206+00
+6	1	31	credit	400.00	Payment for Booking #31	2025-10-13 06:32:30.10881+00
+7	1	\N	debit	1200.00	Payout Request #2	2025-10-13 06:33:06.608701+00
+8	1	32	credit	400.00	Payment for Booking #32	2025-10-18 05:16:21.303018+00
+9	1	32	credit	400.00	Payment for Booking #32	2025-10-18 05:16:28.603419+00
+10	1	34	credit	400.00	Payment for Booking #34	2025-10-18 06:38:20.69812+00
+11	1	35	credit	250.00	Payment received for Booking #35 (Original: ₹300.00, Discount: ₹50.00)	2025-10-18 09:22:25.3709+00
+12	1	36	credit	350.00	Payment received for Booking #36 (Original: ₹400.00, Discount: ₹50.00)	2025-10-19 05:02:45.988515+00
+13	1	37	credit	250.00	Payment received for Booking #37 (Original: ₹300.00, Discount: ₹50.00)	2025-10-19 06:08:51.526964+00
+14	1	38	credit	365.00	Payment received for Booking #38 (Original: ₹400.00, Discount: ₹35.00)	2025-10-19 11:24:36.010239+00
+15	1	39	credit	265.00	Payment received for Booking #39 (Original: ₹300.00, Discount: ₹35.00)	2025-10-19 12:53:48.772976+00
+16	1	40	credit	250.00	Payment received for Booking #40 (Original: ₹300.00, Discount: ₹50.00)	2025-10-19 13:37:24.840041+00
+17	1	41	credit	365.00	Payment received for Booking #41 (Original: ₹400.00, Discount: ₹35.00)	2025-10-19 13:39:26.890776+00
 \.
 
 
@@ -4003,24 +4244,24 @@ COPY public.transactions (id, wallet_id, booking_id, type, amount, description, 
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (id, full_name, email, password, phone, role, profile_image, account_status, created_at, latitude, longitude, address_line1, address_line2, city, pincode, state, otp_code, otp_expires_at) FROM stdin;
-7	Swayam Shah	swayam@gmail.com	$2y$10$EKVBlEHgag1sAKIl0Cmp8Oor/rLjv7OgJnjKtHzTHffBhSinsknym	9623001236	customer	\N	active	2025-08-16 09:48:01.576568+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-8	Ankit Verma	ankit@gmail.com	$2y$10$h0lmMCHM3ae9qv342gWjZ.BJQ69as.7JvPDJa5QBWjb5YOl3oFRhq	8523001456	customer	\N	active	2025-08-16 09:52:37.721337+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-9	Sushant Rajput	sushant@gmail.com	$2y$10$oWRFuH4Qgcgu6HSAPcCx1uDvV/k8qYWMvqF2dSgZz41xQHApe.jrC	9852110036	customer	\N	active	2025-08-16 09:56:45.35922+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	/dailyfix/worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N
-5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	/dailyfix/customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	/dailyfix/worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	/dailyfix/customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-13	Purvi Panchal 	purvi@gmail.com	$2y$10$zPrZvJJATh7yNwJg5Z2pD.tpusOEa3rnDin/8G2MjS8oU7ysY8ufa	8520014563	worker	/dailyfix/worker/uploads/68a06aed05d049.49404600.jpg	active	2025-08-16 11:26:33.93526+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	/dailyfix/uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-1	Fenil Pastagia	17fenill@gmail.com	$2y$10$Bv9/dYNN/f5hkEAAnQ/ydePn0T3lpYCuwqvegYWKuBctloc/WRA1G	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	\N	\N
-17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	suspended	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N
-21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	Surat	395006	Gujarat	\N	\N
+COPY public.users (id, full_name, email, password, phone, role, profile_image, account_status, created_at, latitude, longitude, address_line1, address_line2, city, pincode, state, otp_code, otp_expires_at, auth_user_id) FROM stdin;
+7	Swayam Shah	swayam@gmail.com	$2y$10$EKVBlEHgag1sAKIl0Cmp8Oor/rLjv7OgJnjKtHzTHffBhSinsknym	9623001236	customer	\N	active	2025-08-16 09:48:01.576568+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+8	Ankit Verma	ankit@gmail.com	$2y$10$h0lmMCHM3ae9qv342gWjZ.BJQ69as.7JvPDJa5QBWjb5YOl3oFRhq	8523001456	customer	\N	active	2025-08-16 09:52:37.721337+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+9	Sushant Rajput	sushant@gmail.com	$2y$10$oWRFuH4Qgcgu6HSAPcCx1uDvV/k8qYWMvqF2dSgZz41xQHApe.jrC	9852110036	customer	\N	active	2025-08-16 09:56:45.35922+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	/dailyfix/worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+1	Fenil Pastagia	17fenill@gmail.com	$2y$10$UuPLUH4YyaSChm/ETqTxN.9Qsu8BhJGn2Hayg9/VbiGP7wUYge17m	9924976503	customer	/dailyfix/customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	301575	2025-10-13 08:35:26	\N
+4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N	\N
+5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	/dailyfix/customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	/dailyfix/worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	/dailyfix/customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	/dailyfix/uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	suspended	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	Surat	395006	Gujarat	\N	\N	\N
+22	Hemant Sharma	hemant@gmail.com	$2y$10$sreN4.DgD8U9MSaZIY8XSOBtZiFwKs67/przmb4WIfPmzyJfFI.eO	9853201478	worker	/dailyfix/uploads/profile_images/68eaa49e7192b.jpg	active	2025-10-11 18:40:22.808899+00	21.23831114	72.83171587	J-10, WeCare Laudry, Sumeru Complex	Laxmikant Ashram Road	Surat	305994	Gujarat	\N	\N	\N
 \.
 
 
@@ -4029,7 +4270,7 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 --
 
 COPY public.wallets (id, worker_id, balance, created_at, updated_at) FROM stdin;
-1	21	800.00	2025-10-11 12:57:28.098856+00	2025-10-11 17:59:05.427704+00
+1	21	3295.00	2025-10-11 12:57:28.098856+00	2025-10-13 06:33:06.608701+00
 \.
 
 
@@ -4080,6 +4321,7 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 404	4	2025-10-03	11:00:00	2025-10-01 15:36:29.221974+00
 405	4	2025-10-01	11:00:00	2025-10-01 15:36:29.19684+00
 406	4	2025-10-02	11:00:00	2025-10-01 15:36:29.215619+00
+461	21	2025-10-21	09:00:00	2025-10-18 05:14:30.685539+00
 158	4	2025-09-20	11:00:00	2025-09-20 12:34:36.809386+00
 159	4	2025-09-23	10:00:00	2025-09-20 12:34:36.82439+00
 161	4	2025-09-25	11:00:00	2025-09-20 12:34:36.803045+00
@@ -4099,10 +4341,31 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 414	4	2025-10-01	20:00:00	2025-10-01 15:36:29.19684+00
 416	4	2025-10-03	20:00:00	2025-10-01 15:36:29.221974+00
 418	4	2025-10-02	20:00:00	2025-10-01 15:36:29.215619+00
+465	21	2025-10-21	10:00:00	2025-10-18 05:14:30.685539+00
 430	4	2025-10-06	11:00:00	2025-10-04 18:12:19.256617+00
 434	4	2025-10-06	18:00:00	2025-10-04 18:12:19.256617+00
 437	4	2025-10-05	11:00:00	2025-10-04 18:12:19.304729+00
 439	4	2025-10-05	18:00:00	2025-10-04 18:12:19.304729+00
+466	21	2025-10-23	09:00:00	2025-10-18 05:14:30.793653+00
+470	21	2025-10-21	11:00:00	2025-10-18 05:14:30.685539+00
+471	21	2025-10-23	10:00:00	2025-10-18 05:14:30.793653+00
+476	21	2025-10-21	12:00:00	2025-10-18 05:14:30.685539+00
+477	21	2025-10-23	11:00:00	2025-10-18 05:14:30.793653+00
+482	21	2025-10-21	13:00:00	2025-10-18 05:14:30.685539+00
+486	21	2025-10-21	18:00:00	2025-10-18 05:14:30.685539+00
+487	21	2025-10-23	12:00:00	2025-10-18 05:14:30.793653+00
+490	21	2025-10-21	19:00:00	2025-10-18 05:14:30.685539+00
+493	21	2025-10-23	13:00:00	2025-10-18 05:14:30.793653+00
+496	21	2025-10-23	18:00:00	2025-10-18 05:14:30.793653+00
+498	21	2025-10-23	19:00:00	2025-10-18 05:14:30.793653+00
+508	21	2025-10-18	09:00:00	2025-10-18 08:00:42.837988+00
+509	21	2025-10-18	10:00:00	2025-10-18 08:00:42.837988+00
+510	21	2025-10-18	11:00:00	2025-10-18 08:00:42.837988+00
+511	21	2025-10-18	12:00:00	2025-10-18 08:00:42.837988+00
+512	21	2025-10-18	13:00:00	2025-10-18 08:00:42.837988+00
+513	21	2025-10-18	14:00:00	2025-10-18 08:00:42.837988+00
+514	21	2025-10-18	18:00:00	2025-10-18 08:00:42.837988+00
+515	21	2025-10-18	19:00:00	2025-10-18 08:00:42.837988+00
 221	21	2025-09-29	10:00:00	2025-09-28 13:18:07.367208+00
 225	21	2025-09-29	11:00:00	2025-09-28 13:18:07.367208+00
 227	21	2025-09-28	10:00:00	2025-09-28 13:18:07.392457+00
@@ -4118,13 +4381,21 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 452	21	2025-10-12	10:00:00	2025-10-11 16:34:33.178052+00
 353	21	2025-10-05	10:00:00	2025-09-30 15:47:08.001006+00
 360	21	2025-10-05	11:00:00	2025-09-30 15:47:08.001006+00
+472	21	2025-10-22	09:00:00	2025-10-18 05:14:30.87386+00
 365	21	2025-10-05	17:00:00	2025-09-30 15:47:08.001006+00
+478	21	2025-10-22	10:00:00	2025-10-18 05:14:30.87386+00
+488	21	2025-10-22	11:00:00	2025-10-18 05:14:30.87386+00
+494	21	2025-10-22	12:00:00	2025-10-18 05:14:30.87386+00
+497	21	2025-10-22	13:00:00	2025-10-18 05:14:30.87386+00
+499	21	2025-10-22	18:00:00	2025-10-18 05:14:30.87386+00
 342	4	2025-09-29	09:00:00	2025-09-29 15:04:30.547022+00
 343	4	2025-09-29	11:00:00	2025-09-29 15:04:30.547022+00
 344	4	2025-09-29	12:00:00	2025-09-29 15:04:30.547022+00
 345	4	2025-09-29	20:00:00	2025-09-29 15:04:30.547022+00
 346	4	2025-09-29	21:00:00	2025-09-29 15:04:30.547022+00
+500	21	2025-10-22	19:00:00	2025-10-18 05:14:30.87386+00
 373	21	2025-10-05	18:00:00	2025-09-30 15:47:08.001006+00
+516	21	2025-10-19	09:00:00	2025-10-19 13:30:51.959584+00
 379	21	2025-10-05	19:00:00	2025-09-30 15:47:08.001006+00
 381	21	2025-10-05	20:00:00	2025-09-30 15:47:08.001006+00
 389	21	2025-10-06	10:00:00	2025-09-30 15:47:15.41401+00
@@ -4133,11 +4404,24 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 392	21	2025-10-06	18:00:00	2025-09-30 15:47:15.41401+00
 393	21	2025-10-06	19:00:00	2025-09-30 15:47:15.41401+00
 394	21	2025-10-06	20:00:00	2025-09-30 15:47:15.41401+00
+517	21	2025-10-19	10:00:00	2025-10-19 13:30:51.959584+00
+518	21	2025-10-19	11:00:00	2025-10-19 13:30:51.959584+00
+519	21	2025-10-19	12:00:00	2025-10-19 13:30:51.959584+00
+520	21	2025-10-19	13:00:00	2025-10-19 13:30:51.959584+00
+521	21	2025-10-19	18:00:00	2025-10-19 13:30:51.959584+00
+522	21	2025-10-19	19:00:00	2025-10-19 13:30:51.959584+00
+523	21	2025-10-19	20:00:00	2025-10-19 13:30:51.959584+00
 432	4	2025-10-07	11:00:00	2025-10-04 18:12:19.277736+00
 435	4	2025-10-07	18:00:00	2025-10-04 18:12:19.277736+00
 440	4	2025-10-10	11:00:00	2025-10-04 18:12:19.638402+00
 441	4	2025-10-10	18:00:00	2025-10-04 18:12:19.638402+00
 252	21	2025-09-28	20:00:00	2025-09-28 13:18:07.392457+00
+453	21	2025-10-13	10:00:00	2025-10-13 06:29:00.977933+00
+454	21	2025-10-13	11:00:00	2025-10-13 06:29:00.977933+00
+455	21	2025-10-13	12:00:00	2025-10-13 06:29:00.977933+00
+456	21	2025-10-13	13:00:00	2025-10-13 06:29:00.977933+00
+457	21	2025-10-13	18:00:00	2025-10-13 06:29:00.977933+00
+458	21	2025-10-13	19:00:00	2025-10-13 06:29:00.977933+00
 348	21	2025-10-01	10:00:00	2025-09-30 15:47:07.99174+00
 355	21	2025-10-01	11:00:00	2025-09-30 15:47:07.99174+00
 356	21	2025-10-02	10:00:00	2025-09-30 15:47:08.026707+00
@@ -4155,12 +4439,26 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 397	21	2025-10-03	17:00:00	2025-09-30 16:04:57.38118+00
 398	21	2025-10-03	18:00:00	2025-09-30 16:04:57.38118+00
 399	21	2025-10-03	19:00:00	2025-09-30 16:04:57.38118+00
+462	21	2025-10-20	09:00:00	2025-10-18 05:14:30.685371+00
+468	21	2025-10-20	10:00:00	2025-10-18 05:14:30.685371+00
+474	21	2025-10-20	11:00:00	2025-10-18 05:14:30.685371+00
+481	21	2025-10-20	12:00:00	2025-10-18 05:14:30.685371+00
 429	4	2025-10-09	11:00:00	2025-10-04 18:12:19.243589+00
 428	4	2025-10-04	11:00:00	2025-10-04 18:12:19.224749+00
 431	4	2025-10-09	18:00:00	2025-10-04 18:12:19.243589+00
 433	4	2025-10-04	18:00:00	2025-10-04 18:12:19.224749+00
 436	4	2025-10-08	11:00:00	2025-10-04 18:12:19.292737+00
 438	4	2025-10-08	18:00:00	2025-10-04 18:12:19.292737+00
+485	21	2025-10-20	13:00:00	2025-10-18 05:14:30.685371+00
+491	21	2025-10-20	18:00:00	2025-10-18 05:14:30.685371+00
+495	21	2025-10-20	19:00:00	2025-10-18 05:14:30.685371+00
+501	21	2025-10-24	09:00:00	2025-10-18 05:14:31.462455+00
+502	21	2025-10-24	10:00:00	2025-10-18 05:14:31.462455+00
+503	21	2025-10-24	11:00:00	2025-10-18 05:14:31.462455+00
+504	21	2025-10-24	12:00:00	2025-10-18 05:14:31.462455+00
+505	21	2025-10-24	13:00:00	2025-10-18 05:14:31.462455+00
+506	21	2025-10-24	18:00:00	2025-10-18 05:14:31.462455+00
+507	21	2025-10-24	19:00:00	2025-10-18 05:14:31.462455+00
 \.
 
 
@@ -4168,9 +4466,21 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 -- Data for Name: worker_keys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at, status) FROM stdin;
-1	F1N6MJ1O	t	18	2025-08-21 17:13:21.31666+00	active
-2	A2B3C4D5	t	21	2025-08-21 17:13:21.31666+00	active
+COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at, status, deleted_at) FROM stdin;
+1	F1N6MJ	t	18	2025-08-21 17:13:21.31666+00	active	\N
+2	A2B3C4	t	21	2025-08-21 17:13:21.31666+00	active	\N
+7	Q9TPL6	t	22	2025-10-11 18:27:26.206986+00	active	\N
+8	V413CL	f	\N	2025-10-11 19:33:24.330107+00	active	\N
+\.
+
+
+--
+-- Data for Name: worker_offers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.worker_offers (id, worker_id, coupon_code, discount_type, discount_value, min_booking_amount, valid_from, valid_until, max_uses, uses_count, is_active, created_at) FROM stdin;
+1	21	FLAT50	fixed	50.00	0.00	\N	2025-10-20 23:59:00+00	\N	1	t	2025-10-18 07:59:23.534494+00
+3	21	FLAT35	fixed	35.00	0.00	\N	2025-10-25 23:59:00+00	\N	4	t	2025-10-19 11:07:19.561536+00
 \.
 
 
@@ -4182,11 +4492,11 @@ COPY public.worker_profiles (user_id, bio, experience_years, hourly_rate, is_ver
 3	Hello! I'm Virat, and I love making vehicles sparkle. For me, cleaning a car or bike is about restoring its beauty and making it look its absolute best. I use the best techniques to 'cover drive' away dirt and grime from every nook and cranny. You can trust me to be reliable, professional, and passionate about giving your ride the care it deserves.	7	200.00	f
 5	I am Washing Machine Repairer and a cleaner, my shop name is "Ashu Washing Machine Services" in Varachha, Surat , we provide all types of services related to the washing machine. All technical and manufacturing errors can be solved.	4	350.00	f
 11	I am Rohan Desai, i own a garage named "Rohan Bike and Car Garage" , we provide all kind of services related to bike and car. Let it be oil, horn, engine, spare parts- we take care of everything.	2	600.00	f
-13	I am Purvi Panchal, provide house cleaning services to households. I provide services like brooming, cleaning utensils, washing clothes and all other types of house cleaning.	6	800.00	f
 14	My Name is Jay, I lived in surat, and I provide service of bike and car cleaning!	5	250.00	f
 18	My Name is Rupesh	4	200.00	f
 21	I provide Home Cleaning and Vehicle related services	6	300.00	f
 4	I was working as an employee at Llyod AC where i was working as a AC repairer and has been expertise in technological aspects of all types of ACs. So, i have 3+ years of experience and looking forward to serve you.	8	600.00	f
+22	I provide a Laundry Service Provider. \r\nI have a Drier and a Washing Machine to wash clothes and shoes with modern technology.	5	250.00	f
 \.
 
 
@@ -4197,7 +4507,10 @@ COPY public.worker_profiles (user_id, bio, experience_years, hourly_rate, is_ver
 COPY public.worker_services (user_id, sub_service_id) FROM stdin;
 4	10
 4	9
+22	21
+22	22
 21	1
+21	12
 21	21
 21	5
 21	7
@@ -4209,6 +4522,10 @@ COPY public.worker_services (user_id, sub_service_id) FROM stdin;
 --
 
 COPY public.worker_sub_service_items (user_id, sub_service_item_id, price) FROM stdin;
+22	6	0.00
+22	5	0.00
+22	8	0.00
+22	7	0.00
 21	3	300.00
 21	4	300.00
 21	6	400.00
@@ -4417,21 +4734,28 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 30, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 41, true);
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.notifications_id_seq', 1, false);
 
 
 --
 -- Name: payouts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.payouts_id_seq', 1, true);
+SELECT pg_catalog.setval('public.payouts_id_seq', 2, true);
 
 
 --
 -- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reviews_id_seq', 3, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 14, true);
 
 
 --
@@ -4445,7 +4769,7 @@ SELECT pg_catalog.setval('public.services_id_seq', 11, true);
 -- Name: sub_service_items_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.sub_service_items_id_seq', 6, true);
+SELECT pg_catalog.setval('public.sub_service_items_id_seq', 8, true);
 
 
 --
@@ -4459,14 +4783,14 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 22, true);
 -- Name: transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transactions_id_seq', 5, true);
+SELECT pg_catalog.setval('public.transactions_id_seq', 17, true);
 
 
 --
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 21, true);
+SELECT pg_catalog.setval('public.users_id_seq', 22, true);
 
 
 --
@@ -4480,14 +4804,21 @@ SELECT pg_catalog.setval('public.wallets_id_seq', 1, true);
 -- Name: worker_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_availability_id_seq', 452, true);
+SELECT pg_catalog.setval('public.worker_availability_id_seq', 523, true);
 
 
 --
 -- Name: worker_keys_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_keys_id_seq', 6, true);
+SELECT pg_catalog.setval('public.worker_keys_id_seq', 8, true);
+
+
+--
+-- Name: worker_offers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.worker_offers_id_seq', 3, true);
 
 
 --
@@ -4578,11 +4909,27 @@ ALTER TABLE ONLY auth.mfa_factors
 
 
 --
--- Name: oauth_clients oauth_clients_client_id_key; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+-- Name: oauth_authorizations oauth_authorizations_authorization_code_key; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
 --
 
-ALTER TABLE ONLY auth.oauth_clients
-    ADD CONSTRAINT oauth_clients_client_id_key UNIQUE (client_id);
+ALTER TABLE ONLY auth.oauth_authorizations
+    ADD CONSTRAINT oauth_authorizations_authorization_code_key UNIQUE (authorization_code);
+
+
+--
+-- Name: oauth_authorizations oauth_authorizations_authorization_id_key; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_authorizations
+    ADD CONSTRAINT oauth_authorizations_authorization_id_key UNIQUE (authorization_id);
+
+
+--
+-- Name: oauth_authorizations oauth_authorizations_pkey; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_authorizations
+    ADD CONSTRAINT oauth_authorizations_pkey PRIMARY KEY (id);
 
 
 --
@@ -4591,6 +4938,22 @@ ALTER TABLE ONLY auth.oauth_clients
 
 ALTER TABLE ONLY auth.oauth_clients
     ADD CONSTRAINT oauth_clients_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth_consents oauth_consents_pkey; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_consents
+    ADD CONSTRAINT oauth_consents_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth_consents oauth_consents_user_client_unique; Type: CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_consents
+    ADD CONSTRAINT oauth_consents_user_client_unique UNIQUE (user_id, client_id);
 
 
 --
@@ -4698,6 +5061,14 @@ ALTER TABLE ONLY public.bookings
 
 
 --
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: payouts payouts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4786,6 +5157,22 @@ ALTER TABLE ONLY public.transactions
 
 
 --
+-- Name: worker_offers unique_worker_coupon_code; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_offers
+    ADD CONSTRAINT unique_worker_coupon_code UNIQUE (worker_id, coupon_code);
+
+
+--
+-- Name: users users_auth_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_auth_user_id_key UNIQUE (auth_user_id);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4839,6 +5226,14 @@ ALTER TABLE ONLY public.worker_keys
 
 ALTER TABLE ONLY public.worker_keys
     ADD CONSTRAINT worker_keys_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: worker_offers worker_offers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_offers
+    ADD CONSTRAINT worker_offers_pkey PRIMARY KEY (id);
 
 
 --
@@ -5052,10 +5447,10 @@ CREATE INDEX mfa_factors_user_id_idx ON auth.mfa_factors USING btree (user_id);
 
 
 --
--- Name: oauth_clients_client_id_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+-- Name: oauth_auth_pending_exp_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
 --
 
-CREATE INDEX oauth_clients_client_id_idx ON auth.oauth_clients USING btree (client_id);
+CREATE INDEX oauth_auth_pending_exp_idx ON auth.oauth_authorizations USING btree (expires_at) WHERE (status = 'pending'::auth.oauth_authorization_status);
 
 
 --
@@ -5063,6 +5458,27 @@ CREATE INDEX oauth_clients_client_id_idx ON auth.oauth_clients USING btree (clie
 --
 
 CREATE INDEX oauth_clients_deleted_at_idx ON auth.oauth_clients USING btree (deleted_at);
+
+
+--
+-- Name: oauth_consents_active_client_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX oauth_consents_active_client_idx ON auth.oauth_consents USING btree (client_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: oauth_consents_active_user_client_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX oauth_consents_active_user_client_idx ON auth.oauth_consents USING btree (user_id, client_id) WHERE (revoked_at IS NULL);
+
+
+--
+-- Name: oauth_consents_user_order_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX oauth_consents_user_order_idx ON auth.oauth_consents USING btree (user_id, granted_at DESC);
 
 
 --
@@ -5171,6 +5587,13 @@ CREATE INDEX sessions_not_after_idx ON auth.sessions USING btree (not_after DESC
 
 
 --
+-- Name: sessions_oauth_client_id_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
+--
+
+CREATE INDEX sessions_oauth_client_id_idx ON auth.sessions USING btree (oauth_client_id);
+
+
+--
 -- Name: sessions_user_id_idx; Type: INDEX; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -5252,6 +5675,41 @@ CREATE INDEX users_instance_id_idx ON auth.users USING btree (instance_id);
 --
 
 CREATE INDEX users_is_anonymous_idx ON auth.users USING btree (is_anonymous);
+
+
+--
+-- Name: idx_notifications_user_id_created_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_notifications_user_id_created_at ON public.notifications USING btree (user_id, created_at DESC);
+
+
+--
+-- Name: idx_notifications_user_id_unread; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_notifications_user_id_unread ON public.notifications USING btree (user_id, is_read) WHERE (is_read = false);
+
+
+--
+-- Name: idx_users_auth_user_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_auth_user_id ON public.users USING btree (auth_user_id);
+
+
+--
+-- Name: idx_worker_offers_coupon_code; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_worker_offers_coupon_code ON public.worker_offers USING btree (coupon_code);
+
+
+--
+-- Name: idx_worker_offers_worker_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_worker_offers_worker_id ON public.worker_offers USING btree (worker_id);
 
 
 --
@@ -5427,6 +5885,38 @@ ALTER TABLE ONLY auth.mfa_factors
 
 
 --
+-- Name: oauth_authorizations oauth_authorizations_client_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_authorizations
+    ADD CONSTRAINT oauth_authorizations_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+
+
+--
+-- Name: oauth_authorizations oauth_authorizations_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_authorizations
+    ADD CONSTRAINT oauth_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: oauth_consents oauth_consents_client_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_consents
+    ADD CONSTRAINT oauth_consents_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+
+
+--
+-- Name: oauth_consents oauth_consents_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.oauth_consents
+    ADD CONSTRAINT oauth_consents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: one_time_tokens one_time_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -5467,6 +5957,14 @@ ALTER TABLE ONLY auth.saml_relay_states
 
 
 --
+-- Name: sessions sessions_oauth_client_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
+--
+
+ALTER TABLE ONLY auth.sessions
+    ADD CONSTRAINT sessions_oauth_client_id_fkey FOREIGN KEY (oauth_client_id) REFERENCES auth.oauth_clients(id) ON DELETE CASCADE;
+
+
+--
 -- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: supabase_auth_admin
 --
 
@@ -5480,6 +5978,14 @@ ALTER TABLE ONLY auth.sessions
 
 ALTER TABLE ONLY auth.sso_domains
     ADD CONSTRAINT sso_domains_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES auth.sso_providers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: bookings bookings_applied_offer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bookings
+    ADD CONSTRAINT bookings_applied_offer_id_fkey FOREIGN KEY (applied_offer_id) REFERENCES public.worker_offers(id) ON DELETE RESTRICT;
 
 
 --
@@ -5520,6 +6026,14 @@ ALTER TABLE ONLY public.worker_keys
 
 ALTER TABLE ONLY public.worker_services
     ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -5587,6 +6101,14 @@ ALTER TABLE ONLY public.transactions
 
 
 --
+-- Name: users users_auth_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_auth_user_id_fkey FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: wallets wallets_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -5600,6 +6122,14 @@ ALTER TABLE ONLY public.wallets
 
 ALTER TABLE ONLY public.worker_availability
     ADD CONSTRAINT worker_availability_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: worker_offers worker_offers_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.worker_offers
+    ADD CONSTRAINT worker_offers_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -5763,10 +6293,43 @@ ALTER TABLE auth.sso_providers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: notifications Allow service role to insert notifications; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Allow service role to insert notifications" ON public.notifications FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: notifications Users can mark their own notifications as read; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can mark their own notifications as read" ON public.notifications FOR UPDATE USING ((EXISTS ( SELECT 1
+   FROM public.users u
+  WHERE ((u.id = notifications.user_id) AND (u.auth_user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.users u
+  WHERE ((u.id = notifications.user_id) AND (u.auth_user_id = auth.uid())))));
+
+
+--
+-- Name: notifications Users can view their own notifications; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can view their own notifications" ON public.notifications FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM public.users u
+  WHERE ((u.id = notifications.user_id) AND (u.auth_user_id = auth.uid())))));
+
+
+--
 -- Name: bookings; Type: ROW SECURITY; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: notifications; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: payouts; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -6721,11 +7284,27 @@ GRANT ALL ON TABLE auth.mfa_factors TO dashboard_user;
 
 
 --
+-- Name: TABLE oauth_authorizations; Type: ACL; Schema: auth; Owner: supabase_auth_admin
+--
+
+GRANT ALL ON TABLE auth.oauth_authorizations TO postgres;
+GRANT ALL ON TABLE auth.oauth_authorizations TO dashboard_user;
+
+
+--
 -- Name: TABLE oauth_clients; Type: ACL; Schema: auth; Owner: supabase_auth_admin
 --
 
 GRANT ALL ON TABLE auth.oauth_clients TO postgres;
 GRANT ALL ON TABLE auth.oauth_clients TO dashboard_user;
+
+
+--
+-- Name: TABLE oauth_consents; Type: ACL; Schema: auth; Owner: supabase_auth_admin
+--
+
+GRANT ALL ON TABLE auth.oauth_consents TO postgres;
+GRANT ALL ON TABLE auth.oauth_consents TO dashboard_user;
 
 
 --
@@ -6842,6 +7421,24 @@ GRANT ALL ON TABLE public.bookings TO service_role;
 GRANT ALL ON SEQUENCE public.bookings_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.bookings_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.bookings_id_seq TO service_role;
+
+
+--
+-- Name: TABLE notifications; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.notifications TO anon;
+GRANT ALL ON TABLE public.notifications TO authenticated;
+GRANT ALL ON TABLE public.notifications TO service_role;
+
+
+--
+-- Name: SEQUENCE notifications_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.notifications_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.notifications_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.notifications_id_seq TO service_role;
 
 
 --
@@ -7022,6 +7619,24 @@ GRANT ALL ON TABLE public.worker_keys TO service_role;
 GRANT ALL ON SEQUENCE public.worker_keys_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.worker_keys_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.worker_keys_id_seq TO service_role;
+
+
+--
+-- Name: TABLE worker_offers; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.worker_offers TO anon;
+GRANT ALL ON TABLE public.worker_offers TO authenticated;
+GRANT ALL ON TABLE public.worker_offers TO service_role;
+
+
+--
+-- Name: SEQUENCE worker_offers_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.worker_offers_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.worker_offers_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.worker_offers_id_seq TO service_role;
 
 
 --

@@ -49,7 +49,11 @@ try {
                                 <img src="/dailyfix/<?php echo htmlspecialchars($booking['worker_avatar'] ?: 'assets/images/default-avatar.png'); ?>" alt="Worker" class="job-card-avatar">
                                 <div class="job-card-customer-info">
                                     <h3><?php echo htmlspecialchars($booking['worker_name']); ?></h3>
-                                    <p>Booked for: <?php echo (new DateTime($booking['booking_time']))->format("D, M j, Y, g:i A"); ?></p>
+                                    <p>Booked for: 
+                                        <?php $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC')); // Specify it's UTC
+                                        $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata')); // Convert to local
+                                        echo $bookingTime->format("D, M j, Y, g:i A"); // Now format the local time 
+                                        ?></p>
                                 </div>
                             </div>
                             <div class="job-card-body">
