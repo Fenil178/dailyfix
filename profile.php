@@ -195,6 +195,7 @@ sort($states);
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <script defer src="/dailyfix/assets/js/worker_availability.js"></script>
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
     <style> /* Added styles for offers section */
         #offers .form-card {
             background-color: var(--background-secondary);

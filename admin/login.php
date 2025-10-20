@@ -46,6 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
 <body>
     <div class="login-container">

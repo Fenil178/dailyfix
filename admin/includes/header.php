@@ -15,7 +15,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="assets/css/admin_style.css">
-    
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+
     <style>body { opacity: 0; transition: opacity 0.3s ease; }</style>
 </head>
 <body> 

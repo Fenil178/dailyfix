@@ -76,3 +76,4 @@ try {
     header("Location: /dailyfix/profile.php?error=update_failed#location");
     exit;
 }
+?>

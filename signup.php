@@ -173,6 +173,7 @@ try {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link href="/dailyfix/assets/css/signup.css" rel="stylesheet">
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
 <body>
     <div class="login-container">

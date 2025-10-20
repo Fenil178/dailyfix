@@ -13,6 +13,7 @@ $login_path = ($from === 'admin') ? '/dailyfix/admin/login.php' : '/dailyfix/log
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
     <style>
         /* Using the same styles from your new login.php for consistency */
         * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -86,6 +86,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
     <style> /* Combined styles */
         .custom-modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); align-items: center; justify-content: center; }
         .custom-modal.show { display: flex; }

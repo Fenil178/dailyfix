@@ -42,6 +42,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
+  <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
 <body>
 <nav class="navbar">

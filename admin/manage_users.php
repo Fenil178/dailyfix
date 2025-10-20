@@ -45,6 +45,7 @@ try {
 <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-users"></i> User Management</h1>

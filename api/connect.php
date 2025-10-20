@@ -25,3 +25,4 @@ try {
     // This will show you the exact error for debugging
     die("Connection failed: " . $e->getMessage());
 }
+?>

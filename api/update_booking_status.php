@@ -89,3 +89,4 @@ try {
     http_response_code(500); // Internal Server Error
     echo json_encode(['status' => 'error', 'message' => 'A database error occurred.']);
 }
+?>

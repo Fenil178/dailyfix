@@ -75,6 +75,7 @@ if ($admin_id > 0) {
 ?>
 
 <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+<link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-user-edit"></i> Edit Administrator</h1>

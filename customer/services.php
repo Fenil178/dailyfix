@@ -63,6 +63,7 @@ try {
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
 
 <script defer src="/dailyfix/assets/js/app.js"></script>
