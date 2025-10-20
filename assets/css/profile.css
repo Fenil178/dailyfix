@@ -550,7 +550,7 @@ body.dark-mode .form-actions .btn-secondary:disabled {
     border-color: var(--primary-color);
     color: var(--primary-color);
     box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
-}
+}   
 
 .service-card-selectable input[type="checkbox"]:checked + label i {
     color: var(--primary-color);
