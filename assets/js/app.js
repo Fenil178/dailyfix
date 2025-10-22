@@ -73,60 +73,64 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Logout confirmation logic
-  const logoutLink = document.getElementById('logout-link');
-  const customModal = document.getElementById('custom-logout-modal');
-  const confirmBtn = document.getElementById('confirm-logout-btn');
-  const cancelBtn = document.getElementById('cancel-logout-btn');
-  const closeBtn = customModal ? customModal.querySelector('.close-button') : null;
-
+  const logoutLink = document.getElementById("logout-link");
+  const customModal = document.getElementById("custom-logout-modal");
+  const confirmBtn = document.getElementById("confirm-logout-btn");
+  const cancelBtn = document.getElementById("cancel-logout-btn");
+  const closeBtn = customModal
+    ? customModal.querySelector(".close-button")
+    : null;
 
   if (logoutLink && customModal && confirmBtn && cancelBtn && closeBtn) {
-      logoutLink.addEventListener('click', function(event) {
-          event.preventDefault();
-          customModal.style.display = 'block';
-      });
+    logoutLink.addEventListener("click", function (event) {
+      event.preventDefault();
+      customModal.style.display = "block";
+    });
 
-      // ** THIS IS THE UPDATED LOGIC **
-      // It checks if you are in the admin panel and redirects you correctly.
-      confirmBtn.addEventListener('click', function() {
-          if (window.location.pathname.includes('/admin/')) {
-              window.location.href = "/dailyfix/admin/logout.php";
-          } else {
-              window.location.href = "/dailyfix/logout.php";
-          }
-      });
+    // ** THIS IS THE UPDATED LOGIC **
+    // It checks if you are in the admin panel and redirects you correctly.
+    confirmBtn.addEventListener("click", function () {
+      if (window.location.pathname.includes("/admin/")) {
+        window.location.href = "/dailyfix/admin/logout.php";
+      } else {
+        window.location.href = "/dailyfix/logout.php";
+      }
+    });
 
-      cancelBtn.addEventListener('click', function() {
-          customModal.style.display = 'none';
-      });
+    cancelBtn.addEventListener("click", function () {
+      customModal.style.display = "none";
+    });
 
-      closeBtn.addEventListener('click', function() {
-          customModal.style.display = 'none';
-      });
+    closeBtn.addEventListener("click", function () {
+      customModal.style.display = "none";
+    });
 
-      window.addEventListener('click', function(event) {
-          if (event.target === customModal) {
-              customModal.style.display = 'none';
-          }
-      });
+    window.addEventListener("click", function (event) {
+      if (event.target === customModal) {
+        customModal.style.display = "none";
+      }
+    });
   }
 
   // Location Dropdown in Header
-  const locationToggle = document.getElementById('dashboard-location-toggle');
-  const locationDropdown = document.getElementById('location-dropdown');
+  const locationToggle = document.getElementById("dashboard-location-toggle");
+  const locationDropdown = document.getElementById("location-dropdown");
 
   if (locationToggle && locationDropdown) {
-      locationToggle.addEventListener('click', (event) => {
-          event.stopPropagation();
-          locationDropdown.classList.toggle('active');
-      });
+    locationToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      locationDropdown.classList.toggle("active");
+    });
 
-      // Close dropdown if clicked outside
-      window.addEventListener('click', (event) => {
-          if (!locationToggle.contains(event.target) && !locationDropdown.contains(event.target)) {
-              locationDropdown.classList.remove('active');
-          }
-      });
+    // Close dropdown if clicked outside
+    window.addEventListener("click", (event) => {
+      if (
+        !locationToggle.contains(event.target) &&
+        !locationDropdown.contains(event.target)
+      ) {
+        locationDropdown.classList.remove("active");
+      }
+    });
   }
 
   // Intersection Observer for section fly-in animation
@@ -146,6 +150,123 @@ document.addEventListener("DOMContentLoaded", () => {
 
     flySections.forEach((section) => observer.observe(section));
   }
+  
+  // --- Custom Card Slider Logic - V3 (Integrated) ---
+  const sliderContainer = document.querySelector(".card-slider-container");
+
+  if (sliderContainer) {
+    const cards = sliderContainer.querySelectorAll(".slider-card");
+    const prevButton = sliderContainer.querySelector(".slider-arrow.prev");
+    const nextButton = sliderContainer.querySelector(".slider-arrow.next");
+
+    if (cards.length === 0) return; // Exit if no cards
+
+    let currentCardIndex = 0;
+    const slideInterval = 3500; // 3.5 seconds
+    let slideTimer;
+    let dots = [];
+
+    // --- Create Navigation Dots ---
+    function createDots() {
+      const dotsContainer = document.createElement("div");
+      dotsContainer.className = "slider-dots";
+
+      cards.forEach((_, index) => {
+        const dot = document.createElement("span");
+        dot.className = "slider-dot";
+        dot.dataset.index = index;
+
+        dot.addEventListener("click", () => {
+          showCard(index);
+          currentCardIndex = index;
+          resetSliderTimer(); // Reset timer on manual dot click
+        });
+
+        dotsContainer.appendChild(dot);
+        dots.push(dot);
+      });
+
+      sliderContainer.appendChild(dotsContainer);
+    }
+
+    // --- Show Card Function ---
+    function showCard(index) {
+      // Update cards
+      cards.forEach((card, i) => {
+        card.classList.toggle("active", i === index);
+      });
+
+      // Update dots
+      if (dots.length > 0) {
+        dots.forEach((dot, i) => {
+          dot.classList.toggle("active", i === index);
+        });
+      }
+    }
+
+    // --- Navigation Functions ---
+    function nextCard() {
+      currentCardIndex = (currentCardIndex + 1) % cards.length;
+      showCard(currentCardIndex);
+    }
+
+    function prevCard() {
+      currentCardIndex =
+        (currentCardIndex - 1 + cards.length) % cards.length;
+      showCard(currentCardIndex);
+    }
+
+    // --- Timer Controls ---
+    function startSlider() {
+      stopSlider(); // Clear existing timer
+      if (cards.length > 1) {
+        slideTimer = setInterval(nextCard, slideInterval);
+      }
+    }
+
+    function stopSlider() {
+      clearInterval(slideTimer);
+    }
+
+    function resetSliderTimer() {
+      stopSlider();
+      startSlider();
+    }
+
+    // --- Initialize Slider ---
+    if (cards.length > 1) {
+      createDots(); // Create dots only if more than 1 card
+
+      // --- NEW: Arrow Button Listeners ---
+      if (prevButton && nextButton) {
+        nextButton.addEventListener("click", () => {
+          nextCard();
+          resetSliderTimer(); // Reset timer on manual arrow click
+        });
+
+        prevButton.addEventListener("click", () => {
+          prevCard();
+          resetSliderTimer(); // Reset timer on manual arrow click
+        });
+      }
+
+      // --- BUG FIX: Use Page Visibility API instead of hover ---
+      // This pauses the slider if you change tabs, which is more reliable.
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          stopSlider(); // Pause when tab is hidden
+        } else {
+          startSlider(); // Resume when tab is visible
+        }
+      });
+
+      // Start the slider auto-play
+      startSlider();
+    } // End if (cards.length > 1)
+
+    // Show the first card initially
+    showCard(currentCardIndex);
+  } // End if (sliderContainer)
 
   // Basic form validation
   const forms = document.querySelectorAll("form");

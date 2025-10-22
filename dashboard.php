@@ -5,6 +5,94 @@ ini_set('display_errors', 1);
 include_once __DIR__ . "/api/connect.php";
 include_once __DIR__ . "/api/header.php";
 
+// --- START: PHP CODE TO FETCH SLIDER DATA ---
+$sliderItems = [];
+$limit = 3; // Number of items per category in the slider
+
+try {
+    // --- Fetch Latest Active Offers ---
+    $sqlOffers = "SELECT wo.*, u.full_name as worker_name
+                  FROM public.worker_offers wo
+                  JOIN public.users u ON wo.worker_id = u.id
+                  WHERE wo.is_active = true
+                    AND (wo.valid_until IS NULL OR wo.valid_until >= NOW())
+                    AND wo.uses_count < COALESCE(wo.max_uses, wo.uses_count + 1)
+                  ORDER BY wo.created_at DESC
+                  LIMIT :limit";
+    $stmtOffers = $conn->prepare($sqlOffers);
+    $stmtOffers->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmtOffers->execute();
+    $offers = $stmtOffers->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($offers as $offer) {
+        $discountText = ($offer['discount_type'] == 'percentage')
+            ? $offer['discount_value'] . '%'
+            : '₹' . number_format($offer['discount_value'], 2);
+        $minBookingText = ($offer['min_booking_amount'] > 0)
+            ? ' on bookings > ₹' . number_format($offer['min_booking_amount'], 2)
+            : '';
+
+        $sliderItems[] = [
+            'type' => 'offer', // Added type for potential styling/logic
+            'icon' => 'fas fa-tags text-warning', // This class is used by CSS now
+            'title' => "Offer: {$discountText} OFF!",
+            'text' => "Code '{$offer['coupon_code']}' from {$offer['worker_name']}{$minBookingText}.",
+        ];
+    }
+
+    // --- Fetch Featured Workers (Verified) ---
+    $sqlWorkers = "SELECT u.id, u.full_name, wp.bio
+                   FROM public.users u
+                   JOIN public.worker_profiles wp ON u.id = wp.user_id
+                   WHERE u.role = 'worker' AND u.account_status = 'active' AND wp.is_verified = true
+                   ORDER BY u.created_at DESC -- Consider a more relevant order?
+                   LIMIT :limit";
+    $stmtWorkers = $conn->prepare($sqlWorkers);
+    $stmtWorkers->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmtWorkers->execute();
+    $workers = $stmtWorkers->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($workers as $worker) {
+        $bioSnippet = !empty($worker['bio']) && strlen($worker['bio']) > 80 ? substr($worker['bio'], 0, 77) . '...' : $worker['bio'];
+        $sliderItems[] = [
+            'type' => 'worker',
+            'icon' => 'fas fa-user-check text-primary', // This class is used by CSS now
+            'title' => "Featured: {$worker['full_name']}",
+            'text' => $bioSnippet ?: 'Verified service provider ready to help.',
+        ];
+    }
+
+    // --- Fetch New Services (Sub-Services) ---
+    $sqlServices = "SELECT ss.name, s.name as parent_service_name
+                    FROM public.sub_services ss
+                    JOIN public.services s ON ss.service_id = s.id
+                    ORDER BY ss.id DESC
+                    LIMIT :limit";
+    $stmtServices = $conn->prepare($sqlServices);
+    $stmtServices->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmtServices->execute();
+    $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($services as $service) {
+        $sliderItems[] = [
+            'type' => 'service',
+            'icon' => 'fas fa-tools text-success', // This class is used by CSS now
+            'title' => "New Service: {$service['name']}",
+            'text' => "Now available under {$service['parent_service_name']}. Book today!",
+        ];
+    }
+
+    // Shuffle the items for variety if desired
+    if (count($sliderItems) > 1) {
+        shuffle($sliderItems);
+    }
+
+} catch (PDOException $e) {
+    // Log error or handle gracefully
+    error_log("Error fetching slider data: " . $e->getMessage()); // Log error
+    $sliderItems = []; // Ensure slider doesn't break if DB query fails
+}
+
 // Initialize variables
 $stats = [
     'primary' => 0, 'secondary' => 0, 'tertiary' => 0, 'quaternary' => 0,
@@ -122,7 +210,45 @@ try {
             </div>
         </div>
 
-        <div class="stats-grid-v4">
+        <?php 
+        if ($role === 'customer' && !empty($sliderItems)): 
+        ?>
+        <div class="container mt-4 mb-5">
+            <h2 class="section-header-v4" style="margin-bottom: 1rem; border-bottom: none; padding: 0;">
+                What's New & Offers
+            </h2>
+            <div class="card-slider-container">
+
+                <button class="slider-arrow prev" aria-label="Previous Slide">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="slider-arrow next" aria-label="Next Slide">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <?php foreach ($sliderItems as $index => $item): ?>
+                    <div class="slider-card <?php echo ($index === 0) ? 'active' : ''; ?>" data-type="<?php echo htmlspecialchars($item['type']); ?>">
+                        
+                        <div class="slider-content-wrapper"> 
+                            <?php if (!empty($item['icon'])): ?>
+                                <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
+                            <?php endif; ?>
+                            
+                            <div class="slider-text-content">
+                                <h5><?php echo htmlspecialchars($item['title']); ?></h5>
+                                <p><?php echo htmlspecialchars($item['text']); ?></p>
+                            </div>
+
+                        </div>
+
+                    </div>
+                <?php endforeach; ?>
+                
+                </div>
+        </div>
+        <?php endif; ?>
+
+        <div class="stats-grid-v4 stats-grid-<?php echo $role; ?>">
             <?php if ($role === 'customer'): ?>
                 <div class="stat-card-v4 stat-primary">
                     <div class="stat-icon">

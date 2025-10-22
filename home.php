@@ -494,7 +494,7 @@ function timeAgo($datetime) {
                             </div>
                         </div>
                         <?php else: ?>
-                         <div class="top-worker-specializations" style="margin-bottom: 1.5rem;"> {/* Keep consistent spacing */}
+                         <div class="top-worker-specializations" style="margin-bottom: 1.5rem;">
                             <h4>Specializes In</h4>
                             <p style="font-size: 0.9rem; color: #9ca3af;">No specializations listed.</p>
                          </div>

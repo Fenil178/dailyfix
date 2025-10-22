@@ -4105,10 +4105,13 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 33	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	cancelled	2025-10-18 06:34:40.502885+00	400.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
 34	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	completed	2025-10-18 06:35:50.741859+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N
 35	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 08:30:00+00	completed	2025-10-18 08:01:33.651839+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+42	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-20 07:30:00+00	completed	2025-10-20 07:10:49.222588+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
 39	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 12:07:00.161281+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00
 36	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 05:30:00+00	completed	2025-10-19 04:58:43.913505+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
 37	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 06:30:00+00	completed	2025-10-19 05:27:12.849197+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+43	23	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: 20,Jay Shivam Soc; Part - 2, Cozway Road, Surat, Gujarat, 395004	2025-10-20 12:30:00+00	in_progress	2025-10-20 08:07:36.860614+00	300.00	unpaid	\N	\N	\N	\N	pending	t	\N	\N	\N
 40	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:31:39.210274+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00
+44	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-22 12:30:00+00	cancelled	2025-10-22 07:43:28.417044+00	300.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N
 41	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:38:05.403527+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00
 38	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 10:59:09.456605+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00
 \.
@@ -4151,6 +4154,10 @@ COPY public.reviews (id, booking_id, reviewer_id, worker_id, rating, comment, cr
 12	36	1	21	3	Worker wasn't co-operative and rude. Overall his service was fabulous.	2025-10-19 05:28:26.189014+00
 13	37	1	21	4		2025-10-19 12:07:13.066105+00
 14	38	1	21	5	Worker came on time and completed work before time, his speed and dedication towards work was tremendous.	2025-10-19 12:10:30.596446+00
+15	41	1	21	4	Best Ever Experience! Best platform for service booking	2025-10-20 07:11:24.837705+00
+16	40	1	21	3	Nice Platform with nice service provider	2025-10-20 07:11:52.831947+00
+17	39	1	21	4		2025-10-20 07:12:02.163853+00
+18	42	1	21	4		2025-10-20 07:17:20.883183+00
 \.
 
 
@@ -4237,6 +4244,7 @@ COPY public.transactions (id, wallet_id, booking_id, type, amount, description, 
 15	1	39	credit	265.00	Payment received for Booking #39 (Original: ₹300.00, Discount: ₹35.00)	2025-10-19 12:53:48.772976+00
 16	1	40	credit	250.00	Payment received for Booking #40 (Original: ₹300.00, Discount: ₹50.00)	2025-10-19 13:37:24.840041+00
 17	1	41	credit	365.00	Payment received for Booking #41 (Original: ₹400.00, Discount: ₹35.00)	2025-10-19 13:39:26.890776+00
+18	1	42	credit	250.00	Payment received for Booking #42 (Original: ₹300.00, Discount: ₹50.00)	2025-10-20 07:14:00.969554+00
 \.
 
 
@@ -4253,13 +4261,14 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	/dailyfix/worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N	\N
 5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	/dailyfix/worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	/dailyfix/customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+23	jay	jay1509@gmail.com	$2y$10$IW5WX/sdoLsU0aGYTqlcYeue.EPxTJXsLCF/ud9D2BVB3MSrYW9sS	6352121293	customer	uploads/profile_images/68f5ed6bca016.jpg	active	2025-10-20 08:06:14.508593+00	22.28881053	70.76566453	20,Jay Shivam Soc; Part - 2	Cozway Road	Surat	395004	Gujarat	\N	\N	\N
 10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	/dailyfix/customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	/dailyfix/worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	/dailyfix/customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	/dailyfix/worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	/dailyfix/uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	/dailyfix/uploads/profile_images/68a760fa384d7.png	suspended	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 21	Veer Naik	veer@gmail.com	$2y$10$THBaWlEaoLrkdKzpbA4hju9LCN5XxLhWebDObg4ttgK4qdhYpa/Xe	9632015877	worker	uploads/profile_images/68d9353613b7b.jpg	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	Surat	395006	Gujarat	\N	\N	\N
 22	Hemant Sharma	hemant@gmail.com	$2y$10$sreN4.DgD8U9MSaZIY8XSOBtZiFwKs67/przmb4WIfPmzyJfFI.eO	9853201478	worker	/dailyfix/uploads/profile_images/68eaa49e7192b.jpg	active	2025-10-11 18:40:22.808899+00	21.23831114	72.83171587	J-10, WeCare Laudry, Sumeru Complex	Laxmikant Ashram Road	Surat	305994	Gujarat	\N	\N	\N
 \.
@@ -4270,7 +4279,7 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 --
 
 COPY public.wallets (id, worker_id, balance, created_at, updated_at) FROM stdin;
-1	21	3295.00	2025-10-11 12:57:28.098856+00	2025-10-13 06:33:06.608701+00
+1	21	3545.00	2025-10-11 12:57:28.098856+00	2025-10-13 06:33:06.608701+00
 \.
 
 
@@ -4479,8 +4488,8 @@ COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at,
 --
 
 COPY public.worker_offers (id, worker_id, coupon_code, discount_type, discount_value, min_booking_amount, valid_from, valid_until, max_uses, uses_count, is_active, created_at) FROM stdin;
-1	21	FLAT50	fixed	50.00	0.00	\N	2025-10-20 23:59:00+00	\N	1	t	2025-10-18 07:59:23.534494+00
 3	21	FLAT35	fixed	35.00	0.00	\N	2025-10-25 23:59:00+00	\N	4	t	2025-10-19 11:07:19.561536+00
+1	21	FLAT50	fixed	50.00	0.00	\N	2025-10-20 23:59:00+00	\N	2	t	2025-10-18 07:59:23.534494+00
 \.
 
 
@@ -4734,7 +4743,7 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 41, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 44, true);
 
 
 --
@@ -4755,7 +4764,7 @@ SELECT pg_catalog.setval('public.payouts_id_seq', 2, true);
 -- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reviews_id_seq', 14, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 18, true);
 
 
 --
@@ -4783,14 +4792,14 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 22, true);
 -- Name: transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transactions_id_seq', 17, true);
+SELECT pg_catalog.setval('public.transactions_id_seq', 18, true);
 
 
 --
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 22, true);
+SELECT pg_catalog.setval('public.users_id_seq', 23, true);
 
 
 --

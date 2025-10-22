@@ -745,7 +745,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
             });
         }
 
-    }); // --- *** END of SINGLE DOMContentLoaded Listener *** ---
+    });
     </script>
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>

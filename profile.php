@@ -298,7 +298,7 @@ sort($states);
                     </div>
                     <?php endif; ?>
                     <h3>Personal Information</h3>
-                    <form action="profile.php#details" method="POST"> {/* Added hash */}
+                    <form action="profile.php#details" method="POST">
                         <input type="hidden" name="update_user_details" value="1">
                         <div class="form-grid">
                             <div class="form-group">
@@ -331,7 +331,7 @@ sort($states);
                     </div>
                     <?php endif; ?>
                     <h3>Professional Profile</h3>
-                    <form action="profile.php#professional" method="POST"> {/* Added hash */}
+                    <form action="profile.php#professional" method="POST">
                         <input type="hidden" name="update_worker_profile" value="1">
                         <div class="form-grid">
                             <div class="form-group">
@@ -340,7 +340,7 @@ sort($states);
                                     value="<?php echo htmlspecialchars($workerProfile['experience_years'] ?? ''); ?>">
                             </div>
                             <div class="form-group">
-                                <label for="hourly_rate">Hourly Rate (₹)</label> {/* Changed symbol */}
+                                <label for="hourly_rate">Hourly Rate (₹)</label>
                                 <input type="number" id="hourly_rate" name="hourly_rate" step="0.50"
                                     value="<?php echo htmlspecialchars($workerProfile['hourly_rate'] ?? ''); ?>">
                             </div>
@@ -420,7 +420,7 @@ sort($states);
                                             <?php endfor; ?>
                                         </div>
                                     </div>
-                                    <p><?php echo nl2br(htmlspecialchars($review['comment'] ?? '')); ?></p> {/* Added null check */}
+                                    <p><?php echo nl2br(htmlspecialchars($review['comment'] ?? '')); ?></p>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -443,7 +443,7 @@ sort($states);
                         <div id="service-step-1" class="step active">
                             <h4>1. Main Services</h4>
                             <p>Select the main categories you specialize in.</p>
-                            <div id="main-services-container" class="service-selection-grid"> {/* Changed class */}
+                            <div id="main-services-container" class="service-selection-grid">
                             </div>
                             <div class="form-actions">
                                 <button type="button" class="btn btn-secondary back-btn disabled" disabled>Back</button>
@@ -542,7 +542,6 @@ sort($states);
                 <div class="form-section">
                     <h3>Booking History</h3>
                     <p>A summary of your recent bookings. For more details, visit the "My Bookings" page.</p>
-                    {/* Link to actual bookings page */}
                     <a href="/dailyfix/customer/bookings.php" class="submit-btn"
                         style="text-align: center; text-decoration: none; display: inline-block; width: auto;">View All My Bookings</a>
                 </div>
@@ -585,7 +584,6 @@ sort($states);
                                     <label for="city">City</label>
                                     <select id="city" name="city">
                                         <option value="">Select City</option>
-                                        {/* Cities populated by JS */}
                                     </select>
                                 </div>
                             </div>
