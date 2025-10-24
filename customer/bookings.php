@@ -22,6 +22,26 @@ try {
 } catch (PDOException $e) {
     error_log("Customer bookings fetch error: " . $e->getMessage());
 }
+
+// --- NEW DEBT CHECK ---
+$hasOutstandingDebt = false;
+try {
+    $stmt_debt_check = $conn->prepare("
+        SELECT COUNT(*) FROM public.bookings
+        WHERE customer_id = ? 
+        AND status = 'completed'
+        AND payment_status = 'pending' 
+    ");
+    // Assuming $userId is available from included header/session check
+    $stmt_debt_check->execute([$userId]); 
+    if ($stmt_debt_check->fetchColumn() > 0) {
+        $hasOutstandingDebt = true;
+    }
+} catch (PDOException $e) {
+    error_log("Customer debt check failed: " . $e->getMessage());
+    // Continue even on error, so user isn't blocked by a temporary DB issue
+}
+// --- END NEW DEBT CHECK ---
 ?>
 
 <!DOCTYPE html>
@@ -42,6 +62,12 @@ try {
     <main class="page-content">
         <div class="management-container">
             <h1 class="page-title">My Bookings</h1>
+            <?php if ($hasOutstandingDebt): ?>
+                <div class="alert debt-alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p><strong>Payment Required!</strong> You have outstanding payments for completed services. Please view details and complete payment to be eligible for new bookings.</p>
+                </div>
+            <?php endif; ?>
             <?php if (count($bookings) > 0) : ?>
                 <div class="job-card-grid">
                     <?php foreach ($bookings as $booking) : ?>
@@ -63,6 +89,11 @@ try {
                             </div>
                             <div class="job-card-actions">
                                 <a href="/dailyfix/booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-main">View Details</a>
+                                
+                                <?php if (in_array($booking['status'], ['pending', 'confirmed'])) : ?>
+                                    <button class="btn cancel" onclick="openCancelModal(<?php echo $booking['id']; ?>)">Cancel Booking</button>
+                                <?php endif; ?>
+
                                 <?php if ($booking['status'] === 'completed' && $booking['payment_status'] === 'paid' && !$booking['review_id']) : ?>
                                     <button class="btn accept" onclick="openReviewModal(<?php echo $booking['id']; ?>)">Leave a Review</button>
                                 <?php endif; ?>
@@ -99,7 +130,22 @@ try {
             </form>
         </div>
     </div>
-
+    
+    <div id="cancelModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeCancelModal()">&times;</span>
+            <h2>Cancel Booking</h2>
+            <p>Please provide a mandatory reason for cancelling the booking.</p>
+            <form id="cancelForm">
+                <input type="hidden" id="cancelBookingId" name="booking_id">
+                <div class="form-group">
+                    <textarea id="cancellationReason" name="cancellation_reason" placeholder="Reason for cancellation..." rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn cancel">Confirm Cancellation</button>
+            </form>
+        </div>
+    </div>
+    
     <div id="messageModal" class="modal" style="display:none;">
         <div class="modal-content">
             <span class="close" onclick="closeMessageModal()">&times;</span>
@@ -110,7 +156,7 @@ try {
     </div>
 
     <script>
-    // --- Review Modal Functions ---
+    // --- Review Modal Functions (Existing) ---
     function openReviewModal(bookingId) {
         document.getElementById('bookingId').value = bookingId;
         document.getElementById('reviewModal').style.display = 'flex';
@@ -135,7 +181,18 @@ try {
         });
     });
 
-    // --- NEW Message Modal Functions ---
+    // --- NEW Cancellation Modal Functions ---
+    function openCancelModal(bookingId) {
+        document.getElementById('cancelBookingId').value = bookingId;
+        document.getElementById('cancelModal').style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModal').style.display = 'none';
+        document.getElementById('cancelForm').reset();
+    }
+
+    // --- Message Modal Functions (Existing) ---
     const messageModal = document.getElementById('messageModal');
     const messageModalTitle = document.getElementById('messageModalTitle');
     const messageModalText = document.getElementById('messageModalText');
@@ -165,7 +222,7 @@ try {
     }
 
 
-    // --- UPDATED Form Submit Event Listener ---
+    // --- UPDATED Review Form Submit Event Listener (Existing) ---
     document.getElementById('reviewForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -205,6 +262,53 @@ try {
             .finally(() => {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Submit Review';
+            });
+    });
+    
+    // --- NEW Cancellation Form Submit Event Listener ---
+    document.getElementById('cancelForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = this;
+        const submitButton = form.querySelector('button[type="submit"]');
+        const data = Object.fromEntries(new FormData(form).entries());
+        
+        if (!data.cancellation_reason.trim()) {
+            showMessageModal('Validation Error', 'Cancellation reason is mandatory.');
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Cancelling...';
+
+        // NOTE: This calls the new customer cancellation API logic
+        fetch('/dailyfix/api/customer_cancel_booking.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    booking_id: parseInt(data.booking_id),
+                    cancellation_reason: data.cancellation_reason.trim()
+                })
+            })
+            .then(response => {
+                return response.json().then(body => ({ ok: response.ok, body }));
+            })
+            .then(({ ok, body }) => {
+                closeCancelModal();
+                if (ok) {
+                    showMessageModal('Cancellation Success', body.message, 'success');
+                } else {
+                    throw new Error(body.message || 'Cancellation failed. An unknown error occurred.');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting cancellation:', error);
+                closeCancelModal();
+                showMessageModal('Cancellation Failed', error.message, 'error');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Confirm Cancellation';
             });
     });
     </script>

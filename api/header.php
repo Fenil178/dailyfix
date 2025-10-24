@@ -56,10 +56,10 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         <?php
             $links = [];
             if ($role === 'customer') {
-                $links = [ 'dashboard.php' => 'Dashboard', 'services.php' => 'Browse Services', 'bookings.php' => 'My Bookings', 'contact.php' => 'Help' ];
+                $links = [ 'dashboard.php' => 'Dashboard', 'services.php' => 'Browse Services', 'bookings.php' => 'My Bookings', 'reports.php' => 'My Reports', 'contact.php' => 'Help' ];
                 $basePath = '/dailyfix/customer/';
             } elseif ($role === 'worker') {
-                $links = [ 'dashboard.php' => 'Dashboard', 'jobs.php' => 'Job Requests', 'earnings.php' => 'My Earnings', 'contact.php' => 'Help' ];
+                $links = [ 'dashboard.php' => 'Dashboard', 'jobs.php' => 'Job Requests', 'earnings.php' => 'My Earnings', 'reports.php' => 'My Reports', 'contact.php' => 'Help' ];
                 $basePath = '/dailyfix/worker/';
             }
 

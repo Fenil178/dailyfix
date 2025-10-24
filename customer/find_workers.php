@@ -1,6 +1,24 @@
 <?php
-include_once __DIR__ . "/../api/connect.php";
-include_once __DIR__ . "/../api/header.php";
+include_once __DIR__ . "/../api/encryption.php"; // Added for security and decryption
+include_once __DIR__ . "/../api/connect.php"; // Include your database connection
+
+$isLoggedIn = false;
+
+// Check for user cookies (Copied from services.php for consistency)
+if (isset($_COOKIE['encrypted_user_id']) && isset($_COOKIE['encrypted_user_role'])) {
+    $userId = decrypt_id($_COOKIE['encrypted_user_id']);
+    $role = decrypt_id($_COOKIE['encrypted_user_role']);
+
+    if ($userId && $role) {
+        $isLoggedIn = true;
+    }
+}
+
+// Redirect if not logged in (Copied from services.php for consistency)
+if (!$isLoggedIn) {
+    header("Location: /dailyfix/login.php");
+    exit;
+}
 
 if (!isset($_GET['service'])) {
     header("Location: /dailyfix/customer/services.php");
@@ -15,6 +33,7 @@ $customer_lon = null;
 
 // Get customer's location
 try {
+    // Note: The $userId variable is now guaranteed to be set by the logic above
     $stmt = $conn->prepare("SELECT latitude, longitude FROM public.users WHERE id = ?");
     $stmt->execute([$userId]);
     $customer_location = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -85,24 +104,23 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Find Workers for <?php echo htmlspecialchars($serviceName); ?></title>
-    <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
-    <link rel="stylesheet" href="/dailyfix/assets/css/worker_list.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/index.css" /> 
+    <link rel="stylesheet" href="/dailyfix/assets/css/services.css" /> 
+    <link rel="stylesheet" href="/dailyfix/assets/css/worker_list.css" /> 
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
     </head>
-<body>
-    <main class="page-content">
-    <section class="services-hero">
-        <h1>Available Workers for <?php echo htmlspecialchars($serviceName); ?></h1>
-    </section>
-    <section class="page-header">
-        <a href="/dailyfix/customer/services.php" class="back-link"><i class="fas fa-arrow-left"></i> Back to Services</a>
-    </section>
+<body class="light-mode">
+    <?php include_once __DIR__ . "/../api/header.php"; ?>
 
-        <section class="worker-list-container">
+    <main class="page-content">
+        <section class="worker-list-container section-fly">
+            <a href="/dailyfix/customer/services.php" class="back-link"><i class="fas fa-arrow-left"></i> Back to Services</a>
+            <h1 class="section-title">Available Workers for <?php echo htmlspecialchars($serviceName); ?></h1>
+            
             <?php if (count($workers) > 0): ?>
                 <div class="worker-grid">
                 <?php

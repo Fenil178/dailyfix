@@ -81,6 +81,23 @@ try {
 
 // --- Database Operation ---
 try {
+    // === NEW PAYMENT ENFORCEMENT CHECK ===
+    $stmt_debt_check = $conn->prepare("
+        SELECT COUNT(*) FROM public.bookings
+        WHERE customer_id = ? 
+        AND status = 'completed'
+        AND payment_status = 'pending' 
+    ");
+    $stmt_debt_check->execute([$customer_id]);
+    $debt_count = $stmt_debt_check->fetchColumn();
+
+    if ($debt_count > 0) {
+        http_response_code(403); // Forbidden
+        echo json_encode(['status' => 'error', 'message' => 'You have outstanding payments for completed services. Please settle them before booking a new service.']);
+        exit;
+    }
+    // === END NEW PAYMENT ENFORCEMENT CHECK ===
+    
     $conn->beginTransaction();
 
     $full_service_details = "Service: {$sub_service_name}\nItem: {$service_item_name}\nAddress: {$address}";

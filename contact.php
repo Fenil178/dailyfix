@@ -2,7 +2,8 @@
 
 include_once __DIR__ . "/api/encryption.php";
 include_once __DIR__ . "/api/connect.php";
-include_once __DIR__ . "/api/header.php";
+// The api/header.php include has been removed from the top, to be placed in the body
+// include_once __DIR__ . "/api/header.php";
 
 $isLoggedIn = false;
 
@@ -48,11 +49,6 @@ if (!$isLoggedIn) {
 <?php include_once __DIR__ . "/api/header.php"; ?>
 
 <main class="page-content">
-  <section class="contact-hero">
-    <h1>Help & Contact</h1>
-    <p>Need assistance? We’re here to help!</p>
-  </section>
-
   <section class="contact-grid section-fly">
     <div class="contact-form">
       <h2>Contact Us</h2>
