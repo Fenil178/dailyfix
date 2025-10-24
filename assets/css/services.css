@@ -1,119 +1,244 @@
+/* ============================================= */
+/* ===== Root Variables & Theming ===== */
+/* ============================================= */
 :root {
   --primary-color: #007bff;
   --secondary-color: #ffc107;
-  --background-color-light: #f4f7f9;
+  --background-color-light: #f8f9fa;
   --background-color-card: #ffffff;
-  --text-color-dark: #333;
+  --text-color-dark: #212529;
   --text-color-light: #6c757d;
-  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  --border-color: #e9ecef;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --hover-glow-color: rgba(0, 123, 255, 0.08);
+  --icon-glyph-color: #ffffff;
 }
 
 body.dark-mode {
-  --primary-color: #ffc107; /* A slight change for better contrast in dark mode */
-  --secondary-color: #007bff; /* A slight change for better contrast in dark mode */
+  --primary-color: #ffc107;
+  --secondary-color: #007bff;
   --background-color-light: #121212;
-  --background-color-card: #1f1f1f;
+  --background-color-card: #1e1e1e;
   --text-color-dark: #e0e0e0;
-  --text-color-light: #bdc3c7;
-  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  --text-color-light: #a0a0a0;
+  --border-color: #333;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --hover-glow-color: rgba(255, 193, 7, 0.08);
 }
 
+/* ============================================= */
+/* ===== General Body & Layout Styles ===== */
+/* ============================================= */
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;
   color: var(--text-color-dark);
   background-color: var(--background-color-light);
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .page-content {
   padding-top: 5rem;
 }
 
+/* Hero Section */
 .services-hero {
-  background: var(--primary-color);
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  color: #fff;
-  padding: 5rem 2rem;
+  background: var(--background-color-light);
+  color: var(--text-color-dark);
+  padding: 4rem 2rem;
   text-align: center;
   margin-top: 0;
-  animation: gradientBG 8s ease infinite;
-}
-
-@keyframes gradientBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 .services-hero h1 {
   font-weight: 700;
-  font-size: 3rem;
+  font-size: 2.8rem;
   margin-bottom: 0.5rem;
+  color: var(--primary-color);
 }
 
 .services-hero p {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto;
+  color: var(--text-color-light);
 }
 
-.main-services-container, .sub-services-container {
+/* Service Containers & Grid Layout */
+.main-services-container,
+.sub-services-container {
   max-width: 1200px;
-  margin: 3rem auto;
+  margin: 2rem auto 4rem auto;
   padding: 0 1rem;
 }
 
-.services-grid, .sub-services-grid {
+.services-grid,
+.sub-services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
   padding: 0;
 }
 
-.services-grid h3 {
-  color: var(--primary-color);
-}
-
+/* ============================================= */
+/* ===== Main Service Card Styles ===== */
+/* ============================================= */
 .service-card {
   background-color: var(--background-color-card);
-  padding: 2.5rem;
-  border-radius: 1rem;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
   box-shadow: var(--box-shadow);
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover glow effect */
+.service-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 90% 10%,
+      var(--hover-glow-color) 0%,
+      transparent 50%);
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+  border-radius: inherit;
 }
 
 .service-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.service-card:hover::before {
+  opacity: 1;
+}
+
+/* Card Icon */
+.service-card i {
+  font-size: 3rem;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+  background-color: var(--primary-color);
+  color: var(--icon-glyph-color);
+}
+
+.service-card:hover i {
+  transform: scale(1.1);
+}
+
+/* Card Content */
+.service-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-color-dark);
+}
+
+.service-card p {
+  font-size: 0.9rem;
+  color: var(--text-color-light);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ============================================= */
+/* ===== Sub-Service Card Styles ===== */
+/* ============================================= */
+.sub-services-container h2 {
+  text-align: center;
+  margin-bottom: 3rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-color-dark);
+}
+
+#sub-service-title {
+  color: var(--primary-color);
+}
+
+.sub-service-card {
+  background-color: var(--background-color-card);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: var(--box-shadow);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-color-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.sub-service-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.service-card i {
-  font-size: 3rem;
-  color: var(--secondary-color);
+/* Sub-service Card Icon */
+.sub-service-card i {
+  font-size: 2.5rem;
+  width: 70px;
+  height: 70px;
+  line-height: 70px;
+  border-radius: 50%;
   margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+  background-color: var(--secondary-color);
+  color: var(--icon-glyph-color);
 }
 
-.service-card h3 {
-  font-size: 1.5rem;
+.sub-service-card:hover i {
+  transform: scale(1.1);
+}
+
+/* Sub-service Card Content */
+.sub-service-card span {
+  font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 0;
-  color: var(--primary-color);
+  color: var(--text-color-dark);
 }
 
-.sub-services-container h2 {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2rem;
-  color: var(--primary-color);
+.sub-service-card .book-now-btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 8px 20px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+.sub-service-card:hover .book-now-btn {
+  background-color: var(--secondary-color);
+  color: var(--text-color-dark);
+  transform: scale(1.05);
+}
+
+/* ============================================= */
+/* ===== Utility & Animation Styles ===== */
+/* ============================================= */
+/* Utility class to hide elements */
 .hidden {
   display: none;
 }
 
+/* Back navigation link */
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -132,46 +257,12 @@ body {
   transform: translateX(-5px);
 }
 
-/* Updated styles for the sub-service cards to match the main cards' aesthetic */
-.sub-service-card {
-  background-color: var(--background-color-card);
-  padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: var(--box-shadow);
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-  cursor: pointer;
-  text-decoration: none; /* Remove underline from links */
-  color: var(--text-color-dark);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.sub-service-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.sub-service-card i {
-  font-size: 3rem;
-  color: var(--secondary-color);
-  margin-bottom: 1.5rem;
-}
-
-.sub-service-card span {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--primary-color);
-}
-
+/* Section fly-in animation */
 .section-fly {
   opacity: 0;
-  transform: translateY(60px);
+  transform: translateY(50px);
   transition: opacity 0.8s cubic-bezier(0.25, 0.8, 0.25, 1),
     transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
-  will-change: opacity, transform;
 }
 
 .section-fly.visible {
@@ -179,35 +270,68 @@ body {
   transform: translateY(0);
 }
 
-/* Responsive design */
+/* Staggered card fade-in animation */
+.services-grid.visible .service-card {
+  animation: card-fade-in 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) backwards;
+}
+
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================= */
+/* ===== Responsive Design ===== */
+/* ============================================= */
+
+/* For tablets and smaller desktops */
+@media (max-width: 992px) {
+  .services-hero h1 {
+    font-size: 2.5rem; /* Slightly smaller title */
+  }
+
+  .main-services-container,
+  .sub-services-container {
+    padding: 0 1.5rem; /* More horizontal padding */
+  }
+
+  .services-grid,
+  .sub-services-grid {
+    /* Ensure a max of 2-3 columns on tablets */
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+/* For mobile phones */
 @media (max-width: 768px) {
   .services-hero h1 {
-    font-size: 2rem;
+    font-size: 2rem; /* Further reduce title size */
   }
+
   .services-hero p {
-    font-size: 1rem;
+    font-size: 1rem; /* Adjust paragraph size for readability */
   }
-  .services-grid, .sub-services-grid {
+  
+  .main-services-container,
+  .sub-services-container {
+    margin: 1.5rem auto 3rem auto; /* Reduce vertical margins */
+  }
+
+  .services-grid,
+  .sub-services-grid {
+    /* Switch to a single column layout on small screens */
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.5rem; /* Reduce gap between cards */
   }
-}
-
-/* In services.css */
-.sub-service-card .book-now-btn {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 8px 20px;
-  background-color: var(--primary-color);
-  color: #fff;
-  border-radius: 20px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.sub-service-card:hover .book-now-btn {
-  background-color: var(--secondary-color);
-  /* color: var(--text-color-dark); */ /* REMOVED */
-  transform: scale(1.05);
+  
+  .service-card {
+    padding: 2rem 1.5rem; /* Adjust card padding */
+  }
 }
