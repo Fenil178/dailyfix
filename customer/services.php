@@ -31,7 +31,7 @@ try {
     $mainServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Fetch all sub-services and organize them by service_id
-    $stmt = $conn->prepare("SELECT service_id, name, icon, slug FROM public.sub_services ORDER BY name"); // Fetch slug instead of link
+    $stmt = $conn->prepare("SELECT service_id, name, icon, slug FROM public.sub_services ORDER BY name");
     $stmt->execute();
     $allSubServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -39,13 +39,26 @@ try {
       $subServices[$sub['service_id']][] = [
           'name' => $sub['name'],
           'icon' => $sub['icon'],
-          'slug' => $sub['slug'] // Add slug here
+          'slug' => $sub['slug']
       ];
     }
 } catch (PDOException $e) {
     error_log("Database Error: " . $e->getMessage());
     $mainServices = [];
 }
+
+// // In a real app, this might come from the database.
+$serviceDescriptions = [
+    "Cleaning Services" => "Spotless cleaning for your home and office.",
+    "Home Services" => "Plumbing, electrical, and carpentry experts.",
+    "Vehicle Services" => "Keep your car in pristine condition.",
+    "Cooling Services" => "AC repair, service, and installation.",
+    "Refrigerator Services" => "Fast and reliable fridge repairs.",
+    "Washing Machine Services" => "Fixing all models and brands.",
+    "Water Purifier Services" => "Ensuring you get clean, safe water.",
+    "Elevator Services" => "Maintenance and repair for elevators."
+];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,6 +79,15 @@ try {
   <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
 
+<style>
+    /* Add delays to each card for the stagger effect */
+    <?php for ($i = 1; $i <= 12; $i++): ?>
+      .services-grid.visible .service-card:nth-child(<?php echo $i; ?>) {
+        animation-delay: <?php echo $i * 0.07; ?>s;
+      }
+    <?php endfor; ?>
+  </style>
+
 <script defer src="/dailyfix/assets/js/app.js"></script>
 <script defer>
   // Pass the PHP data to JavaScript
@@ -79,7 +101,7 @@ try {
 <main class="page-content">
   <section class="services-hero">
     <h1>Our Services</h1>
-    <p>Select from our range of expert household help</p>
+    <p>Find reliable and professional help for all your daily needs.</p>
   </section>
 
   <section class="main-services-container section-fly">
@@ -88,6 +110,7 @@ try {
         <div class="service-card" data-service-id="<?php echo htmlspecialchars($service['id']); ?>">
           <i class="<?php echo htmlspecialchars($service['icon']); ?>"></i>
           <h3><?php echo htmlspecialchars($service['name']); ?></h3>
+          <p><?php echo htmlspecialchars($serviceDescriptions[$service['name']] ?? 'Quality service guaranteed.'); ?></p>
         </div>
       <?php endforeach; ?>
     </div>
@@ -95,7 +118,7 @@ try {
 
   <section class="sub-services-container section-fly hidden">
     <a href="#" id="back-to-main" class="back-link"><i class="fas fa-arrow-left"></i> Back to Main Services</a>
-    <h2>Sub-services for <span id="sub-service-title"></span></h2>
+    <h2><span id="sub-service-title"></span> Services</h2>
     <div class="sub-services-grid" id="sub-services-grid">
       </div>
   </section>
