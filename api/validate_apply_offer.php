@@ -79,7 +79,7 @@ try {
     if (!$offer) {
         // If the new offer is invalid, we need to rollback the decrement of the old offer count!
         $conn->rollBack(); // Rollback the whole transaction
-        throw new Exception("Invalid or inactive coupon code for this worker.");
+        throw new Exception("Invalid coupon code.");
     }
     
     // Check if user is trying to apply the SAME offer again (edge case)

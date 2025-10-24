@@ -265,9 +265,9 @@ try {
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-info">
-                        <span class="stat-label">Completed Services</span>
+                        <span class="stat-label">All Bookings</span>
                         <span class="stat-value"><?php echo $stats['secondary']; ?></span>
-                        <span class="stat-desc">Jobs finished successfully</span>
+                        <span class="stat-desc">Services booked</span>
                     </div>
                 </div>
                 <div class="stat-card-v4 stat-warning">

@@ -42,6 +42,23 @@ if (!$booking) {
     exit;
 }
 
+$appliedCouponCode = null;
+if ($booking['applied_offer_id']) {
+    try {
+        $stmt_coupon = $conn->prepare("SELECT coupon_code FROM public.worker_offers WHERE id = ?");
+        $stmt_coupon->execute([$booking['applied_offer_id']]);
+        $appliedCouponCode = $stmt_coupon->fetchColumn();
+    } catch (PDOException $e) {
+        error_log("Error fetching applied coupon code: " . $e->getMessage());
+    }
+}
+
+
+// Calculate final cost after discount for display
+$originalCost = (float)($booking['final_cost'] ?? 0.00); // This is the base price set during booking
+$discountAmount = (float)($booking['discount_amount'] ?? 0.00);
+$finalCostAfterDiscount = max(0, $originalCost - $discountAmount);
+
 // --- Dynamic Variables Setup ---
 $statusClass = strtolower(str_replace(' ', '_', $booking['status']));
 $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
@@ -121,9 +138,19 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
          body.dark-mode #coupon-section button#apply-coupon-btn { color: #111; }
          /* Styles for Available Offer Buttons */
          .available-offer-btn {
-                background-color: var(--hover-color); border: 1px dashed var(--primary-color); color: var(--primary-color);
-                padding: 5px 10px; border-radius: 6px; font-size: 0.8em; cursor: pointer; transition: background-color 0.2s, color 0.2s;
-            }
+            background-color: var(--hover-color); border: 1px dashed var(--primary-color); color: var(--primary-color);
+            padding: 5px 10px; border-radius: 6px; font-size: 0.8em; cursor: pointer; transition: background-color 0.2s, color 0.2s;
+         }
+
+         /* Add style for disabled input */
+         #coupon-section input[type="text"]:disabled {
+             background-color: var(--border-color); /* Lighter grey */
+             cursor: not-allowed;
+             opacity: 0.7;
+         }
+         body.dark-mode #coupon-section input[type="text"]:disabled {
+              background-color: #444; /* Darker grey */
+         }
          .available-offer-btn code { background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 3px; font-weight: bold;}
          .available-offer-btn:hover { background-color: var(--primary-color); color: white; }
          body.dark-mode .available-offer-btn { background-color: rgba(251, 191, 36, 0.1); border-color: var(--primary-color); color: var(--primary-color); }
@@ -150,10 +177,10 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                 </div>
             </div>
 
-            <div class="details-grid-main">
+             <div class="details-grid-main">
                 <div class="details-column">
                     <div class="detail-card">
-                        <h3><i class="fas fa-clipboard-list"></i> Job Breakdown</h3>
+                         <h3><i class="fas fa-clipboard-list"></i> Job Breakdown</h3>
                         <div class="card-section">
                             <div class="detail-item">
                                 <strong>Service Category</strong>
@@ -177,15 +204,16 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                             </div>
                             <?php if ($discountAmount > 0): ?>
                             <div class="detail-item">
-                                <strong>Discount Applied</strong>
+                                <strong>Discount Applied <?php if ($appliedCouponCode) echo '(' . htmlspecialchars($appliedCouponCode) . ')'; ?></strong>
                                 <span style="color: var(--success-color);">-₹<?php echo number_format($discountAmount, 2); ?></span>
                             </div>
-                            <div class="detail-item">
+                            <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 5px 0;">
+                            <div class="detail-item" style="margin-top: 5px;">
                                 <strong>Final Cost</strong>
                                 <span style="font-weight: bold; font-size: 1.1em;">₹<?php echo number_format($finalCostAfterDiscount, 2); ?></span>
                             </div>
                             <?php endif; ?>
-                            <div class="detail-item">
+                            <div class="detail-item" style="margin-top: <?php echo ($discountAmount > 0) ? '1rem' : '0.5rem'; ?>;">
                                 <strong>Payment Status</strong>
                                 <span class="item-status <?php echo htmlspecialchars($booking['payment_status']); ?>"><?php echo ucfirst(htmlspecialchars($booking['payment_status'])); ?></span>
                             </div>
@@ -214,7 +242,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        </div>
 
                     <?php if ($role === 'worker'): ?>
                         <?php if ($booking['status'] === 'confirmed'): ?>
@@ -232,43 +260,64 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         <?php endif; ?>
                     <?php endif; ?>
 
-                     <?php if ($role === 'customer' && $booking['work_completed_by_worker'] && $booking['payment_status'] === 'unpaid'): ?>
+                    <?php if ($role === 'customer' && $booking['work_completed_by_worker'] && $booking['payment_status'] === 'unpaid'): ?>
                         <div class="action-panel">
                             <h2>Payment Required</h2>
                             <p>The worker confirmed job completion. Please finalize payment.</p>
 
-                            <div id="coupon-section" style="margin-bottom: 1.5rem; text-align: left;">
-                                <label for="coupon-code" style="font-weight: 500; display: block; margin-bottom: 0.5rem;">Have a Coupon Code?</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="text" id="coupon-code" placeholder="Enter code" style="text-transform: uppercase;">
-                                    <button id="apply-coupon-btn">Apply</button>
-                                </div>
-                                <div id="coupon-message"></div>
-                                <a href="#" id="remove-coupon-btn" style="display: none; font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; text-decoration: none;">Remove Coupon</a>
+<div id="coupon-section" style="margin-bottom: 1.5rem; text-align: left;">
+    <label for="coupon-code" style="font-weight: 500; display: block; margin-bottom: 0.5rem;">
+        <?php echo ($booking['applied_offer_id'] && $appliedCouponCode) ? '' : 'Have a Coupon Code?'; ?>
+    </label>
+    <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="coupon-code" placeholder="Enter code" style="text-transform: uppercase;"
+               value="<?php echo htmlspecialchars($appliedCouponCode ?? ''); ?>"
+               <?php if ($booking['applied_offer_id'] && $appliedCouponCode) echo 'disabled'; // Disable input if pre-applied ?>
+               >
+        <?php // Conditionally hide the Apply button if a coupon was pre-applied
+        if (!($booking['applied_offer_id'] && $appliedCouponCode)): ?>
+            <button id="apply-coupon-btn">Apply</button>
+        <?php endif; ?>
+    </div>
+    <div id="coupon-message">
+         <?php if ($booking['applied_offer_id'] && $discountAmount > 0): ?>
+             <span style="color: var(--success-color); font-weight: 500;">Discount of ₹<?php echo number_format($discountAmount, 2); ?> applied.</span>
+         <?php endif; ?>
+    </div>
 
-                                 <div id="price-summary">
-                                     <p>Original Cost: <span id="original-cost">₹<?php echo number_format($originalCost, 2); ?></span></p>
-                                     <p>Discount: <span id="discount-applied">-₹0.00</span></p>
-                                     <hr>
-                                     <p>New Total: <span id="final-cost-display">₹<?php echo number_format($originalCost, 2); ?></span></p>
-                                </div>
-                                </div>
+    <?php // Conditionally hide the Remove link if a coupon was pre-applied
+    if (!($booking['applied_offer_id'] && $appliedCouponCode)): ?>
+        <a href="#" id="remove-coupon-btn" style="display: none; font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; text-decoration: none;">Remove Coupon</a>
+    <?php endif; ?>
+
+    <div id="price-summary" style="<?php echo $discountAmount > 0 ? 'display: block;' : 'display: none;'; ?>">
+         <p>Original Cost: <span id="original-cost">₹<?php echo number_format($originalCost, 2); ?></span></p>
+         <p>Discount: <span id="discount-applied">-₹<?php echo number_format($discountAmount, 2); ?></span></p>
+         <hr>
+         <p>New Total: <span id="final-cost-display">₹<?php echo number_format($finalCostAfterDiscount, 2); ?></span></p>
+    </div>
+     <?php // This condition already correctly hides this section
+     if (!($booking['applied_offer_id'] && $appliedCouponCode)): ?>
+         <div id="available-offers-container-details" style="margin-top: 1rem;"></div>
+     <?php endif; ?>
+</div>
 
                             <button id="pay-now-btn" class="btn btn-main" data-booking-id="<?php echo $booking['id']; ?>" data-final-amount="<?php echo $finalCostAfterDiscount; ?>">
                                 Pay Now ₹<?php echo number_format($finalCostAfterDiscount, 2); ?>
-                             </button>
+                            </button>
                         </div>
                     <?php endif; ?>
 
                     <?php if ($booking['status'] === 'completed' && $booking['payment_status'] === 'paid'): ?>
-                        <div class="action-panel" style="border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);">
+                       <div class="action-panel" style="border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);">
                             <h2><i class="fas fa-check-circle" style="color: #10b981;"></i> Job Completed & Paid</h2>
                             <p style="color: #10b981;">This transaction is complete. Thank you for using DailyFix.</p>
                             <a href="/dailyfix/generate_invoice.php?id=<?php echo $booking['id']; ?>" target="_blank" class="btn btn-main" style="background-color: #10b981; color: white; margin-top: 1rem;">
                                 <i class="fas fa-file-invoice"></i> Download Invoice
                             </a>
-                        </div>
+                            </div>
                     <?php endif; ?>
+
                 </div>
             </div>
         </div>
@@ -321,6 +370,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         newCloseBtn.onclick = function() {
             modal.classList.remove('show');
             if (status === 'success') {
+                // Reload on success for status updates, payment, coupon removal
                 window.location.reload();
             }
         };
@@ -341,7 +391,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         const closeBtn = modal.querySelector('.modal-close-icon');
 
         titleEl.textContent = title;
-        messageEl.innerHTML = message;
+        messageEl.innerHTML = message; // Use innerHTML for potential bold tags
         modal.classList.add('show');
 
         // Remove previous listeners
@@ -397,6 +447,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
              })
             .then(data => {
                 if (data.status === 'success') {
+                     // Reload will show updated status
                      showStatusModal('success', 'Status Updated', 'Booking status changed successfully.');
                 } else {
                      throw new Error(data.message || 'Could not update status.');
@@ -405,42 +456,35 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
             .catch((error) => {
                  console.error("Job Action Error:", error);
                  showStatusModal('error', 'Update Failed', error.message || 'A network error occurred.');
+                 // Restore buttons on failure
                  buttonsInContainer.forEach(btn => {
                     btn.disabled = false;
-                    let originalHTML = 'Action';
-                    for (const html in originalTexts) {
-                       if(html && !html.includes('fa-spinner')) {
-                           originalHTML = html;
-                           break;
-                       }
-                    }
+                    // Find the original HTML safely
+                    let originalHTML = 'Action'; // Default fallback
+                     for (const html in originalTexts) {
+                        if (originalTexts.hasOwnProperty(html) && !html.includes('fa-spinner')) {
+                             originalHTML = html;
+                             break;
+                        }
+                     }
                     btn.innerHTML = originalHTML;
                 });
             });
     }
 
-    // --- displayAvailableOffers (for Customer payment panel) ---
-    function displayAvailableOffers(offers) {
-        const couponSection = document.getElementById('coupon-section');
-        if (!couponSection) return;
-
-        let offersContainer = couponSection.querySelector('.available-offers-container');
-        if (!offersContainer) {
-            offersContainer = document.createElement('div');
-            offersContainer.className = 'available-offers-container';
-            offersContainer.style.marginTop = '1rem';
-            offersContainer.style.paddingTop = '1rem';
-            offersContainer.style.borderTop = '1px dashed var(--border-color)';
-            couponSection.appendChild(offersContainer);
-        }
+     // --- displayAvailableOffers (slightly adapted for details page) ---
+    function displayAvailableOffersDetails(offers) {
+        const offersContainer = document.getElementById('available-offers-container-details');
+        if (!offersContainer) return;
 
         if (offers.length === 0) {
-            offersContainer.innerHTML = '';
-            return;
+            offersContainer.innerHTML = ''; return;
         }
 
         let offersHtml = '<p style="font-size: 0.9em; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-color-light);">Available Offers:</p>';
         offersHtml += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">';
+
+        const currentCost = parseFloat(<?php echo json_encode($originalCost); ?>); // Use original booking cost here
 
         offers.forEach(offer => {
             let offerText = '';
@@ -453,31 +497,30 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                  offerText += ` (min ₹${parseFloat(offer.min_booking_amount).toFixed(2)})`;
              }
 
-            offersHtml += `<button type="button" class="available-offer-btn" data-code="${offer.coupon_code}" title="Click to apply ${offer.coupon_code}">
+             // Check if applicable based on original booking cost
+             let canApply = currentCost >= parseFloat(offer.min_booking_amount);
+             let titleText = canApply ? `Click to apply ${offer.coupon_code}` : `Requires min ₹${parseFloat(offer.min_booking_amount).toFixed(2)} booking value`;
+
+            offersHtml += `<button type="button" class="available-offer-btn" data-code="${offer.coupon_code}" title="${titleText}" ${!canApply ? 'disabled style="opacity:0.5; cursor: not-allowed; border-style: dotted;"' : ''}>
                               <code>${offer.coupon_code}</code>: ${offerText}
                            </button>`;
         });
-
         offersHtml += '</div>';
         offersContainer.innerHTML = offersHtml;
 
-        offersContainer.querySelectorAll('.available-offer-btn').forEach(btn => {
+        offersContainer.querySelectorAll('.available-offer-btn:not([disabled])').forEach(btn => {
             btn.addEventListener('click', function() {
                 const code = this.dataset.code;
                 const couponInput = document.getElementById('coupon-code');
                 const applyBtn = document.getElementById('apply-coupon-btn');
-                if (couponInput && applyBtn) {
+                // Ensure elements exist and apply button is not disabled (meaning not already applied/hidden)
+                if (couponInput && applyBtn && !applyBtn.disabled && applyBtn.style.display !== 'none') {
                     couponInput.value = code;
-                    if(!applyBtn.disabled) {
-                         applyBtn.click();
-                    } else {
-                        console.log("Apply button busy, set value only.");
-                    }
+                    applyBtn.click();
                 }
             });
         });
     }
-
 
     // --- *** SINGLE DOMContentLoaded Listener *** ---
     document.addEventListener('DOMContentLoaded', function() {
@@ -493,28 +536,37 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         const discountAppliedSpan = document.getElementById('discount-applied');
         const finalCostDisplaySpan = document.getElementById('final-cost-display');
         const removeCouponBtn = document.getElementById('remove-coupon-btn');
+        const availableOffersContainerDetails = document.getElementById('available-offers-container-details');
 
-        // Get initial costs from PHP
+
+        // Get initial costs and state from PHP
         let currentBookingCost = parseFloat(<?php echo json_encode($originalCost); ?>);
+        // let currentDiscount = parseFloat(<?php echo json_encode($discountAmount); ?>); // We can read this from PHP if needed, but finalCostAfterDiscount is more direct
         let finalCostAfterDiscount = parseFloat(<?php echo json_encode($finalCostAfterDiscount); ?>);
+        // ** Check if the remove button ITSELF has the data-pre-applied attribute **
+        const isCouponPreApplied = removeCouponBtn && removeCouponBtn.hasAttribute('data-pre-applied');
 
-
-        // --- Fetch and display available offers (if payment panel exists) ---
-        const customerPaymentPanel = document.querySelector('#pay-now-btn'); // Use pay button as indicator
-        if (customerPaymentPanel) {
-             const workerIdForOffers = <?php echo json_encode($booking['worker_id']); ?>;
-             if (workerIdForOffers) {
-                 fetch(`/dailyfix/api/get_worker_offers.php?worker_id=${workerIdForOffers}`)
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.status === 'success' && result.data) {
-                            displayAvailableOffers(result.data);
-                        }
-                    })
-                    .catch(err => console.error("Error fetching available offers:", err));
-             }
-        }
-
+        // --- Fetch and display available offers (if payment panel exists AND coupon not pre-applied) ---
+         if (payNowBtnCustomer && !isCouponPreApplied && availableOffersContainerDetails) {
+              const workerIdForOffers = <?php echo json_encode($booking['worker_id']); ?>;
+              if (workerIdForOffers) {
+                  fetch(`/dailyfix/api/get_worker_offers.php?worker_id=${workerIdForOffers}`)
+                     .then(res => res.json())
+                     .then(result => {
+                         if (result.status === 'success' && result.data) {
+                             displayAvailableOffersDetails(result.data); // Use the details version
+                         } else {
+                              availableOffersContainerDetails.innerHTML = ''; // Clear if no offers
+                         }
+                     })
+                     .catch(err => {
+                        console.error("Error fetching available offers:", err);
+                        availableOffersContainerDetails.innerHTML = '<p style="font-size: 0.8em; color: var(--danger-color);">Could not load offers.</p>';
+                     });
+              }
+         } else if (availableOffersContainerDetails) {
+              availableOffersContainerDetails.innerHTML = ''; // Ensure it's empty if coupon pre-applied
+         }
 
         // --- Event Listeners ---
 
@@ -578,42 +630,48 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                 formData.append('coupon_code', code);
 
                 fetch('/dailyfix/api/validate_apply_offer.php', { method: 'POST', body: formData })
-                    .then(res => res.json().then(body => ({ ok: res.ok, body })))
-                    .then(({ ok, body }) => {
-                         button.disabled = false; // Re-enable
+                     .then(res => res.json().then(body => ({ ok: res.ok, body })))
+                     .then(({ ok, body }) => {
+                          button.disabled = false; // Re-enable first
 
-                        if (ok && body.status === 'success') {
-                            couponMessageDiv.textContent = body.message;
-                            couponMessageDiv.style.color = 'var(--success-color)';
-                            button.textContent = 'Applied';
-                            button.style.backgroundColor = 'var(--success-color)';
-                            button.style.color = 'white';
+                         if (ok && body.status === 'success') {
+                             couponMessageDiv.textContent = body.message;
+                             couponMessageDiv.style.color = 'var(--success-color)';
+                             button.textContent = 'Applied';
+                             button.style.backgroundColor = 'var(--success-color)';
+                             button.style.color = 'white';
+                             button.disabled = true; // Disable after applying
+                             couponCodeInput.disabled = true; // Disable input
+                             if(availableOffersContainerDetails) availableOffersContainerDetails.style.display = 'none'; // Hide available offers
 
-                            originalCostSpan.textContent = `₹${body.original_cost}`;
-                            discountAppliedSpan.textContent = `-₹${body.discount_amount}`;
-                            finalCostDisplaySpan.textContent = `₹${body.final_cost_after_discount}`;
-                            priceSummaryDiv.style.display = 'block';
 
-                            const finalAmount = parseFloat(body.final_cost_after_discount.replace(/,/g, ''));
-                            payNowBtnCustomer.textContent = `Pay Now ₹${finalAmount.toFixed(2)}`;
-                            payNowBtnCustomer.dataset.finalAmount = finalAmount;
-                            finalCostAfterDiscount = finalAmount;
+                             originalCostSpan.textContent = `₹${body.original_cost}`;
+                             discountAppliedSpan.textContent = `-₹${body.discount_amount}`;
+                             finalCostDisplaySpan.textContent = `₹${body.final_cost_after_discount}`;
+                             priceSummaryDiv.style.display = 'block';
 
-                            removeCouponBtn.style.display = 'inline';
+                             const finalAmount = parseFloat(body.final_cost_after_discount.replace(/,/g, ''));
+                             payNowBtnCustomer.textContent = `Pay Now ₹${finalAmount.toFixed(2)}`;
+                             payNowBtnCustomer.dataset.finalAmount = finalAmount;
+                             finalCostAfterDiscount = finalAmount; // Update JS state
 
-                        } else {
-                            couponMessageDiv.textContent = body.message || `Error applying coupon.`;
-                            couponMessageDiv.style.color = 'var(--danger-color)';
-                            button.innerHTML = 'Apply';
-                            priceSummaryDiv.style.display = 'none';
-                            payNowBtnCustomer.textContent = `Pay Now ₹${currentBookingCost.toFixed(2)}`;
-                            payNowBtnCustomer.dataset.finalAmount = currentBookingCost;
-                            finalCostAfterDiscount = currentBookingCost;
+                             removeCouponBtn.style.display = 'inline'; // Show remove button
+                             // IMPORTANT: Make sure data-pre-applied is NOT present
+                             // if the coupon was applied NOW.
+                             removeCouponBtn.removeAttribute('data-pre-applied');
 
-                            button.style.backgroundColor = '';
-                            button.style.color = '';
-                            removeCouponBtn.style.display = 'none';
-                        }
+                         } else {
+                             couponMessageDiv.textContent = body.message || `Error applying coupon.`;
+                             couponMessageDiv.style.color = 'var(--danger-color)';
+                             button.innerHTML = 'Apply'; // Reset button text
+                             button.style.backgroundColor = ''; // Reset styles
+                             button.style.color = '';
+                             priceSummaryDiv.style.display = 'none'; // Hide summary
+                             payNowBtnCustomer.textContent = `Pay Now ₹${currentBookingCost.toFixed(2)}`;
+                             payNowBtnCustomer.dataset.finalAmount = currentBookingCost;
+                             finalCostAfterDiscount = currentBookingCost; // Update JS state
+                             removeCouponBtn.style.display = 'none';
+                         }
                     })
                     .catch((error) => {
                         console.error("Coupon Apply Error:", error);
@@ -621,28 +679,30 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         couponMessageDiv.style.color = 'var(--danger-color)';
                         button.disabled = false;
                         button.innerHTML = 'Apply';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
                         priceSummaryDiv.style.display = 'none';
                          payNowBtnCustomer.textContent = `Pay Now ₹${currentBookingCost.toFixed(2)}`;
                          payNowBtnCustomer.dataset.finalAmount = currentBookingCost;
                          finalCostAfterDiscount = currentBookingCost;
-                         button.style.backgroundColor = '';
-                         button.style.color = '';
                          removeCouponBtn.style.display = 'none';
                     });
             });
         }
 
-        // Customer: Remove Coupon
-        if (removeCouponBtn && applyCouponBtn && couponCodeInput && payNowBtnCustomer) {
+        // Customer: Remove Coupon (Add listener only if the button exists)
+        if (removeCouponBtn && payNowBtnCustomer) {
             removeCouponBtn.addEventListener('click', function(e) {
                 e.preventDefault();
 
+                // --- If not pre-applied, proceed with removal ---
                 const bookingId = payNowBtnCustomer.dataset.bookingId;
                 const buttonLink = this;
                 const originalLinkText = 'Remove Coupon';
 
-                buttonLink.innerHTML = 'Removing...';
-                couponMessageDiv.textContent = '';
+                buttonLink.style.pointerEvents = 'none'; // Prevent double clicks
+                buttonLink.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
+                couponMessageDiv.textContent = ''; // Clear message area
 
                 const formData = new FormData();
                 formData.append('booking_id', bookingId);
@@ -650,42 +710,27 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                 fetch('/dailyfix/api/remove_worker_offers.php', { method: 'POST', body: formData })
                     .then(res => res.json().then(body => ({ ok: res.ok, body })))
                     .then(({ ok, body }) => {
-                        buttonLink.innerHTML = originalLinkText; // Reset text
-
                         if (ok && body.status === 'success') {
-                            couponMessageDiv.textContent = 'Coupon removed.';
-                            couponMessageDiv.style.color = 'var(--success-color)';
-                            buttonLink.style.display = 'none';
-
-                            applyCouponBtn.disabled = false;
-                            applyCouponBtn.innerHTML = 'Apply';
-                            applyCouponBtn.style.backgroundColor = '';
-                            applyCouponBtn.style.color = '';
-
-                            couponCodeInput.disabled = false;
-                            couponCodeInput.value = '';
-
-                            priceSummaryDiv.style.display = 'none';
-
-                            payNowBtnCustomer.textContent = `Pay Now ₹${currentBookingCost.toFixed(2)}`;
-                            payNowBtnCustomer.dataset.finalAmount = currentBookingCost;
-                            finalCostAfterDiscount = currentBookingCost;
-
+                             window.location.reload();
+                             // Reload handles UI reset
                         } else {
                             couponMessageDiv.textContent = body.message || `Error removing coupon.`;
                             couponMessageDiv.style.color = 'var(--danger-color)';
+                            buttonLink.innerHTML = originalLinkText; // Reset on error
+                            buttonLink.style.pointerEvents = 'auto'; // Re-enable click
                         }
                     })
                     .catch(() => {
                         couponMessageDiv.textContent = 'Network error while removing coupon.';
                         couponMessageDiv.style.color = 'var(--danger-color)';
-                        buttonLink.innerHTML = originalLinkText;
+                        buttonLink.innerHTML = originalLinkText; // Reset on error
+                        buttonLink.style.pointerEvents = 'auto'; // Re-enable click
                     });
             });
         }
 
 
-        // Customer: Pay Now (Initialization and Listener)
+        // Customer: Pay Now (Initialization and Listener - No changes needed here)
         if (payNowBtnCustomer) {
              // Set initial button text
              payNowBtnCustomer.textContent = `Pay Now ₹${parseFloat(finalCostAfterDiscount).toFixed(2)}`;
@@ -709,7 +754,8 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
             payNowBtnCustomer.addEventListener('click', function() {
                 const button = this;
                 const originalHTML = button.innerHTML;
-                const amountToPay = parseFloat(finalCostAfterDiscount).toFixed(2); // Use JS variable
+                // Use the JS variable 'finalCostAfterDiscount' which is updated by apply/remove logic OR initialized by PHP
+                 const amountToPay = parseFloat(finalCostAfterDiscount).toFixed(2);
 
                 const processPayment = () => {
                     button.disabled = true;
@@ -724,6 +770,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         .then(({ ok, body }) => {
                             if (ok && body.status === 'success') {
                                 showStatusModal('success', 'Payment Successful!', body.message || 'Payment processed.');
+                                // Reload handled by modal
                             } else {
                                 showStatusModal('error', 'Payment Failed', body.message || `Payment processing error.`);
                                 button.disabled = false;

@@ -48,14 +48,14 @@ try {
 
 try {
     $sql = "
-        SELECT u.id, u.full_name, u.profile_image, u.latitude, u.longitude, 
+        SELECT u.id, u.full_name, u.profile_image, u.latitude, u.longitude,
                u.address_line1, u.address_line2, u.city, u.state, u.pincode,
-               wp.bio, wp.experience_years, wp.hourly_rate";
-    
+               wp.bio, wp.experience_years, wp.hourly_rate"; // Keep hourly_rate if needed elsewhere, but price comes from items
+
     if ($customer_lat && $customer_lon) {
         $sql .= ", (6371 * acos(cos(radians(?)) * cos(radians(u.latitude)) * cos(radians(u.longitude) - radians(?)) + sin(radians(?)) * sin(radians(u.latitude)))) AS distance";
     }
-    
+
     $sql .= "
         FROM public.users u
         JOIN public.worker_profiles wp ON u.id = wp.user_id
@@ -63,7 +63,7 @@ try {
     ";
 
     $stmt = $conn->prepare($sql);
-    
+
     if ($customer_lat && $customer_lon) {
         $stmt->execute([$customer_lat, $customer_lon, $customer_lat, $workerId]);
     } else {
@@ -109,7 +109,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Book <?php echo htmlspecialchars($worker['full_name']); ?></title>
-    
+
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/book_worker.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
@@ -133,6 +133,9 @@ try {
           --text-color-light: #64748b;
           --text-color-white: #ffffff;
           --box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.1);
+          --success-color: #10b981; /* Added */
+          --danger-color: #ef4444; /* Added */
+          --info-color: #3b82f6; /* Added */
         }
 
         body.dark-mode {
@@ -147,38 +150,76 @@ try {
           --text-color-light: #94a3b8;
           --text-color-white: #000000;
           --box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.3);
+          --success-color: #34d399; /* Added */
+          --danger-color: #f87171; /* Added */
+          --info-color: #60a5fa; /* Added */
         }
 
         /* Modal Styles */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
             left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
         }
         .modal-content {
             background-color: var(--background-color-card);
-            margin: 15% auto;
             padding: 20px;
             border: 1px solid var(--border-color);
-            width: 80%;
+            width: 80%; /* Could be more or less, depending on screen size */
             max-width: 500px;
             text-align: center;
             border-radius: 10px;
             color: var(--text-color-dark);
+            box-shadow: var(--box-shadow);
         }
-    </style>
 
+        /* Add or adjust styles for coupon section */
+        .coupon-section {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+        }
+        .coupon-section label { font-weight: 500; display: block; margin-bottom: 0.5rem; color: var(--text-color-dark); }
+        .coupon-input-group { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .coupon-input-group input[type="text"] { flex-grow: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--hover-color); color: var(--text-color-dark); text-transform: uppercase; }
+        .coupon-input-group button { padding: 10px 15px; flex-shrink: 0; background-color: var(--primary-color); color: var(--text-color-white); border:none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; }
+        .coupon-input-group button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .coupon-message { font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2em; font-weight: 500; }
+        .remove-coupon-btn { font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; text-decoration: none; cursor: pointer; display: none; } /* Initially hidden */
+        .price-summary { margin-top: 1rem; font-size: 0.9rem; color: var(--text-color-light); border-top: 1px dashed var(--border-color); padding-top: 1rem; display: none; /* Initially hidden */ }
+        .price-summary p { margin: 0.3rem 0; }
+        .price-summary hr { border: none; border-top: 1px solid var(--border-color); margin: 0.5rem 0; }
+        .price-summary .discount-applied { color: var(--success-color); font-weight: 500; }
+        .price-summary .final-price-display { font-weight: bold; font-size: 1.1em; color: var(--text-color-dark); }
+
+         /* Styles for Available Offer Buttons */
+         .available-offer-btn {
+                background-color: var(--hover-color); border: 1px dashed var(--primary-color); color: var(--primary-color);
+                padding: 5px 10px; border-radius: 6px; font-size: 0.8em; cursor: pointer; transition: background-color 0.2s, color 0.2s;
+                margin-bottom: 0.5rem; /* Add some spacing */
+            }
+         .available-offer-btn code { background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 3px; font-weight: bold;}
+         .available-offer-btn:hover { background-color: var(--primary-color); color: white; }
+         body.dark-mode .available-offer-btn { background-color: rgba(251, 191, 36, 0.1); border-color: var(--primary-color); color: var(--primary-color); }
+         body.dark-mode .available-offer-btn:hover { background-color: var(--primary-color); color: #111; }
+         body.dark-mode .available-offer-btn code { background: rgba(255,255,255,0.1); }
+         body.dark-mode .coupon-input-group input[type="text"] { background-color: #333; border-color: #555; }
+         body.dark-mode .coupon-input-group button { color: #111; } /* If primary color is light */
+
+    </style>
 </head>
 <body>
-    <main class="page-content">  
+    <main class="page-content">
         <div class="page-header" style="max-width: 1100px; margin: 2rem auto 1rem auto; padding: 0 1rem;">
-            <a href="<?php echo $backLink; ?>" class="back-link"><i class="fas fa-arrow-left"></i> <?php echo $backLinkText; ?></a>        
+            <a href="<?php echo $backLink; ?>" class="back-link"><i class="fas fa-arrow-left"></i> <?php echo $backLinkText; ?></a>
         </div>
         <div class="booking-container">
             <div class="worker-profile-panel">
@@ -191,13 +232,12 @@ try {
                 <img src="<?php echo htmlspecialchars($workerAvatar); ?>" alt="<?php echo htmlspecialchars($worker['full_name']); ?>" class="profile-avatar-custom">
                 <h1><?php echo htmlspecialchars($worker['full_name']); ?></h1>
                 <div class="profile-meta">
-                    <span><i class="fas fa-star"></i> 4.8 Stars</span>
-                    <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($worker['experience_years']); ?>+ years</span>
+                    <span><i class="fas fa-star"></i> 4.8 Stars</span> <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($worker['experience_years']); ?>+ years</span>
                     <?php if (isset($worker['distance'])): ?>
                         <span><i class="fas fa-map-pin"></i> <?php echo round($worker['distance'], 2); ?> km away</span>
                     <?php endif; ?>
                 </div>
-                
+
                 <p class="profile-bio"><?php echo nl2br(htmlspecialchars($worker['bio'])); ?></p>
 
                 <div class="profile-meta" style="margin-top: 1.5rem; justify-content: flex-start;">
@@ -227,6 +267,9 @@ try {
                     <input type="hidden" id="booking_time_combined" name="booking_time">
                     <input type="hidden" id="service_item_name" name="service_item_name">
                     <input type="hidden" id="price" name="price">
+                    <input type="hidden" id="applied_offer_id" name="applied_offer_id" value="">
+                    <input type="hidden" id="discount_amount_val" name="discount_amount" value="0">
+
 
                     <div class="form-group">
                         <label>Services for "<?php echo htmlspecialchars($subServiceName); ?>"</label>
@@ -236,7 +279,7 @@ try {
                                     <div class="service-option" data-item-name="<?php echo htmlspecialchars($item['name']); ?>" data-price="<?php echo htmlspecialchars($item['price']); ?>">
                                         <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
                                         <span><?php echo htmlspecialchars($item['name']); ?></span>
-                                        <span class="service-price">₹<?php echo htmlspecialchars($item['price']); ?></span>
+                                        <span class="service-price">₹<?php echo htmlspecialchars(number_format((float)$item['price'], 2)); ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -244,7 +287,7 @@ try {
                             <?php endif; ?>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Select a Date</label>
                         <div id="calendar-container">
@@ -256,15 +299,32 @@ try {
                         <label>Select a Time for <span id="selected-date-text"></span></label>
                         <div id="slots-grid" class="slots-grid"></div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="address">Your Address</label>
                         <input type="text" id="address" name="address" required value="<?php echo $customer_address_string; ?>">
                     </div>
+
+                    <!-- Apply Coupon Section-->
+                    <div class="coupon-section" id="coupon-section-wrapper" style="display: none;"> <label for="coupon-code">Apply Coupon</label>
+                        <div class="coupon-input-group">
+                            <input type="text" id="coupon-code" placeholder="Enter coupon code">
+                            <button type="button" id="apply-coupon-btn">Apply</button>
+                        </div>
+                        <div id="coupon-message" class="coupon-message"></div>
+                        <a href="#" id="remove-coupon-btn" class="remove-coupon-btn">Remove Coupon</a>
+                        <div id="available-offers-container" style="margin-top: 1rem;"></div> </div>
+
+                    <div class="price-summary" id="price-summary-display">
+                        <p>Original Price: <span id="original-price-display">₹0.00</span></p>
+                        <p>Discount: <span id="discount-applied-display" class="discount-applied">-₹0.00</span></p>
+                        <hr>
+                        <p>Final Price: <span id="final-price-display" class="final-price-display">₹0.00</span></p>
+                    </div>
+
                     <button type="submit" class="submit-btn" id="submit-booking-btn">Send Booking Request</button>
                 </form>
             </div>
-
         </div>
     </main>
 
@@ -284,7 +344,7 @@ try {
 
             const lightTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
             const lightAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-            
+
             const darkTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
             const darkAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
@@ -299,7 +359,7 @@ try {
                 .bindPopup('Your Location');
 
             L.marker([<?php echo $worker['latitude']; ?>, <?php echo $worker['longitude']; ?>]).addTo(map)
-                .bindPopup('<?php echo htmlspecialchars($worker['full_name']); ?>\'s Location');
+                .bindPopup('<?php echo htmlspecialchars(addslashes($worker['full_name'])); ?>\'s Location');
         });
     </script>
     <?php endif; ?>
@@ -313,11 +373,92 @@ try {
             const submitButton = document.getElementById('submit-booking-btn');
             const successModal = document.getElementById('successModal');
             const countdownSpan = document.getElementById('countdown');
-            
+
+            // Coupon related elements
+            const couponSectionWrapper = document.getElementById('coupon-section-wrapper');
+            const couponCodeInput = document.getElementById('coupon-code');
+            const applyCouponBtn = document.getElementById('apply-coupon-btn');
+            const couponMessageDiv = document.getElementById('coupon-message');
+            const removeCouponBtn = document.getElementById('remove-coupon-btn');
+            const availableOffersContainer = document.getElementById('available-offers-container');
+            const hiddenOfferIdInput = document.getElementById('applied_offer_id');
+            const hiddenDiscountInput = document.getElementById('discount_amount_val');
+
+            // Price summary elements
+            const priceSummaryDisplay = document.getElementById('price-summary-display');
+            const originalPriceDisplay = document.getElementById('original-price-display');
+            const discountAppliedDisplay = document.getElementById('discount-applied-display');
+            const finalPriceDisplay = document.getElementById('final-price-display');
+
+            let selectedItemPrice = 0;
+            const workerId = bookingForm.dataset.workerId; // Get worker ID from form data attribute
+
+            // --- Fetch and Display Available Offers ---
+            function fetchAndDisplayOffers() {
+                if (!workerId || !selectedItemPrice || selectedItemPrice <= 0) {
+                     availableOffersContainer.innerHTML = ''; // Clear if no item selected or no worker
+                     return;
+                }
+                 fetch(`/dailyfix/api/get_worker_offers.php?worker_id=${workerId}`)
+                     .then(res => res.json())
+                     .then(result => {
+                         if (result.status === 'success' && result.data && result.data.length > 0) {
+                             displayAvailableOffers(result.data);
+                         } else {
+                             availableOffersContainer.innerHTML = ''; // Clear if no offers
+                         }
+                     })
+                     .catch(err => {
+                        console.error("Error fetching available offers:", err);
+                        availableOffersContainer.innerHTML = '<p style="font-size: 0.8em; color: var(--danger-color);">Could not load offers.</p>';
+                    });
+            }
+
+            function displayAvailableOffers(offers) {
+                let offersHtml = '<p style="font-size: 0.9em; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-color-light);">Available Offers:</p>';
+                offersHtml += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">';
+
+                offers.forEach(offer => {
+                    let offerText = '';
+                    if (offer.discount_type === 'percentage') {
+                        offerText = `${parseFloat(offer.discount_value)}% off`;
+                    } else {
+                        offerText = `₹${parseFloat(offer.discount_value).toFixed(2)} off`;
+                    }
+                    if (parseFloat(offer.min_booking_amount) > 0) {
+                        offerText += ` (min ₹${parseFloat(offer.min_booking_amount).toFixed(2)})`;
+                    }
+
+                    // Check if offer is applicable based on current item price
+                    let canApply = selectedItemPrice >= parseFloat(offer.min_booking_amount);
+                    let titleText = canApply ? `Click to apply ${offer.coupon_code}` : `Requires min ₹${parseFloat(offer.min_booking_amount).toFixed(2)} service value`;
+
+
+                    offersHtml += `<button type="button" class="available-offer-btn" data-code="${offer.coupon_code}" title="${titleText}" ${!canApply ? 'disabled style="opacity:0.5; cursor: not-allowed; border-style: dotted;"' : ''}>
+                                      <code>${offer.coupon_code}</code>: ${offerText}
+                                   </button>`;
+                });
+
+                offersHtml += '</div>';
+                availableOffersContainer.innerHTML = offersHtml;
+
+                availableOffersContainer.querySelectorAll('.available-offer-btn:not([disabled])').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        couponCodeInput.value = this.dataset.code;
+                        applyCouponBtn.click(); // Trigger apply action
+                    });
+                });
+            }
+
+
+            // --- Service Selection Logic ---
             if (serviceSelectionGrid) {
                 serviceSelectionGrid.addEventListener('click', function(e) {
                     const clickedService = e.target.closest('.service-option');
                     if (!clickedService) return;
+
+                    // Reset coupon state if service changes
+                    resetCouponState();
 
                     document.querySelectorAll('.service-option').forEach(option => {
                         option.classList.remove('selected');
@@ -326,18 +467,148 @@ try {
                     clickedService.classList.add('selected');
                     hiddenServiceItemInput.value = clickedService.dataset.itemName;
                     hiddenPriceInput.value = clickedService.dataset.price;
+                    selectedItemPrice = parseFloat(clickedService.dataset.price);
+
+                    // Show coupon section and fetch offers only if a service with price > 0 is selected
+                    if (selectedItemPrice > 0) {
+                        couponSectionWrapper.style.display = 'block';
+                        fetchAndDisplayOffers();
+                    } else {
+                        couponSectionWrapper.style.display = 'none';
+                         availableOffersContainer.innerHTML = '';
+                    }
                 });
             }
 
+            // --- Reset Coupon State ---
+            function resetCouponState() {
+                couponCodeInput.value = '';
+                couponCodeInput.disabled = false;
+                applyCouponBtn.disabled = false;
+                applyCouponBtn.innerHTML = 'Apply';
+                couponMessageDiv.textContent = '';
+                couponMessageDiv.style.color = '';
+                removeCouponBtn.style.display = 'none';
+                priceSummaryDisplay.style.display = 'none';
+                hiddenOfferIdInput.value = '';
+                hiddenDiscountInput.value = '0';
+                // selectedItemPrice = 0; // Don't reset price here, it's tied to service selection
+                couponSectionWrapper.style.display = 'none'; // Hide until a service is selected
+                availableOffersContainer.innerHTML = '';
+            }
+
+            // --- Apply Coupon Logic ---
+            applyCouponBtn.addEventListener('click', function() {
+                const code = couponCodeInput.value.trim().toUpperCase();
+                if (!code) {
+                    couponMessageDiv.textContent = 'Please enter a coupon code.';
+                    couponMessageDiv.style.color = 'var(--danger-color)';
+                    return;
+                }
+                if (selectedItemPrice <= 0) {
+                     couponMessageDiv.textContent = 'Please select a service first.';
+                     couponMessageDiv.style.color = 'var(--danger-color)';
+                     return;
+                }
+
+                applyCouponBtn.disabled = true;
+                applyCouponBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                couponMessageDiv.textContent = '';
+
+                const formData = new FormData();
+                formData.append('worker_id', workerId);
+                formData.append('coupon_code', code);
+                formData.append('item_price', selectedItemPrice);
+
+                fetch('/dailyfix/api/validate_offer_pre_booking.php', { method: 'POST', body: formData })
+                    .then(res => res.json().then(body => ({ ok: res.ok, body })))
+                    .then(({ ok, body }) => {
+                        applyCouponBtn.disabled = false; // Re-enable regardless of outcome
+
+                        if (ok && body.status === 'success') {
+                            couponMessageDiv.textContent = body.message + ` Discount: ₹${body.discount_amount}`;
+                            couponMessageDiv.style.color = 'var(--success-color)';
+                            applyCouponBtn.innerHTML = 'Applied';
+                            applyCouponBtn.disabled = true; // Disable after successful apply
+                            couponCodeInput.disabled = true; // Disable input too
+                            removeCouponBtn.style.display = 'inline'; // Show remove button
+
+                            // Update hidden fields
+                            hiddenOfferIdInput.value = body.offer_id;
+                            hiddenDiscountInput.value = parseFloat(body.discount_amount.replace(/,/g, ''));
+
+                            // Update price summary display
+                            originalPriceDisplay.textContent = `₹${body.original_price}`;
+                            discountAppliedDisplay.textContent = `-₹${body.discount_amount}`;
+                            finalPriceDisplay.textContent = `₹${body.final_price}`;
+                            priceSummaryDisplay.style.display = 'block';
+
+                        } else {
+                            couponMessageDiv.textContent = body.message || 'Error validating coupon.';
+                            couponMessageDiv.style.color = 'var(--danger-color)';
+                            applyCouponBtn.innerHTML = 'Apply';
+                            priceSummaryDisplay.style.display = 'none';
+                            hiddenOfferIdInput.value = '';
+                            hiddenDiscountInput.value = '0';
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Coupon Validation Error:", error);
+                        couponMessageDiv.textContent = 'A network error occurred during validation.';
+                        couponMessageDiv.style.color = 'var(--danger-color)';
+                        applyCouponBtn.disabled = false;
+                        applyCouponBtn.innerHTML = 'Apply';
+                        priceSummaryDisplay.style.display = 'none';
+                        hiddenOfferIdInput.value = '';
+                        hiddenDiscountInput.value = '0';
+                    });
+            });
+
+            // --- Remove Coupon Logic ---
+            removeCouponBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Reset UI elements related to coupon
+                couponCodeInput.value = '';
+                couponCodeInput.disabled = false;
+                applyCouponBtn.disabled = false;
+                applyCouponBtn.innerHTML = 'Apply';
+                couponMessageDiv.textContent = 'Coupon removed.';
+                couponMessageDiv.style.color = 'var(--info-color)'; // Or neutral/light grey
+                removeCouponBtn.style.display = 'none';
+                priceSummaryDisplay.style.display = 'none';
+                hiddenOfferIdInput.value = '';
+                hiddenDiscountInput.value = '0';
+
+                // Re-enable coupon section and fetch offers if a service is still selected
+                if (selectedItemPrice > 0) {
+                    couponSectionWrapper.style.display = 'block';
+                    fetchAndDisplayOffers();
+                } else {
+                     couponSectionWrapper.style.display = 'none';
+                }
+            });
+
+
+            // --- Form Submission Logic ---
             bookingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
                 if (!hiddenServiceItemInput.value) {
-                    alert('Please select a service item before sending the booking request.');
+                    alert('Please select a service item.');
+                    return;
+                }
+                if (!document.getElementById('booking_date').value || !document.getElementById('booking_time_combined').value) {
+                    alert('Please select a date and time slot.');
                     return;
                 }
 
+
+                // Disable submit button during processing
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request...';
+
                 const formData = new FormData(bookingForm);
+                // Hidden fields for coupon (applied_offer_id, discount_amount) are already included
 
                 fetch('/dailyfix/api/create_booking.php', {
                     method: 'POST',
@@ -346,7 +617,7 @@ try {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        successModal.style.display = 'block';
+                        successModal.style.display = 'flex'; // Use flex for centering
                         let countdown = 5;
                         countdownSpan.textContent = countdown;
                         const interval = setInterval(() => {
@@ -359,13 +630,31 @@ try {
                         }, 1000);
                     } else {
                         alert('Error: ' + data.message);
+                         // Re-enable submit button on error
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Send Booking Request';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('An error occurred. Please try again.');
+                     // Re-enable submit button on network error
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Send Booking Request';
                 });
             });
+
+            // Make modal clickable outside to close (for success modal)
+            if (successModal) {
+                successModal.addEventListener('click', function(event) {
+                    if (event.target === successModal) {
+                        // Optionally redirect immediately or just hide
+                        // successModal.style.display = 'none';
+                        // Or force redirect:
+                        // window.location.href = '/dailyfix/customer/bookings.php';
+                    }
+                });
+            }
         });
     </script>
 </body>
