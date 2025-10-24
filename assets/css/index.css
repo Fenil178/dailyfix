@@ -992,24 +992,32 @@ body.dark-mode .welcome-text p {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
-}
-
-body.dark-mode .btn-primary-v4 {
-  background-color: #0f172a;
-  color: #fbbf24;
+  transform: scale(1);
+  transform-origin: center;
 }
 
 .btn-primary-v4:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transform: scale(1.02); /* Subtle scale increase */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   background-color: #ffffff;
 }
 
-.btn-primary-v4 i {
-  font-size: 1.1rem;
+body.dark-mode .btn-primary-v4 {
+  background-color: rgba(15, 23, 42, 0.95);
+  color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .btn-primary-v4:hover {
+  background-color: rgba(15, 23, 42, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== Stats Grid ===== */
@@ -1047,7 +1055,7 @@ body.dark-mode .btn-primary-v4 {
 @keyframes fadeInUp {
   from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: scale(0.95) translateY(20px);
   }
   to {
       opacity: 1;
@@ -1085,11 +1093,33 @@ body.dark-mode .btn-primary-v4 {
   justify-content: center;
   font-size: 1.75rem;
   flex-shrink: 0;
-  transition: transform 0.3s ease;
+
+  /* keep container dimensions stable and only animate visual properties */
+  transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: box-shadow, transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  overflow: visible;
 }
 
+/* Target the inner icon (usually an <i> or svg). Scale this, not the container. */
+.stat-icon > * {
+  display: inline-block; /* required so transform does not affect layout flow */
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), color 0.24s ease;
+  transform-origin: center;
+  will-change: transform;
+  transform: translateZ(0) scale(1);
+  backface-visibility: hidden;
+}
+
+/* Hover: scale the inner icon only — container size stays the same so text/layout won't shift */
+.stat-card-v4:hover .stat-icon > * {
+  transform: scale(1.12);
+}
+
+/* subtle lift / shadow on the container for better visual feedback */
 .stat-card-v4:hover .stat-icon {
-  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .stat-primary .stat-icon {
@@ -1229,22 +1259,28 @@ body.dark-mode .stat-info .stat-icon {
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
+  gap: 0.4rem;
+  opacity: 0.75;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.8rem;
+  margin: -0.5rem -0.8rem;
+  border-radius: 6px;
 }
 
 .view-all-link-v4:hover {
-  gap: 0.75rem;
-  opacity: 0.8;
+  opacity: 1;
+  background-color: rgba(var(--primary-rgb), 0.08);
 }
 
 .view-all-link-v4 i {
   font-size: 0.8rem;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  left: 0;
 }
 
 .view-all-link-v4:hover i {
-  transform: translateX(3px);
+  transform: translateX(6px);
 }
 
 /* ===== Activity List ===== */
@@ -1256,15 +1292,46 @@ body.dark-mode .stat-info .stat-icon {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  padding: 1.25rem 1.25rem;
+  padding: 1.25rem;
   border-radius: 12px;
-  transition: all 0.3s ease;
   margin-bottom: 0.5rem;
+
+  /* visual-only transitions, no translate/scale on the whole row */
+  background-color: transparent;
+  transition: background-color 240ms ease, box-shadow 280ms cubic-bezier(0.22,1,0.36,1);
+  will-change: box-shadow, background-color;
 }
 
+/* Light mode hover effects */
 .activity-item-v4:hover {
   background-color: var(--hover-color);
-  transform: translateX(4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Dark mode hover effects */
+body.dark-mode .activity-item-v4:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Optional: reduce motion for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .activity-item-v4 {
+    transition: background-color 180ms linear;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .activity-item-v4:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+    body.dark-mode .activity-item-v4:hover {
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .activity-icon-v4 {
@@ -1375,12 +1442,13 @@ body.dark-mode .status-in_progress {
   background-color: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
-  transform: translateX(2px);
 }
 
 .btn-view-v4 i {
-  font-size: 0.75rem;
-  transition: transform 0.3s ease;
+  font-size: 0.8rem;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  left: 0;
 }
 
 .btn-view-v4:hover i {
@@ -1621,22 +1689,38 @@ body.dark-mode .activity-details p {
   text-align: left;
 }
 
-/* === NEW Icon Styles (borrowed from V4 stats) === */
 .slider-content-wrapper i {
-  font-size: 1.5rem; /* Smaller icon */
   width: 56px;
   height: 56px;
-  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 14px;
   flex-shrink: 0;
-  margin-bottom: 0; /* Override old style */
-  transition: transform 0.3s ease;
+  font-size: 1.5rem;
+  transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: box-shadow, transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  overflow: visible;
 }
 
+/* Target the inner icon element */
+.slider-content-wrapper i > * {
+  display: inline-block;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+  transform: scale(1);
+}
+
+/* Scale only the inner icon on container hover */
+.card-slider-container:hover .slider-content-wrapper i > * {
+  transform: scale(1.12);
+}
+
+/* Optional: subtle shadow effect on icon container */
 .card-slider-container:hover .slider-content-wrapper i {
-  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* Dynamic Icon Colors */
