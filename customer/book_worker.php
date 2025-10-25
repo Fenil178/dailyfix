@@ -402,11 +402,14 @@ try {
                  fetch(`/dailyfix/api/get_worker_offers.php?worker_id=${workerId}`)
                      .then(res => res.json())
                      .then(result => {
+                        // --- MODIFIED SECTION ---
                          if (result.status === 'success' && result.data && result.data.length > 0) {
-                             displayAvailableOffers(result.data);
+                             displayAvailableOffers(result.data); // Call function to display buttons
                          } else {
-                             availableOffersContainer.innerHTML = ''; // Clear if no offers
+                             // Display "No coupons" message if API succeeds but data is empty, or if API fails
+                             availableOffersContainer.innerHTML = '<p style="font-size: 0.9em; color: var(--text-color-light);">No coupons currently available.</p>';
                          }
+                         // --- END MODIFIED SECTION ---
                      })
                      .catch(err => {
                         console.error("Error fetching available offers:", err);
@@ -414,9 +417,44 @@ try {
                     });
             }
 
+            // --- Fetch and Display Available Offers ---
+            function fetchAndDisplayOffers() {
+                if (!workerId || !selectedItemPrice || selectedItemPrice <= 0) {
+                     availableOffersContainer.innerHTML = ''; // Clear if no item selected or no worker
+                     return;
+                }
+                 fetch(`/dailyfix/api/get_worker_offers.php?worker_id=${workerId}`)
+                     .then(res => res.json())
+                     .then(result => {
+                         // --- Check API result and decide what to display ---
+                         if (result.status === 'success' && result.data && result.data.length > 0) {
+                             displayAvailableOffers(result.data); // Call function to display buttons if offers exist
+                         } else {
+                             // Display "No coupons" message if API succeeds but data is empty, or if API fails initially
+                             availableOffersContainer.innerHTML = '<p style="font-size: 0.9em; color: var(--text-color-light);">No coupons currently available.</p>';
+                         }
+                     })
+                     .catch(err => {
+                        console.error("Error fetching available offers:", err);
+                        // Also display a message on fetch error
+                        availableOffersContainer.innerHTML = '<p style="font-size: 0.9em; color: var(--danger-color);">Could not load offers.</p>';
+                    });
+            }
+
+            // --- THIS FUNCTION ONLY DISPLAYS OFFERS (if they exist) ---
             function displayAvailableOffers(offers) {
+                // Check if the container exists (safety check)
+                 if (!availableOffersContainer) {
+                     console.error("Available offers container not found in displayAvailableOffers!");
+                     return;
+                 }
+
+                // Build the HTML for the offer buttons
                 let offersHtml = '<p style="font-size: 0.9em; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-color-light);">Available Offers:</p>';
                 offersHtml += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">';
+
+                // Get the current selected item price from the global variable
+                // const currentCost = selectedItemPrice; // No need to re-read from PHP here
 
                 offers.forEach(offer => {
                     let offerText = '';
@@ -440,8 +478,9 @@ try {
                 });
 
                 offersHtml += '</div>';
-                availableOffersContainer.innerHTML = offersHtml;
+                availableOffersContainer.innerHTML = offersHtml; // Populate container with buttons
 
+                // Re-add event listeners for the newly created buttons
                 availableOffersContainer.querySelectorAll('.available-offer-btn:not([disabled])').forEach(btn => {
                     btn.addEventListener('click', function() {
                         couponCodeInput.value = this.dataset.code;
@@ -450,6 +489,7 @@ try {
                 });
             }
 
+            // ... (rest of your existing JavaScript in book_worker.php) ...
 
             // --- Service Selection Logic ---
             if (serviceSelectionGrid) {

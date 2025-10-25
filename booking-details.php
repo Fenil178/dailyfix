@@ -19,13 +19,16 @@ try {
             c.phone AS customer_phone,
             w.full_name AS worker_name,
             w.profile_image AS worker_avatar,
-            w.phone AS worker_phone
+            w.phone AS worker_phone,
+            r.id as review_id
         FROM
             public.bookings b
         JOIN
             public.users c ON b.customer_id = c.id
         JOIN
             public.users w ON b.worker_id = w.id
+        LEFT JOIN
+            public.reviews r ON b.id = r.booking_id
         WHERE
             b.id = ? AND (b.customer_id = ? OR b.worker_id = ?)
     ");
@@ -156,6 +159,12 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
          body.dark-mode .available-offer-btn { background-color: rgba(251, 191, 36, 0.1); border-color: var(--primary-color); color: var(--primary-color); }
          body.dark-mode .available-offer-btn:hover { background-color: var(--primary-color); color: #111; }
          body.dark-mode .available-offer-btn code { background: rgba(255,255,255,0.1); }
+
+         /* --- NEW STYLE FOR REVIEW BUTTON CONTAINER --- */
+         .review-button-container {
+             text-align: center;
+             margin-top: 1.5rem; /* Space between green box and button */
+         }
     </style>
 </head>
 <body>
@@ -315,8 +324,17 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                             <a href="/dailyfix/generate_invoice.php?id=<?php echo $booking['id']; ?>" target="_blank" class="btn btn-main" style="background-color: #10b981; color: white; margin-top: 1rem;">
                                 <i class="fas fa-file-invoice"></i> Download Invoice
                             </a>
-                            </div>
-                    <?php endif; ?>
+                      </div> <?php // End of the green action-panel div ?>
+
+                       <?php // MOVED Review Button outside the green box ?>
+                       <?php if ($role === 'customer' && !$booking['review_id']): ?>
+                           <div class="review-button-container"> <?php // Existing container for centering/margin ?>
+                               <button class="btn btn-main" onclick="openReviewModal(<?php echo $booking['id']; ?>)">
+                                   <i class="fas fa-star"></i> Leave a Review
+                               </button>
+                           </div>
+                       <?php endif; ?>
+                    <?php endif; // End check for completed & paid ?>
 
                 </div>
             </div>
@@ -344,6 +362,26 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         </div>
     </div>
 
+        <div id="reviewModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeReviewModal()">&times;</span>
+                <h2>Leave a Review</h2>
+                <form id="reviewForm">
+                    <input type="hidden" id="bookingId" name="booking_id">
+                    <div class="rating">
+                        <i class="fas fa-star" data-rating="1"></i>
+                        <i class="fas fa-star" data-rating="2"></i>
+                        <i class="fas fa-star" data-rating="3"></i>
+                        <i class="fas fa-star" data-rating="4"></i>
+                        <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                    <input type="hidden" id="ratingValue" name="rating">
+                    <textarea name="comment" placeholder="Share your experience..." rows="4"></textarea>
+                    <button type="submit">Submit Review</button>
+                </form>
+            </div>
+        </div>
+
     <script>
     // --- Utility Functions (Modals) ---
     function showStatusModal(status, title, message) {
@@ -370,7 +408,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         newCloseBtn.onclick = function() {
             modal.classList.remove('show');
             if (status === 'success') {
-                // Reload on success for status updates, payment, coupon removal
+                // Reload on success for status updates, payment, coupon removal, review submission
                 window.location.reload();
             }
         };
@@ -514,13 +552,32 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                 const couponInput = document.getElementById('coupon-code');
                 const applyBtn = document.getElementById('apply-coupon-btn');
                 // Ensure elements exist and apply button is not disabled (meaning not already applied/hidden)
-                if (couponInput && applyBtn && !applyBtn.disabled && applyBtn.style.display !== 'none') {
+                if (couponInput && applyBtn && !applyBtn.disabled && (!applyBtn.style.display || applyBtn.style.display !== 'none')) { // Added display check
                     couponInput.value = code;
                     applyBtn.click();
                 }
             });
         });
     }
+
+    // --- Review Modal Functions ---
+    function openReviewModal(bookingId) {
+        document.getElementById('bookingId').value = bookingId;
+        document.getElementById('reviewModal').style.display = 'flex';
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').style.display = 'none';
+        // Reset form for next time
+        const reviewForm = document.getElementById('reviewForm');
+        if(reviewForm) reviewForm.reset();
+        const stars = document.querySelectorAll('#reviewModal .rating .fa-star');
+        stars.forEach(s => s.classList.remove('selected'));
+        const ratingValueInput = document.getElementById('ratingValue');
+        if(ratingValueInput) ratingValueInput.value = '';
+    }
+    // --- End Review Modal Functions ---
+
 
     // --- *** SINGLE DOMContentLoaded Listener *** ---
     document.addEventListener('DOMContentLoaded', function() {
@@ -538,13 +595,17 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         const removeCouponBtn = document.getElementById('remove-coupon-btn');
         const availableOffersContainerDetails = document.getElementById('available-offers-container-details');
 
+        // Review Modal Variables
+        const reviewForm = document.getElementById('reviewForm');
+        const reviewStars = document.querySelectorAll('#reviewModal .rating .fa-star');
+        const ratingValueInput = document.getElementById('ratingValue');
+
 
         // Get initial costs and state from PHP
         let currentBookingCost = parseFloat(<?php echo json_encode($originalCost); ?>);
-        // let currentDiscount = parseFloat(<?php echo json_encode($discountAmount); ?>); // We can read this from PHP if needed, but finalCostAfterDiscount is more direct
         let finalCostAfterDiscount = parseFloat(<?php echo json_encode($finalCostAfterDiscount); ?>);
-        // ** Check if the remove button ITSELF has the data-pre-applied attribute **
-        const isCouponPreApplied = removeCouponBtn && removeCouponBtn.hasAttribute('data-pre-applied');
+        const isCouponPreApplied = <?php echo json_encode($booking['applied_offer_id'] && $appliedCouponCode); ?>;
+
 
         // --- Fetch and display available offers (if payment panel exists AND coupon not pre-applied) ---
          if (payNowBtnCustomer && !isCouponPreApplied && availableOffersContainerDetails) {
@@ -588,6 +649,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         .then(data => {
                             if (data.status === 'success') {
                                 showStatusModal('success', 'Work Completed!', 'The customer has been notified for payment.');
+                                // Reload is handled by showStatusModal on success
                             } else {
                                 showStatusModal('error', 'Update Failed', data.message || 'Could not mark work as complete.');
                                 button.disabled = false;
@@ -610,7 +672,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         }
 
         // Customer: Apply Coupon
-        if (applyCouponBtn && couponCodeInput && payNowBtnCustomer && removeCouponBtn) {
+        if (applyCouponBtn && couponCodeInput && payNowBtnCustomer && removeCouponBtn) { // Ensure removeCouponBtn exists
             applyCouponBtn.addEventListener('click', function() {
                 const code = couponCodeInput.value.trim().toUpperCase();
                 const bookingId = payNowBtnCustomer.dataset.bookingId;
@@ -638,8 +700,8 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                              couponMessageDiv.textContent = body.message;
                              couponMessageDiv.style.color = 'var(--success-color)';
                              button.textContent = 'Applied';
-                             button.style.backgroundColor = 'var(--success-color)';
-                             button.style.color = 'white';
+                             button.style.backgroundColor = 'var(--success-color)'; // Optional visual cue
+                             button.style.color = 'white'; // Optional visual cue
                              button.disabled = true; // Disable after applying
                              couponCodeInput.disabled = true; // Disable input
                              if(availableOffersContainerDetails) availableOffersContainerDetails.style.display = 'none'; // Hide available offers
@@ -656,15 +718,13 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                              finalCostAfterDiscount = finalAmount; // Update JS state
 
                              removeCouponBtn.style.display = 'inline'; // Show remove button
-                             // IMPORTANT: Make sure data-pre-applied is NOT present
-                             // if the coupon was applied NOW.
-                             removeCouponBtn.removeAttribute('data-pre-applied');
+                             removeCouponBtn.removeAttribute('data-pre-applied'); // Ensure it's not marked as pre-applied
 
                          } else {
                              couponMessageDiv.textContent = body.message || `Error applying coupon.`;
                              couponMessageDiv.style.color = 'var(--danger-color)';
                              button.innerHTML = 'Apply'; // Reset button text
-                             button.style.backgroundColor = ''; // Reset styles
+                             button.style.backgroundColor = ''; // Reset styles if they were changed
                              button.style.color = '';
                              priceSummaryDiv.style.display = 'none'; // Hide summary
                              payNowBtnCustomer.textContent = `Pay Now ₹${currentBookingCost.toFixed(2)}`;
@@ -695,7 +755,14 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
             removeCouponBtn.addEventListener('click', function(e) {
                 e.preventDefault();
 
-                // --- If not pre-applied, proceed with removal ---
+                // Check if the coupon was pre-applied
+                if (removeCouponBtn.hasAttribute('data-pre-applied')) {
+                     // Optionally show a message that pre-applied coupons can't be removed, or just do nothing.
+                     // For now, let's just prevent the action.
+                     return;
+                }
+
+
                 const bookingId = payNowBtnCustomer.dataset.bookingId;
                 const buttonLink = this;
                 const originalLinkText = 'Remove Coupon';
@@ -711,8 +778,43 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                     .then(res => res.json().then(body => ({ ok: res.ok, body })))
                     .then(({ ok, body }) => {
                         if (ok && body.status === 'success') {
-                             window.location.reload();
-                             // Reload handles UI reset
+                             // --- UI Reset on SUCCESSFUL Removal ---
+                             couponCodeInput.value = '';
+                             couponCodeInput.disabled = false;
+                             if(applyCouponBtn) { // Check if apply button exists before manipulating
+                                 applyCouponBtn.disabled = false;
+                                 applyCouponBtn.innerHTML = 'Apply';
+                                 applyCouponBtn.style.backgroundColor = ''; // Reset style
+                                 applyCouponBtn.style.color = ''; // Reset style
+                             }
+                             couponMessageDiv.textContent = body.message || 'Coupon removed!';
+                             couponMessageDiv.style.color = 'var(--info-color)'; // Use info color
+                             buttonLink.style.display = 'none'; // Hide remove button again
+                             priceSummaryDiv.style.display = 'none';
+
+                             // Reset pay button and final cost variable
+                             finalCostAfterDiscount = currentBookingCost; // Reset to original cost
+                             payNowBtnCustomer.textContent = `Pay Now ₹${currentBookingCost.toFixed(2)}`;
+                             payNowBtnCustomer.dataset.finalAmount = currentBookingCost;
+
+                             // Re-fetch and display available offers
+                             if(availableOffersContainerDetails) {
+                                 availableOffersContainerDetails.style.display = 'block'; // Show available offers section
+                                 const workerIdForOffers = <?php echo json_encode($booking['worker_id']); ?>;
+                                 if (workerIdForOffers) {
+                                      fetch(`/dailyfix/api/get_worker_offers.php?worker_id=${workerIdForOffers}`)
+                                         .then(res => res.json())
+                                         .then(result => {
+                                             if (result.status === 'success' && result.data) {
+                                                 displayAvailableOffersDetails(result.data);
+                                             } else {
+                                                  availableOffersContainerDetails.innerHTML = '';
+                                             }
+                                         }).catch(()=>{/* handle error quietly */});
+                                 }
+                             }
+                              // --- End UI Reset ---
+                             // showStatusModal('success', 'Coupon Removed', body.message); // Can use this instead of inline message
                         } else {
                             couponMessageDiv.textContent = body.message || `Error removing coupon.`;
                             couponMessageDiv.style.color = 'var(--danger-color)';
@@ -730,24 +832,26 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         }
 
 
-        // Customer: Pay Now (Initialization and Listener - No changes needed here)
+        // Customer: Pay Now (Initialization and Listener)
         if (payNowBtnCustomer) {
-             // Set initial button text
+             // Set initial button text based on potentially pre-applied discount
              payNowBtnCustomer.textContent = `Pay Now ₹${parseFloat(finalCostAfterDiscount).toFixed(2)}`;
 
              // Display summary/update button state if discount was applied via PHP on load
-             if (<?php echo json_encode($discountAmount > 0); ?>) {
+             if (isCouponPreApplied) { // Use the PHP check result
                  originalCostSpan.textContent = `₹${currentBookingCost.toFixed(2)}`;
                  discountAppliedSpan.textContent = `-₹${(<?php echo json_encode($discountAmount); ?>).toFixed(2)}`;
                  finalCostDisplaySpan.textContent = `₹${parseFloat(finalCostAfterDiscount).toFixed(2)}`;
                  priceSummaryDiv.style.display = 'block';
-                 if (applyCouponBtn) {
-                     applyCouponBtn.textContent = 'Applied';
-                     applyCouponBtn.style.backgroundColor = 'var(--success-color)';
-                     applyCouponBtn.style.color = 'white';
+                 if (applyCouponBtn) { // Should not exist if pre-applied, but check anyway
+                     applyCouponBtn.style.display = 'none'; // Hide apply button
                  }
-                 if (removeCouponBtn) removeCouponBtn.style.display = 'inline';
-                 // Keep input enabled: if (couponCodeInput) couponCodeInput.disabled = true;
+                 if (removeCouponBtn) {
+                     removeCouponBtn.style.display = 'inline'; // Show remove button
+                     removeCouponBtn.setAttribute('data-pre-applied', 'true'); // Mark it as pre-applied
+                 }
+                 if (couponCodeInput) couponCodeInput.disabled = true; // Disable input
+                 if(availableOffersContainerDetails) availableOffersContainerDetails.style.display = 'none'; // Hide available offers
              }
 
             // Attach Pay Now click listener
@@ -789,6 +893,60 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                     `You are about to authorize a payment of <strong>₹${amountToPay}</strong>. Proceed?`,
                     processPayment
                 );
+            });
+        }
+
+        // Review Modal Star Click Logic
+        reviewStars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = star.getAttribute('data-rating');
+                if(ratingValueInput) ratingValueInput.value = rating;
+                reviewStars.forEach(s => {
+                    s.classList.toggle('selected', s.getAttribute('data-rating') <= rating);
+                });
+            });
+        });
+
+        // Review Form Submit Logic
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const form = this;
+                const submitButton = form.querySelector('button[type="submit"]');
+                const data = Object.fromEntries(new FormData(form).entries());
+
+                if (!data.rating) {
+                    // Use the existing showStatusModal for consistency
+                    showStatusModal('error', 'Validation Error', 'Please select a star rating to submit your review.');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+
+                fetch('/dailyfix/api/submit_review.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json().then(body => ({ ok: response.ok, body })))
+                    .then(({ ok, body }) => {
+                        closeReviewModal(); // Close modal first
+                        if (ok && body.status === 'success') {
+                             showStatusModal('success', 'Review Submitted!', body.message || 'Thank you for your feedback.'); // Reloads on OK
+                        } else {
+                            throw new Error(body.message || 'An unknown error occurred.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting review:', error);
+                        // Show error *after* closing modal
+                        showStatusModal('error', 'Submission Failed', error.message);
+                        // Re-enable button on failure
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Review';
+                    });
             });
         }
 

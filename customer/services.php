@@ -110,7 +110,7 @@ $serviceDescriptions = [
         <div class="service-card" data-service-id="<?php echo htmlspecialchars($service['id']); ?>">
           <i class="<?php echo htmlspecialchars($service['icon']); ?>"></i>
           <h3><?php echo htmlspecialchars($service['name']); ?></h3>
-          <p><?php echo htmlspecialchars($serviceDescriptions[$service['name']] ?? 'Quality service guaranteed.'); ?></p>
+          <p><?php echo htmlspecialchars($serviceDescriptions[$service['name']] ?? 'Your Apparel is our responsiblity.'); ?></p>
         </div>
       <?php endforeach; ?>
     </div>
