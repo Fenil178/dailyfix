@@ -118,7 +118,7 @@ $serviceDescriptions = [
 
   <section class="sub-services-container section-fly hidden">
     <a href="#" id="back-to-main" class="back-link"><i class="fas fa-arrow-left"></i> Back to Main Services</a>
-    <h2><span id="sub-service-title"></span> Services</h2>
+    <h2><span id="sub-service-title"></span></h2>
     <div class="sub-services-grid" id="sub-services-grid">
       </div>
   </section>
