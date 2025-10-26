@@ -12,13 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($userId) || $role !== 'custo
 }
 
 $response = ['status' => 'error', 'message' => 'Invalid request.'];
+$sub_service_item_id = filter_input(INPUT_POST, 'sub_service_item_id', FILTER_VALIDATE_INT); // <<< Get item_id
 $worker_id = filter_input(INPUT_POST, 'worker_id', FILTER_VALIDATE_INT);
 $coupon_code = strtoupper(trim($_POST['coupon_code'] ?? ''));
 $item_price = filter_input(INPUT_POST, 'item_price', FILTER_VALIDATE_FLOAT);
 
-if (!$worker_id || empty($coupon_code) || $item_price === null || $item_price < 0) {
+if (!$worker_id || empty($coupon_code) || $item_price === null || $item_price < 0 || !$sub_service_item_id) {
     http_response_code(400);
-    $response['message'] = 'Worker ID, Coupon Code, and a valid Item Price are required.';
+    $response['message'] = 'Worker ID, Coupon Code, valid Item Price, and Sub-Service Item ID are required.';
     echo json_encode($response);
     exit;
 }
@@ -35,6 +36,16 @@ try {
     if (!$offer) {
         throw new Exception("Invalid or inactive coupon code for this worker.");
     }
+
+    // <<< START: NEW USAGE CHECK (using item_id) >>>
+    $stmt_check_usage = $conn->prepare(
+        "SELECT 1 FROM public.user_coupon_usage WHERE user_id = ? AND offer_id = ? AND sub_service_item_id = ?" // <<< Use item_id
+    );
+    $stmt_check_usage->execute([$userId, $offer['id'], $sub_service_item_id]); // <<< Use item_id
+    if ($stmt_check_usage->fetchColumn()) {
+        throw new Exception("You have already used this coupon code for this specific service item."); // <<< Adjusted message
+    }
+    // <<< END: NEW USAGE CHECK >>>
 
     // Validate the Offer
     if ($offer['valid_from'] && strtotime($offer['valid_from']) > time()) {
@@ -80,6 +91,7 @@ try {
     error_log("Validate Offer Pre-Booking PDO Error: " . $e->getMessage());
     $response['message'] = 'A database error occurred while validating the coupon.';
 } catch (Exception $e) {
+    $http_code = (strpos($e->getMessage(), "already used this coupon") !== false) ? 409 : 400;
     http_response_code(400); // Use Bad Request for validation logic errors
     $response['message'] = $e->getMessage();
 }
