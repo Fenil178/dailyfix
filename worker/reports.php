@@ -17,72 +17,12 @@ if (!isset($userId) || $role !== 'worker') {
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/management.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/reports.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
-<style>
-    /* ------------------- LIGHT MODE STYLES (Base) ------------------- */
-    .report-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-    .report-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .report-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-    .report-card h4 { font-size: 1.2em; color: #555; margin-bottom: 10px; }
-    .report-card p { font-size: 2em; font-weight: 700; color: var(--main-color, #007bff); }
-    .report-card.revenue p { color: #28a745; }
-    .report-card.cancelled p { color: #dc3545; }
-    .detailed-report-container { background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; padding: 20px; border-radius: 8px;}
-    .detailed-report-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-    .detailed-report-table th, .detailed-report-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9em; }
-    .detailed-report-table th { background-color: #f8f8f8; color: #333; }
-    .detailed-report-table tbody tr:hover { background-color: #f5f5f5; }
-    .export-button {
-        padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; transition: background-color 0.2s;
-        background-color: #007bff; color: white; margin-left: 5px;
-    }
-    .export-button:hover { background-color: #0056b3; }
-    .filter-select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; background-color: white; color: #333; }
-    .status-completed { color: #28a745; font-weight: 500; }
-    .status-cancelled { color: #dc3545; font-weight: 500; }
-    .review-yes { color: #28a745; }
-    .review-no { color: #6c757d; }
-    .pdf-button { background-color: #dc3545 !important; }
-
-    /* ------------------- DARK MODE STYLES (NEW) ------------------- */
-    .dark-mode .page-content { background-color: #121212; color: #e0e0e0; }
-    .dark-mode .page-title, .dark-mode h3 { color: #f0f0f0; }
-
-    .dark-mode .report-card { 
-        background: #1e1e1e; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.4); 
-    }
-    .dark-mode .report-card h4 { color: #aaaaaa; }
-    
-    .dark-mode .detailed-report-container { 
-        background: #1e1e1e;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.4); 
-    }
-    .dark-mode .detailed-report-table th { 
-        background-color: #333; 
-        color: #f0f0f0; 
-    }
-    .dark-mode .detailed-report-table td { 
-        color: #e0e0e0; 
-    }
-    .dark-mode .detailed-report-table tbody tr:hover { 
-        background-color: #2a2a2a; 
-    }
-
-    .dark-mode .status-pending { color: #ffb74d; }
-    .dark-mode .status-confirmed { color: #64b5f6; } 
-    .dark-mode .status-completed { color: #81c784; }
-    .dark-mode .status-cancelled { color: #e57373; }
-    .dark-mode .review-yes { color: #81c784; }
-
-    .dark-mode .export-button { background-color: #3b82f6; color: white; }
-    .dark-mode .pdf-button { background-color: #c94040 !important; }
-    .dark-mode .filter-select { background-color: #1e1e1e; color: #e0e0e0; border: 1px solid #444; }
-</style>
 <body>
     <main class="page-content">
         <div class="management-container">
@@ -272,11 +212,15 @@ if (!isset($userId) || $role !== 'worker') {
                     const serviceDetails = job.service_details ? job.service_details.replace(/Service: (.*)\nItem: (.*)\nAddress: (.*)/s, (match, service, item, address) => `Service: <b>${service}</b><br>Item: ${item}<br>Address: ${address.substring(0, 30)}...`) : 'N/A';
                     
                     // Status with Cancellation Reason Tooltip
-                    let statusText = job.status;
+                    let statusBadge;
+                    const statusClass = getStatusClass(job.status); // Get the class name, e.g., "status-completed"
+
                     if (job.status === 'cancelled' && job.cancellation_reason) {
-                        statusText = `<span title="Reason: ${job.cancellation_reason}">${job.status} <i class="fas fa-info-circle"></i></span>`;
+                        // Create the badge with the status class and the title
+                        statusBadge = `<span class="${statusClass}" title="Reason: ${job.cancellation_reason}">${job.status} <i class="fas fa-info-circle"></i></span>`;
                     } else {
-                        statusText = job.status;
+                        // Create a simple badge with the status class
+                        statusBadge = `<span class="${statusClass}">${job.status}</span>`;
                     }
 
                     row.innerHTML = `
@@ -285,7 +229,7 @@ if (!isset($userId) || $role !== 'worker') {
                         <td>${job.customer_name}</td>
                         <td>${serviceDetails}</td>
                         <td>${formatCurrency(job.final_cost)}</td>
-                        <td class="${getStatusClass(job.status)}">${statusText}</td>
+                        <td class="status-cell">${statusBadge}</td> 
                         <td>${reviewContent}</td>
                     `;
                     detailedReportBody.appendChild(row);

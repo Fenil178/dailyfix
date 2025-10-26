@@ -213,11 +213,15 @@ if (!isset($userId) || $role !== 'customer') {
                     const serviceDetails = job.service_details ? job.service_details.replace(/Service: (.*)\nItem: (.*)\nAddress: (.*)/s, (match, service, item, address) => `Service: <b>${service}</b><br>Item: ${item}<br>Address: ${address.substring(0, 30)}...`) : 'N/A';
                     
                     // Status with Cancellation Reason Tooltip
-                    let statusText = job.status;
+                    let statusBadge;
+                    const statusClass = getStatusClass(job.status); // Get the class name, e.g., "status-completed"
+
                     if (job.status === 'cancelled' && job.cancellation_reason) {
-                        statusText = `<span title="Reason: ${job.cancellation_reason}">${job.status} <i class="fas fa-info-circle"></i></span>`;
+                        // Create the badge with the status class and the title
+                        statusBadge = `<span class="${statusClass}" title="Reason: ${job.cancellation_reason}">${job.status} <i class="fas fa-info-circle"></i></span>`;
                     } else {
-                        statusText = job.status;
+                        // Create a simple badge with the status class
+                        statusBadge = `<span class="${statusClass}">${job.status}</span>`;
                     }
 
                     row.innerHTML = `
@@ -226,7 +230,7 @@ if (!isset($userId) || $role !== 'customer') {
                         <td>${job.worker_name}</td>
                         <td>${serviceDetails}</td>
                         <td>${formatCurrency(job.final_cost)}</td>
-                        <td class="${getStatusClass(job.status)}">${statusText}</td>
+                        <td class="status-cell">${statusBadge}</td> 
                         <td>${reviewContent}</td>
                     `;
                     detailedReportBody.appendChild(row);
