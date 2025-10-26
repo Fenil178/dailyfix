@@ -3157,12 +3157,16 @@ COMMENT ON TABLE public.combo_items IS 'Links service combos to the specific sub
 --
 
 CREATE TABLE public.notifications (
-    id bigint NOT NULL,
-    user_id bigint NOT NULL,
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    user_role character varying(10) NOT NULL,
+    title character varying(255) NOT NULL,
     message text NOT NULL,
-    link text,
-    is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    link_url character varying(255),
+    is_read boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    booking_id integer,
+    CONSTRAINT notifications_user_role_check CHECK (((user_role)::text = ANY ((ARRAY['customer'::character varying, 'worker'::character varying, 'admin'::character varying])::text[])))
 );
 
 
@@ -3172,14 +3176,22 @@ ALTER TABLE public.notifications OWNER TO postgres;
 -- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-ALTER TABLE public.notifications ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.notifications_id_seq
+CREATE SEQUENCE public.notifications_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
-    CACHE 1
-);
+    CACHE 1;
+
+
+ALTER SEQUENCE public.notifications_id_seq OWNER TO postgres;
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
@@ -3913,6 +3925,13 @@ ALTER TABLE ONLY auth.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('auth.r
 
 
 --
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
+
+
+--
 -- Name: service_combos id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -4198,6 +4217,7 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 34	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	completed	2025-10-18 06:35:50.741859+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N
 51	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 13:30:00+00	completed	2025-10-24 10:11:28.693135+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N
 35	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 08:30:00+00	completed	2025-10-18 08:01:33.651839+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N
+52	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 11:30:00+00	completed	2025-10-25 09:30:56.923956+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	2025-10-25 15:50:44	\N
 45	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-23 12:30:00+00	completed	2025-10-23 09:12:39.71435+00	300.00	paid	\N	\N	300.00	\N	pending	t	\N	3	35.00	\N	\N	\N	\N
 42	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-20 07:30:00+00	completed	2025-10-20 07:10:49.222588+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N
 39	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 12:07:00.161281+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N
@@ -4213,6 +4233,8 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 48	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 09:30:00+00	completed	2025-10-24 08:30:04.450775+00	350.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N
 49	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 11:30:00+00	completed	2025-10-24 09:09:03.871618+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N
 46	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 03:30:00+00	completed	2025-10-23 15:22:29.52538+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N
+58	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 16:30:00+00	completed	2025-10-25 16:48:35.819799+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	2025-10-25 21:18:33	\N
+57	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 15:30:00+00	completed	2025-10-25 14:26:36.393896+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-25 19:57:52	\N
 \.
 
 
@@ -4228,7 +4250,7 @@ COPY public.combo_items (combo_id, sub_service_item_id) FROM stdin;
 -- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.notifications (id, user_id, message, link, is_read, created_at) FROM stdin;
+COPY public.notifications (id, user_id, user_role, title, message, link_url, is_read, created_at, booking_id) FROM stdin;
 \.
 
 
@@ -4269,6 +4291,9 @@ COPY public.reviews (id, booking_id, reviewer_id, worker_id, rating, comment, cr
 20	48	1	22	4	Great job, used modern technology to clean my sneakers. Now, my shoes are looking as a new one.	2025-10-24 09:08:05.241023+00
 21	49	1	22	3		2025-10-24 09:45:07.669644+00
 22	50	1	22	4	Good Job, my clothes have been dry cleaned perfectly.	2025-10-24 10:12:50.831261+00
+23	52	1	21	4	Fantastic service. 	2025-10-25 11:59:50.770626+00
+24	57	1	22	3	Decent Service	2025-10-25 14:28:56.825617+00
+25	58	1	22	4	Fine 	2025-10-25 16:56:50.919727+00
 \.
 
 
@@ -4372,6 +4397,9 @@ COPY public.transactions (id, wallet_id, booking_id, type, amount, description, 
 24	2	49	credit	180.00	Payment received for Booking #49 (Original: ₹200.00, Discount: ₹20.00)	2025-10-24 09:35:53.040332+00
 25	2	50	credit	180.00	Payment received for Booking #50 (Original: ₹200.00, Discount: ₹20.00)	2025-10-24 10:02:52.115167+00
 26	2	51	credit	130.00	Payment received for Booking #51 (Original: ₹150.00, Discount: ₹20.00)	2025-10-24 10:27:20.629861+00
+27	1	52	credit	265.00	Payment received for Booking #52 (Original: ₹300.00, Discount: ₹35.00)	2025-10-25 11:34:39.730456+00
+28	2	57	credit	150.00	Payment received for Booking #57	2025-10-25 14:28:38.808491+00
+29	2	58	credit	130.00	Payment received for Booking #58 (Original: ₹150.00, Discount: ₹20.00)	2025-10-25 16:50:04.402962+00
 \.
 
 
@@ -4406,8 +4434,8 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 --
 
 COPY public.wallets (id, worker_id, balance, created_at, updated_at) FROM stdin;
-1	21	4605.00	2025-10-11 12:57:28.098856+00	2025-10-13 06:33:06.608701+00
-2	22	820.00	2025-10-24 09:05:34.301241+00	2025-10-24 09:05:34.301241+00
+1	21	4870.00	2025-10-11 12:57:28.098856+00	2025-10-13 06:33:06.608701+00
+2	22	1100.00	2025-10-24 09:05:34.301241+00	2025-10-24 09:05:34.301241+00
 \.
 
 
@@ -4522,13 +4550,28 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 225	21	2025-09-29	11:00:00	2025-09-28 13:18:07.367208+00
 571	22	2025-10-28	21:00:00	2025-10-24 08:22:59.039411+00
 227	21	2025-09-28	10:00:00	2025-09-28 13:18:07.392457+00
+581	21	2025-10-30	10:00:00	2025-10-25 09:29:46.782251+00
+584	21	2025-10-30	11:00:00	2025-10-25 09:29:46.782251+00
 230	21	2025-09-29	17:00:00	2025-09-28 13:18:07.367208+00
+588	21	2025-10-25	10:00:00	2025-10-25 09:29:46.803321+00
+590	21	2025-10-30	12:00:00	2025-10-25 09:29:46.782251+00
+594	21	2025-10-25	11:00:00	2025-10-25 09:29:46.803321+00
+595	21	2025-10-30	13:00:00	2025-10-25 09:29:46.782251+00
 235	21	2025-09-29	18:00:00	2025-09-28 13:18:07.367208+00
 236	21	2025-09-28	11:00:00	2025-09-28 13:18:07.392457+00
+600	21	2025-10-25	12:00:00	2025-10-25 09:29:46.803321+00
+601	21	2025-10-30	14:00:00	2025-10-25 09:29:46.782251+00
+606	21	2025-10-30	17:00:00	2025-10-25 09:29:46.782251+00
+607	21	2025-10-25	13:00:00	2025-10-25 09:29:46.803321+00
 241	21	2025-09-29	19:00:00	2025-09-28 13:18:07.367208+00
+612	21	2025-10-30	18:00:00	2025-10-25 09:29:46.782251+00
 243	21	2025-09-28	17:00:00	2025-09-28 13:18:07.392457+00
+613	21	2025-10-25	14:00:00	2025-10-25 09:29:46.803321+00
+618	21	2025-10-30	19:00:00	2025-10-25 09:29:46.782251+00
+619	21	2025-10-25	17:00:00	2025-10-25 09:29:46.803321+00
 247	21	2025-09-29	20:00:00	2025-09-28 13:18:07.367208+00
 248	21	2025-09-28	18:00:00	2025-09-28 13:18:07.392457+00
+624	21	2025-10-30	20:00:00	2025-10-25 09:29:46.782251+00
 250	21	2025-09-28	19:00:00	2025-09-28 13:18:07.392457+00
 451	21	2025-10-12	09:00:00	2025-10-11 16:34:33.178052+00
 452	21	2025-10-12	10:00:00	2025-10-11 16:34:33.178052+00
@@ -4584,6 +4627,33 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 577	22	2025-10-30	18:00:00	2025-10-24 08:22:59.456612+00
 578	22	2025-10-30	19:00:00	2025-10-24 08:22:59.456612+00
 579	22	2025-10-30	21:00:00	2025-10-24 08:22:59.456612+00
+582	21	2025-10-28	10:00:00	2025-10-25 09:29:46.782704+00
+585	21	2025-10-28	11:00:00	2025-10-25 09:29:46.782704+00
+589	21	2025-10-29	10:00:00	2025-10-25 09:29:46.805948+00
+592	21	2025-10-28	12:00:00	2025-10-25 09:29:46.782704+00
+596	21	2025-10-29	11:00:00	2025-10-25 09:29:46.805948+00
+598	21	2025-10-28	13:00:00	2025-10-25 09:29:46.782704+00
+602	21	2025-10-29	12:00:00	2025-10-25 09:29:46.805948+00
+604	21	2025-10-28	14:00:00	2025-10-25 09:29:46.782704+00
+608	21	2025-10-29	13:00:00	2025-10-25 09:29:46.805948+00
+609	21	2025-10-28	17:00:00	2025-10-25 09:29:46.782704+00
+614	21	2025-10-29	14:00:00	2025-10-25 09:29:46.805948+00
+615	21	2025-10-28	18:00:00	2025-10-25 09:29:46.782704+00
+621	21	2025-10-28	19:00:00	2025-10-25 09:29:46.782704+00
+623	21	2025-10-29	17:00:00	2025-10-25 09:29:46.805948+00
+626	21	2025-10-28	20:00:00	2025-10-25 09:29:46.782704+00
+629	21	2025-10-29	18:00:00	2025-10-25 09:29:46.805948+00
+631	21	2025-10-29	19:00:00	2025-10-25 09:29:46.805948+00
+633	21	2025-10-29	20:00:00	2025-10-25 09:29:46.805948+00
+634	21	2025-10-31	10:00:00	2025-10-25 09:29:47.234399+00
+635	21	2025-10-31	11:00:00	2025-10-25 09:29:47.234399+00
+636	21	2025-10-31	12:00:00	2025-10-25 09:29:47.234399+00
+637	21	2025-10-31	13:00:00	2025-10-25 09:29:47.234399+00
+638	21	2025-10-31	14:00:00	2025-10-25 09:29:47.234399+00
+639	21	2025-10-31	17:00:00	2025-10-25 09:29:47.234399+00
+640	21	2025-10-31	18:00:00	2025-10-25 09:29:47.234399+00
+641	21	2025-10-31	19:00:00	2025-10-25 09:29:47.234399+00
+642	21	2025-10-31	20:00:00	2025-10-25 09:29:47.234399+00
 252	21	2025-09-28	20:00:00	2025-09-28 13:18:07.392457+00
 453	21	2025-10-13	10:00:00	2025-10-13 06:29:00.977933+00
 454	21	2025-10-13	11:00:00	2025-10-13 06:29:00.977933+00
@@ -4628,30 +4698,52 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 505	21	2025-10-24	13:00:00	2025-10-18 05:14:31.462455+00
 506	21	2025-10-24	18:00:00	2025-10-18 05:14:31.462455+00
 507	21	2025-10-24	19:00:00	2025-10-18 05:14:31.462455+00
-525	22	2025-10-25	10:00:00	2025-10-24 08:22:59.013762+00
 524	22	2025-10-26	10:00:00	2025-10-24 08:22:59.0197+00
 528	22	2025-10-27	10:00:00	2025-10-24 08:22:59.025115+00
-529	22	2025-10-25	11:00:00	2025-10-24 08:22:59.013762+00
 530	22	2025-10-26	11:00:00	2025-10-24 08:22:59.0197+00
 534	22	2025-10-27	11:00:00	2025-10-24 08:22:59.025115+00
-535	22	2025-10-25	12:00:00	2025-10-24 08:22:59.013762+00
 536	22	2025-10-26	12:00:00	2025-10-24 08:22:59.0197+00
-540	22	2025-10-25	15:00:00	2025-10-24 08:22:59.013762+00
 541	22	2025-10-27	12:00:00	2025-10-24 08:22:59.025115+00
 542	22	2025-10-26	15:00:00	2025-10-24 08:22:59.0197+00
 544	22	2025-10-26	17:00:00	2025-10-24 08:22:59.0197+00
-546	22	2025-10-25	17:00:00	2025-10-24 08:22:59.013762+00
 547	22	2025-10-27	15:00:00	2025-10-24 08:22:59.025115+00
 550	22	2025-10-26	18:00:00	2025-10-24 08:22:59.0197+00
-551	22	2025-10-25	18:00:00	2025-10-24 08:22:59.013762+00
 553	22	2025-10-27	17:00:00	2025-10-24 08:22:59.025115+00
 555	22	2025-10-26	19:00:00	2025-10-24 08:22:59.0197+00
-557	22	2025-10-25	19:00:00	2025-10-24 08:22:59.013762+00
 559	22	2025-10-27	18:00:00	2025-10-24 08:22:59.025115+00
 561	22	2025-10-26	21:00:00	2025-10-24 08:22:59.0197+00
-563	22	2025-10-25	21:00:00	2025-10-24 08:22:59.013762+00
 565	22	2025-10-27	19:00:00	2025-10-24 08:22:59.025115+00
 569	22	2025-10-27	21:00:00	2025-10-24 08:22:59.025115+00
+580	21	2025-10-26	10:00:00	2025-10-25 09:29:46.760403+00
+583	21	2025-10-27	10:00:00	2025-10-25 09:29:46.785502+00
+586	21	2025-10-27	11:00:00	2025-10-25 09:29:46.785502+00
+587	21	2025-10-26	11:00:00	2025-10-25 09:29:46.760403+00
+591	21	2025-10-27	12:00:00	2025-10-25 09:29:46.785502+00
+593	21	2025-10-26	12:00:00	2025-10-25 09:29:46.760403+00
+597	21	2025-10-27	13:00:00	2025-10-25 09:29:46.785502+00
+599	21	2025-10-26	13:00:00	2025-10-25 09:29:46.760403+00
+603	21	2025-10-27	14:00:00	2025-10-25 09:29:46.785502+00
+605	21	2025-10-26	14:00:00	2025-10-25 09:29:46.760403+00
+610	21	2025-10-27	17:00:00	2025-10-25 09:29:46.785502+00
+611	21	2025-10-26	17:00:00	2025-10-25 09:29:46.760403+00
+616	21	2025-10-27	18:00:00	2025-10-25 09:29:46.785502+00
+617	21	2025-10-26	18:00:00	2025-10-25 09:29:46.760403+00
+620	21	2025-10-27	19:00:00	2025-10-25 09:29:46.785502+00
+622	21	2025-10-26	19:00:00	2025-10-25 09:29:46.760403+00
+625	21	2025-10-25	18:00:00	2025-10-25 09:29:46.803321+00
+627	21	2025-10-27	20:00:00	2025-10-25 09:29:46.785502+00
+628	21	2025-10-26	20:00:00	2025-10-25 09:29:46.760403+00
+630	21	2025-10-25	19:00:00	2025-10-25 09:29:46.803321+00
+632	21	2025-10-25	20:00:00	2025-10-25 09:29:46.803321+00
+643	22	2025-10-25	10:00:00	2025-10-25 16:36:13.462308+00
+644	22	2025-10-25	11:00:00	2025-10-25 16:36:13.462308+00
+645	22	2025-10-25	12:00:00	2025-10-25 16:36:13.462308+00
+646	22	2025-10-25	15:00:00	2025-10-25 16:36:13.462308+00
+647	22	2025-10-25	17:00:00	2025-10-25 16:36:13.462308+00
+648	22	2025-10-25	18:00:00	2025-10-25 16:36:13.462308+00
+649	22	2025-10-25	19:00:00	2025-10-25 16:36:13.462308+00
+650	22	2025-10-25	21:00:00	2025-10-25 16:36:13.462308+00
+651	22	2025-10-25	22:00:00	2025-10-25 16:36:13.462308+00
 \.
 
 
@@ -4672,9 +4764,9 @@ COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at,
 --
 
 COPY public.worker_offers (id, worker_id, coupon_code, discount_type, discount_value, min_booking_amount, valid_from, valid_until, max_uses, uses_count, is_active, created_at) FROM stdin;
-4	22	FLAT20	fixed	20.00	0.00	\N	2025-10-28 23:59:00+00	5	4	t	2025-10-24 08:23:57.717424+00
+3	21	FLAT35	fixed	35.00	0.00	\N	2025-10-25 23:59:00+00	\N	9	t	2025-10-19 11:07:19.561536+00
+4	22	FLAT20	fixed	20.00	0.00	\N	2025-10-28 23:59:00+00	5	5	t	2025-10-24 08:23:57.717424+00
 1	21	FLAT50	fixed	50.00	0.00	\N	2025-10-20 23:59:00+00	\N	2	t	2025-10-18 07:59:23.534494+00
-3	21	FLAT35	fixed	35.00	0.00	\N	2025-10-25 23:59:00+00	\N	8	t	2025-10-19 11:07:19.561536+00
 \.
 
 
@@ -4928,7 +5020,7 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 51, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 58, true);
 
 
 --
@@ -4949,7 +5041,7 @@ SELECT pg_catalog.setval('public.payouts_id_seq', 2, true);
 -- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reviews_id_seq', 22, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 25, true);
 
 
 --
@@ -4984,7 +5076,7 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 22, true);
 -- Name: transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transactions_id_seq', 26, true);
+SELECT pg_catalog.setval('public.transactions_id_seq', 29, true);
 
 
 --
@@ -5005,7 +5097,7 @@ SELECT pg_catalog.setval('public.wallets_id_seq', 2, true);
 -- Name: worker_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_availability_id_seq', 579, true);
+SELECT pg_catalog.setval('public.worker_availability_id_seq', 651, true);
 
 
 --
@@ -5902,10 +5994,10 @@ CREATE INDEX idx_notifications_user_id_created_at ON public.notifications USING 
 
 
 --
--- Name: idx_notifications_user_id_unread; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_notifications_user_read; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX idx_notifications_user_id_unread ON public.notifications USING btree (user_id, is_read) WHERE (is_read = false);
+CREATE INDEX idx_notifications_user_read ON public.notifications USING btree (user_id, user_role, is_read);
 
 
 --
@@ -6270,14 +6362,6 @@ ALTER TABLE ONLY public.worker_services
 
 
 --
--- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.notifications
-    ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
 -- Name: payouts payouts_wallet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6540,33 +6624,6 @@ ALTER TABLE auth.sso_providers ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
-
---
--- Name: notifications Allow service role to insert notifications; Type: POLICY; Schema: public; Owner: postgres
---
-
-CREATE POLICY "Allow service role to insert notifications" ON public.notifications FOR INSERT WITH CHECK (true);
-
-
---
--- Name: notifications Users can mark their own notifications as read; Type: POLICY; Schema: public; Owner: postgres
---
-
-CREATE POLICY "Users can mark their own notifications as read" ON public.notifications FOR UPDATE USING ((EXISTS ( SELECT 1
-   FROM public.users u
-  WHERE ((u.id = notifications.user_id) AND (u.auth_user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.users u
-  WHERE ((u.id = notifications.user_id) AND (u.auth_user_id = auth.uid())))));
-
-
---
--- Name: notifications Users can view their own notifications; Type: POLICY; Schema: public; Owner: postgres
---
-
-CREATE POLICY "Users can view their own notifications" ON public.notifications FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM public.users u
-  WHERE ((u.id = notifications.user_id) AND (u.auth_user_id = auth.uid())))));
-
 
 --
 -- Name: bookings; Type: ROW SECURITY; Schema: public; Owner: postgres

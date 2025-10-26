@@ -1,10 +1,3 @@
-/**
- * assets/css/management.css
- *
- * Styles for the management dashboard page, including tabs,
- * job cards, summary lists, and modals.
- */
-
 /* ==========================================================================
    1. General Page Layout
    ========================================================================== */
@@ -164,14 +157,24 @@ body.dark-mode .job-card-header { border-color: #333; }
 }
 
 .btn.cancel {
-    border: #721c24 2px solid;
-    background-color: #f8d7da;
-    color: #721c24;
+    border: #dc3545 2px solid;
+    background-color: #fff;
+    color: #dc3545;
 }
 
 .btn.cancel:hover {
-    background-color: #721c24;
-    color: #f8d7da;
+    background-color: #dc3545;
+    color: #fff;
+}
+
+body.dark-mode .btn.cancel {
+    background-color: #333;
+    color: #dc3545;
+}
+
+body.dark-mode .btn.cancel:hover {
+    background-color: #dc3545;
+    color: #fff;
 }
 
 /* Minimal hover effects */
@@ -182,6 +185,16 @@ body.dark-mode .job-card-header { border-color: #333; }
 }
 
 .btn.accept:hover {
+    background-color: #32c060;
+    color: #fff;
+}
+
+body.dark-mode .btn.accept {
+    background-color: #333;
+    color: #32c060;
+}
+
+body.dark-mode .btn.accept:hover {
     background-color: #32c060;
     color: #fff;
 }
