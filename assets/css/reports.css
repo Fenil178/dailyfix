@@ -1,0 +1,645 @@
+/*
+ * ===================================================================
+ * REPORT PAGE STYLESHEET
+ * ===================================================================
+ * Author: Your Name
+ * Date: 26 October 2025
+ *
+ * Structure:
+ * 1. CSS Custom Properties (Theme Variables)
+ * 2. Global & Page Layout
+ * 3. Report Controls (Buttons & Filters)
+ * 4. Report Card Grid
+ * 5. Detailed Report Table
+ * 6. Mobile & Tablet Responsiveness
+ * ===================================================================
+ */
+
+/*
+ * -------------------------------------------------------------------
+ * 1. CSS Custom Properties (Theme Variables)
+ * -------------------------------------------------------------------
+ * Define all theme colors here. Light mode is the default (:root).
+ * Dark mode simply overrides these variables.
+ */
+:root {
+  /* -- Backgrounds -- */
+  --bg-page: #f8f9fa; /* Use a very light grey for the page bg */
+  --bg-card: #ffffff;
+  --bg-table-header: #f8f8f8;
+  --bg-row-hover: #f5f5f5;
+
+  /* -- Text -- */
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-on-primary: #ffffff; /* Text on a primary-colored background */
+
+  /* -- Borders & Shadows -- */
+  --border-color: #eee;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-light: rgba(0, 0, 0, 0.05);
+
+  /* -- Theme Colors -- */
+  --color-primary: #007bff;
+  --color-primary-hover: #0056b3;
+  --color-primary-focus-shadow: rgba(0, 123, 255, 0.25);
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+
+  /* -- Status Colors -- */
+  --color-success: #28a745;
+  --color-cancelled: #dc3545;
+  --color-pending: #ffc107;
+  --color-confirmed: #17a2b8;
+  --color-review-no: #6c757d;
+}
+
+/* -- Dark Mode Overrides -- */
+.dark-mode {
+  /* -- Backgrounds -- */
+  --bg-page: #121212;
+  --bg-card: #1e1e1e;
+  --bg-table-header: #333333;
+  --bg-row-hover: #2a2a2a;
+
+  /* -- Text -- */
+  --text-primary: #e0e0e0;
+  --text-secondary: #aaaaaa;
+
+  /* -- Borders & Shadows -- */
+  --border-color: #444;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-light: rgba(0, 0, 0, 0.3);
+
+  /* -- Theme Colors -- */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-focus-shadow: rgba(59, 130, 246, 0.25);
+  --color-danger: #c94040;
+  --color-danger-hover: #b92b2b;
+
+  /* -- Status Colors -- */
+  --color-success: #81c784;    /* Lighter for dark bg */
+  --color-cancelled: #e57373;  /* Lighter for dark bg */
+  --color-pending: #ffb74d;    /* Lighter for dark bg */
+  --color-confirmed: #64b5f6;  /* Lighter for dark bg */
+  --color-review-no: #888888;
+}
+
+/*
+ * -------------------------------------------------------------------
+ * 2. Global & Page Layout
+ * -------------------------------------------------------------------
+ * Styles for the overall page structure.
+ */
+.page-content {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  /* Add a subtle transition for the background color when toggling themes */
+  transition: background-color 0.2s linear;
+}
+
+h3 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+
+/*
+ * -------------------------------------------------------------------
+ * 3. Report Controls (Buttons & Filters)
+ * -------------------------------------------------------------------
+ * Interactive elements at the top of the report.
+ */
+.report-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* Allows controls to stack on small screens */
+  gap: 10px;
+}
+
+/* --- Export Button (Primary) --- */
+.export-button {
+  padding: 10px 20px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  background-color: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  margin-left: 5px;
+  display: inline-flex; /* Aligns icon and text */
+  align-items: center;
+  justify-content: center;
+
+  /* Smooth transitions for all animated properties */
+  transition: 
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.export-button:hover {
+  background-color: var(--color-primary);
+  color: var(--text-on-primary);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1);
+}
+
+.export-button:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  /* Accessibility focus ring */
+  box-shadow: 0 0 0 2px var(--color-primary-focus-shadow);
+}
+
+/* Dark mode adjustments */
+body.dark-mode .export-button:hover {
+  background-color: var(--color-primary);
+  color: var(--text-on-primary);
+}
+
+/* --- PDF Button (Danger) --- */
+.pdf-button {
+  padding: 10px 20px;
+  border: 2px solid var(--color-danger);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  background-color: transparent;
+  color: var(--color-danger);
+  margin-left: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Smooth transitions */
+  transition: 
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pdf-button:hover {
+  background-color: var(--color-danger);
+  color: var(--text-on-primary);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1);
+}
+
+.pdf-button:focus {
+  outline: none;
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px var(--color-primary-focus-shadow);
+}
+
+/* Dark mode adjustments */
+body.dark-mode .pdf-button {
+  background-color: transparent;
+  color: var(--color-danger);
+}
+
+body.dark-mode .pdf-button:hover {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--text-on-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Filter Select Dropdown --- */
+.filter-select {
+  padding: 10px 14px;
+  padding-right: 32px; /* Space for custom arrow */
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-width: 120px;
+
+  /* Custom arrow using an embedded SVG */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+
+  /* Remove default OS styling (the ugly arrow) */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Smooth transitions */
+  transition: 
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease;
+}
+
+.filter-select:hover {
+  border-color: var(--color-primary);
+  background-color: var(--bg-card);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus-shadow);
+}
+
+/* Styling for the dropdown options */
+.filter-select option {
+  padding: 12px 16px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .filter-select {
+  /* Custom dark arrow (SVG stroke is changed to %23fff which is #fff) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .filter-select:hover {
+  background-color: var(--bg-card);
+  border-color: var(--color-pending);
+}
+
+body.dark-mode .filter-select:focus {
+  outline: none;
+  border-color: var(--color-pending);
+  box-shadow: 0 0 0 2px var(--color-primary-focus-shadow);
+}
+
+body.dark-mode .filter-select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.filter-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-image: none;
+}
+
+/*
+ * -------------------------------------------------------------------
+ * 4. Report Card Grid
+ * -------------------------------------------------------------------
+ * The top-level summary cards (e.g., Revenue, Bookings).
+ */
+.report-card-grid {
+  display: grid;
+  /* This is inherently responsive: 
+     - 'auto-fit' creates as many columns as fit
+     - 'minmax(250px, 1fr)' means each column is at least 250px
+       and shares the remaining space (1fr)
+  */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.report-card {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  position: relative;
+  overflow: hidden; /* Ensures any pseudo-elements are contained */
+
+  /* Subtle initial shadow */
+  box-shadow: 0 2px 8px var(--shadow-light);
+
+  /* Smooth transitions for hover effects */
+  transition: 
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s ease;
+}
+
+/* Professional hover: Lifts shadow, no scaling needed */
+.report-card:hover {
+  transform: scale(1); /* Keep scale consistent */
+  box-shadow: 0 8px 24px var(--shadow-color);
+  background-color: var(--bg-card);
+}
+
+.report-card h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  letter-spacing: 0.01em;
+}
+
+.report-card p {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+  line-height: 1.2;
+
+  /* Performance tweak: Prevents text from "wiggling" during animations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Card color variants */
+.report-card.revenue p {
+  color: var(--color-success);
+  transition: color 0.3s ease;
+}
+
+.report-card.cancelled p {
+  color: var(--color-cancelled);
+  transition: color 0.3s ease;
+}
+
+/* Dark mode refinements */
+body.dark-mode .report-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .report-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  background-color: var(--bg-card);
+  /* Optional: Add a very subtle primary color tint on hover */
+  background-image: linear-gradient(
+    145deg,
+    var(--bg-card) 0%,
+    rgba(59, 130, 246, 0.03) 100%
+  );
+}
+
+/*
+ * -------------------------------------------------------------------
+ * 5. Detailed Report Table
+ * -------------------------------------------------------------------
+ * The main data table container and styles.
+ * Note: Section 6 from the original file was merged into this
+ * section to consolidate status styles and remove redundancy.
+ */
+
+/* --- Table Container --- */
+.detailed-report-container {
+    background: var(--bg-card);
+    box-shadow: 0 2px 12px var(--shadow-light);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    padding: 28px;
+    
+    /* This is the key to responsiveness for wide tables */
+    overflow-x: auto; 
+    
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detailed-report-container:hover {
+    box-shadow: 0 4px 20px var(--shadow-light);
+}
+
+/* --- Table Structure --- */
+.detailed-report-table {
+    width: 100%;
+    /* Ensures table scrolls on small screens by forcing a min-width */
+    min-width: 1000px; 
+    /* 'separate' allows 'border-spacing' but we set it to 0 */
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* --- Table Header (<th>) --- */
+.detailed-report-table th {
+    background-color: var(--bg-table-header);
+    color: var(--text-primary);
+    
+    /* Makes the header stick to the top when scrolling vertically */
+    position: sticky;
+    top: 0;
+    z-index: 1; /* Ensures header stays above scrolling content */
+
+    padding: 16px 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+    text-align: left;
+    white-space: nowrap; /* Prevents headers from wrapping */
+    
+    transition: background-color 0.2s ease;
+}
+
+/* --- Table Body (<tbody>), Rows (<tr>), & Cells (<td>) --- */
+.detailed-report-table tbody tr {
+    /* Each row has a bottom border, creating the horizontal lines */
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.detailed-report-table tbody tr:hover {
+    background-color: var(--bg-row-hover);
+    transform: translateZ(0); /* Promotes smoother animation */
+}
+
+/* Default styling for all cells in the body */
+.detailed-report-table tbody td {
+    padding: 18px 20px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+    
+    /* This is the fix: ensures all cell content is centered vertically */
+    vertical-align: middle; 
+    
+    transition: all 0.2s ease;
+}
+
+/* --- Status Badges & Cells --- */
+
+/* This targets the <td> (cell) dedicated to the status */
+.detailed-report-table td.status-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 16px 8px; /* Adjusted padding */
+    width: 140px;       /* Fixed width for status column */
+}
+
+/* Base styles for all status badges */
+.detailed-report-table .status-completed,
+.detailed-report-table .status-cancelled,
+.detailed-report-table .status-pending,
+.detailed-report-table .status-confirmed {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex; /* Use flex to center content in the badge */
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    height: 28px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* --- Status Colors (Consolidated) --- */
+.status-completed {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--color-success);
+    font-weight: 500; /* Merged from old Section 6 */
+}
+
+.status-cancelled {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--color-cancelled);
+    font-weight: 500; /* Merged from old Section 6 */
+}
+
+.status-pending {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--color-pending);
+    font-weight: 500; /* Merged from old Section 6 */
+}
+
+.status-confirmed {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: var(--color-confirmed);
+    font-weight: 500; /* Merged from old Section 6 */
+}
+
+/* --- Review Utility Classes --- */
+.review-yes {
+  color: var(--color-success);
+}
+.review-no {
+  color: var(--color-review-no);
+}
+
+/* --- Dark mode adjustments for Table --- */
+body.dark-mode .status-completed {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+body.dark-mode .status-cancelled {
+    background-color: rgba(220, 53, 69, 0.15);
+}
+body.dark-mode .status-pending {
+    background-color: rgba(255, 193, 7, 0.15);
+}
+body.dark-mode .status-confirmed {
+    background-color: rgba(23, 162, 184, 0.15);
+}
+body.dark-mode .detailed-report-container {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .detailed-report-table th {
+    background-color: var(--bg-table-header);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .detailed-report-table tbody tr {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .detailed-report-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Responsive shadows for better depth on desktop */
+@media (min-width: 768px) {
+    .detailed-report-container {
+        box-shadow: 0 4px 24px var(--shadow-light);
+    }
+    
+    .detailed-report-container:hover {
+        box-shadow: 0 8px 32px var(--shadow-light);
+    }
+}
+
+
+/*
+ * ===================================================================
+ * 6. Mobile & Tablet Responsiveness
+ * ===================================================================
+ * This query targets screens 768px and smaller.
+ * It reduces padding and font sizes to make the design
+ * more compact and usable on mobile devices.
+ */
+@media (max-width: 768px) {
+
+    /* Reduce heading size */
+    h3 {
+        font-size: 1.25rem;
+    }
+
+    /* Reduce padding on buttons */
+    .export-button,
+    .pdf-button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* Reduce padding on select */
+    .filter-select {
+        padding: 8px 12px;
+        padding-right: 30px; /* Keep arrow space */
+        font-size: 0.9rem;
+    }
+
+    /* Reduce gap and padding on cards */
+    .report-card-grid {
+        gap: 16px;
+    }
+    .report-card {
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .report-card h4 {
+        font-size: 1rem;
+    }
+    .report-card p {
+        font-size: 1.75rem;
+    }
+
+    /* Reduce padding on the main table container */
+    .detailed-report-container {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    /* Reduce padding and font size on all table cells */
+    .detailed-report-table th,
+    .detailed-report-table tbody td {
+        padding: 12px 15px;
+        font-size: 0.9rem; /* Slightly smaller font */
+    }
+
+    /* Adjust the status cell */
+    .detailed-report-table td.status-cell {
+        width: 120px;
+        padding: 12px 5px;
+    }
+
+    /* Adjust the badge itself */
+    .detailed-report-table .status-completed,
+    .detailed-report-table .status-cancelled,
+    .detailed-report-table .status-pending,
+    .detailed-report-table .status-confirmed {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        min-width: 100px;
+        height: 26px;
+    }
+}

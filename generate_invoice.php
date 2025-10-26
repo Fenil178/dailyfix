@@ -4,7 +4,7 @@ ob_start();
 
 // --- 1. SETUP & AUTH ---
  include_once __DIR__ . "/api/connect.php"; // Use REAL connection
- include_once __DIR__ . "/api/header.php";   // Use REAL auth (ensure $userId is set)
+ include_once __DIR__ . "/api/header.php";  // Use REAL auth (ensure $userId is set)
 
 // Composer autoload required for Dompdf
 require __DIR__ . '/vendor/autoload.php';
@@ -318,7 +318,7 @@ $options = new Options();
 $options->set('isHtml5ParserEnabled', true);
 $options->set('defaultFont', 'DejaVu Sans'); // Font supporting ₹ symbol
 $options->set('isRemoteEnabled', true);
-
+ 
 try {
     $dompdf = new Dompdf($options);
     $dompdf->loadHtml($html);
