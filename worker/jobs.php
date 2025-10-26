@@ -410,52 +410,132 @@ try {
                 tabLinks.forEach(l => l.classList.remove('active'));
                 tabContents.forEach(c => c.classList.remove('active'));
                 link.classList.add('active');
-                document.getElementById(tabId).classList.add('active');
+                const contentEl = document.getElementById(tabId);
+                if (contentEl) contentEl.classList.add('active');
             });
         });
 
         // --- Job Action Handler ---
         function handleJobAction(bookingId, status, bookingTime, buttonElement) {
-            const originalText = buttonElement.textContent;
+            // Find the closest parent container holding the buttons
+            const actionContainer = buttonElement.closest('.job-card-actions');
+            const buttonsInContainer = actionContainer ? actionContainer.querySelectorAll('.btn, button') : [buttonElement];
+            // Use a Map to store original HTML keyed by the button element
+            const originalTexts = new Map();
 
-            buttonElement.parentElement.querySelectorAll('.btn').forEach(btn => {
-                btn.disabled = true;
-                btn.textContent = '...';
+            // *** MODIFIED LOOP START ***
+            buttonsInContainer.forEach(btn => {
+                originalTexts.set(btn, btn.innerHTML); // Store original HTML
+                btn.disabled = true; // Disable ALL buttons in the container
+
+                // ONLY change the innerHTML of the button that was clicked
+                if (btn === buttonElement) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                }
             });
+            // *** MODIFIED LOOP END ***
 
             let url = `/dailyfix/api/update_booking_status.php?id=${bookingId}&status=${status}`;
-            if (bookingTime) {
+            if (status === 'confirmed' && bookingTime) {
                 url += `&booking_time=${encodeURIComponent(bookingTime)}`;
             }
 
+            // Cancellation Reason Prompt for Decline
+            let cancellationReason = null;
+            if (status === 'cancelled') {
+                cancellationReason = prompt("Please provide a mandatory reason for declining this job:");
+                if (cancellationReason === null || cancellationReason.trim() === "") {
+                    alert("Declination cancelled. A reason is required.");
+                    // Restore buttons immediately using the Map
+                    buttonsInContainer.forEach(btn => {
+                        btn.disabled = false;
+                        if (originalTexts.has(btn)) {
+                             btn.innerHTML = originalTexts.get(btn); // Restore specific original HTML
+                        }
+                     });
+                    return; // Stop the process
+                }
+                url += `&cancellation_reason=${encodeURIComponent(cancellationReason.trim())}`;
+            }
+
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                     if (!response.ok) {
+                         // Attempt to parse JSON error first
+                         return response.json().then(errData => {
+                             throw new Error(errData.message || `HTTP error ${response.status}`);
+                         }).catch(() => {
+                             // Fallback if response wasn't JSON
+                             throw new Error(`HTTP error ${response.status}`);
+                         });
+                     }
+                     return response.json();
+                 })
                 .then(data => {
                     if (data.status === 'success') {
+                        // Success: Remove the card visually and reload smoothly
                         const card = document.getElementById(`job-card-${bookingId}`);
                         if (card) {
-                            card.style.transition = 'opacity 0.5s ease';
+                            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
                             card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                window.location.reload(); // Reload after animation
+                            }, 500); // Match animation duration
+                        } else {
+                            window.location.reload(); // Reload immediately if card not found
                         }
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                    } else {
-                        alert(`Error: ${data.message}`);
-                        buttonElement.parentElement.querySelectorAll('.btn').forEach(btn => {
-                            btn.disabled = false;
-                            if (btn.classList.contains('accept')) btn.textContent = 'Accept';
-                            if (btn.classList.contains('decline')) btn.textContent = 'Decline';
-                            if (btn.classList.contains('btn-main') && btn.textContent === '...') btn.textContent = 'Start Job';
-                        });
+                    } else if (data.status === 'conflict') {
+                        // Specific handling for conflict
+                        alert(`Error: ${data.message || 'Could not accept job due to a time conflict.'}`);
+                         // Restore buttons on conflict using the Map
+                         buttonsInContainer.forEach(btn => {
+                             btn.disabled = false;
+                             if (originalTexts.has(btn)) {
+                                  btn.innerHTML = originalTexts.get(btn);
+                             }
+                          });
+                    }
+                    else {
+                        // General failure
+                        throw new Error(data.message || 'Could not update status.');
                     }
                 })
                 .catch(error => {
                     console.error('Fetch error:', error);
-                    alert('A network error occurred. Please try again.');
-                    window.location.reload();
+                    alert(`Error: ${error.message || 'A network error occurred. Please try again.'}`);
+                    // Restore buttons on any failure using the Map
+                    buttonsInContainer.forEach(btn => {
+                        btn.disabled = false;
+                        if (originalTexts.has(btn)) {
+                             btn.innerHTML = originalTexts.get(btn); // Restore specific original HTML
+                        }
+                    });
+                     // Optional: Reload even on error if state might be inconsistent
+                     // window.location.reload();
                 });
         }
+
+        // --- Initialize Leaflet Maps for Pending Jobs ---
+        // (Ensure this runs *after* the DOM is ready if not already deferred)
+         <?php foreach ($pendingJobs as $job): ?>
+            <?php if ($job['customer_lat'] && $job['customer_lon'] && $worker_lat && $worker_lon) : ?>
+                try {
+                    var map_<?php echo $job['id']; ?> = L.map('map-<?php echo $job['id']; ?>').setView([<?php echo $job['customer_lat']; ?>, <?php echo $job['customer_lon']; ?>], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map_<?php echo $job['id']; ?>);
+                    L.marker([<?php echo $job['customer_lat']; ?>, <?php echo $job['customer_lon']; ?>]).addTo(map_<?php echo $job['id']; ?>).bindPopup("Customer's Location");
+                    L.marker([<?php echo $worker_lat; ?>, <?php echo $worker_lon; ?>]).addTo(map_<?php echo $job['id']; ?>).bindPopup("Your Location");
+                } catch (e) {
+                    console.error("Error initializing map for job <?php echo $job['id']; ?>:", e);
+                    // Optionally display a message in the map container
+                    const mapDiv = document.getElementById('map-<?php echo $job['id']; ?>');
+                    if (mapDiv) mapDiv.innerHTML = '<p style=\"padding:10px; text-align:center; color: red;\">Map could not be loaded.</p>';
+                }
+            <?php endif; ?>
+        <?php endforeach; ?>
+
     </script>
 
     <?php include_once __DIR__ . "/../api/footer.php"; ?>
