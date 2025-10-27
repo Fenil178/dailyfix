@@ -37,15 +37,15 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.page-content {
+/* .page-content {
   padding-top: 5rem;
-}
+} */
 
 /* Hero Section */
 .services-hero {
   background: var(--background-color-light);
   color: var(--text-color-dark);
-  padding: 4rem 2rem;
+  padding: 0rem 2rem 1.5rem 2rem;
   text-align: center;
   margin-top: 0;
 }

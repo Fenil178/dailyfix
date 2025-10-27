@@ -485,7 +485,6 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
-  padding-top: 90px;
 }
 
 .welcome-banner {
@@ -1290,7 +1289,7 @@ body.dark-mode .slider-dot.active {
 @media (max-width: 768px) {
   .navbar {
     padding: 0.5rem 1rem;
-    width: 95%;
+    width: 90%;
   }
   .menu-toggle {
     display: block;
@@ -1331,7 +1330,6 @@ body.dark-mode .slider-dot.active {
   }
   .dashboard-container-v4 {
     padding: 1.5rem 1rem;
-    padding-top: 80px;
   }
   .welcome-banner {
     padding: 1.5rem;

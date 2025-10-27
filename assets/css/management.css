@@ -1,10 +1,10 @@
 /* ==========================================================================
    1. General Page Layout
    ========================================================================== */
-
+/* 
 .page-content {
-    padding-top: 80px; /* Ensures content is below the fixed header */
-}
+    padding-top: 80px;
+} */
 
 .management-container {
     max-width: 1100px;
