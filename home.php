@@ -250,6 +250,7 @@ function timeAgo($datetime) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
     

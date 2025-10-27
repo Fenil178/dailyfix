@@ -45,6 +45,8 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
   <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 </head>
 <body>
+<header>
+<div class="navbar-wrapper">
 <nav class="navbar">
     <div class="logo">
         <a href="/dailyfix/index.php">
@@ -64,6 +66,11 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             }
 
             foreach ($links as $file => $text) {
+                // *** MODIFICATION: Skip Reports and Help from main nav ***
+                if ($text === 'My Reports' || $text === 'Help') {
+                    continue;
+                }
+                
                 $url = "/dailyfix/dashboard.php";
                 if ($file !== 'dashboard.php' && $file !== 'contact.php') {
                     $url = $basePath . $file;
@@ -94,6 +101,14 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         </button>
         <div class="dropdown-menu" id="dropdownMenu">
             <a href="/dailyfix/profile.php"><i class="fas fa-user-circle"></i> My Profile</a>
+            
+            <?php
+                $reportsUrl = ($role === 'worker') ? '/dailyfix/worker/reports.php' : '/dailyfix/customer/reports.php';
+                $helpUrl = '/dailyfix/contact.php';
+                
+                echo "<a href='{$reportsUrl}'><i class='fas fa-chart-bar'></i> My Reports</a>";
+                echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
+            ?>
             <button id="theme-toggle-btn"><i class="fas fa-moon"></i> Theme</button>
             <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
@@ -109,6 +124,58 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             </div>
         </div>
     </div>
+</nav>
+</div>
+</header>
+
+<nav class="mobile-bottom-nav">
+    <?php 
+        // Define active states for cleaner HTML
+        $isDashboard = ($currentPage === 'dashboard.php') ? 'active' : '';
+        $isProfile = ($currentPage === 'profile.php') ? 'active' : '';
+    ?>
+
+    <?php if ($role === 'customer'): ?>
+        <?php
+            $isServices = ($currentPage === 'services.php') ? 'active' : '';
+            $isBookings = ($currentPage === 'bookings.php') ? 'active' : '';
+        ?>
+        <a href="/dailyfix/dashboard.php" class="<?php echo $isDashboard; ?>">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="<?php echo $basePath; ?>services.php" class="<?php echo $isServices; ?>">
+            <i class="fas fa-search"></i>
+            <span>Services</span>
+        </a>
+        <a href="<?php echo $basePath; ?>bookings.php" class="<?php echo $isBookings; ?>">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Bookings</span>
+        </a>
+
+    <?php elseif ($role === 'worker'): ?>
+            <?php
+            $isJobs = ($currentPage === 'jobs.php') ? 'active' : '';
+            $isEarnings = ($currentPage === 'earnings.php') ? 'active' : '';
+        ?>
+        <a href="/dailyfix/dashboard.php" class="<?php echo $isDashboard; ?>">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="<?php echo $basePath; ?>jobs.php" class="<?php echo $isJobs; ?>">
+            <i class="fas fa-briefcase"></i>
+            <span>Jobs</span>
+        </a>
+        <a href="<?php echo $basePath; ?>earnings.php" class="<?php echo $isEarnings; ?>">
+            <i class="fas fa-dollar-sign"></i>
+            <span>Earnings</span>
+        </a>
+    <?php endif; ?>
+    
+    <a href="/dailyfix/profile.php" class="<?php echo $isProfile; ?>">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+    </a>
 </nav>
 </body>
 </html>
