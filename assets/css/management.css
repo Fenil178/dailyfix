@@ -384,7 +384,9 @@ body.dark-mode {
 }
 
 /* --- 7.2. Modal Backdrop & Animation --- */
-#reviewModal {
+#reviewModal,
+#cancelModal,
+#messageModal {
     position: fixed;
     z-index: 1050;
     left: 0;
@@ -411,7 +413,9 @@ body.dark-mode {
 }
 
 /* --- 7.3. Modal Content Box --- */
-#reviewModal .modal-content {
+#reviewModal .modal-content,
+#cancelModal .modal-content,
+#messageModal .modal-content {
     max-width: 440px;
     width: 100%;
     background-color: var(--review-modal-bg);
@@ -424,7 +428,9 @@ body.dark-mode {
     animation: modal-content-animation 0.3s ease-out forwards;
 }
 
-#reviewModal .close {
+#reviewModal .close,
+#cancelModal .close,
+#messageModal .close {
     position: absolute;
     top: 1rem;
     right: 1rem;
@@ -441,12 +447,16 @@ body.dark-mode {
     justify-content: center;
 }
 
-#reviewModal .close:hover {
+#reviewModal .close:hover,
+#cancelModal .close:hover,
+#messageModal .close:hover {
     color: var(--review-modal-close-icon-hover);
     transform: rotate(90deg);
 }
 
-#reviewModal h2 {
+#reviewModal h2,
+#cancelModal h2,
+#messageModal h2 {
     margin: 0 0 1rem 0;
     font-size: 1.75rem;
     font-weight: 700;
@@ -479,7 +489,8 @@ body.dark-mode {
 }
 
 /* --- 7.5. Text Area --- */
-#reviewModal textarea {
+#reviewModal textarea,
+#cancelModal textarea {
     width: 100%;
     border-radius: 12px;
     border: 1px solid var(--review-border-color);
@@ -494,18 +505,21 @@ body.dark-mode {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-#reviewModal textarea::placeholder {
+#reviewModal textarea::placeholder,
+#cancelModal textarea::placeholder {
     color: var(--review-modal-text-light);
 }
 
-#reviewModal textarea:focus {
+#reviewModal textarea:focus,
+#cancelModal textarea:focus {
     outline: none;
     border-color: var(--review-btn-bg);
     box-shadow: 0 0 0 3px var(--review-textarea-focus-ring);
 }
 
 /* --- 7.6. Submit Button --- */
-#reviewModal button[type="submit"] {
+#reviewModal button[type="submit"],
+#cancelModal button[type="submit"] {
     background-color: var(--review-btn-bg);
     color: var(--review-btn-text);
     border: none;
@@ -518,39 +532,14 @@ body.dark-mode {
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-#reviewModal button[type="submit"]:hover {
+#reviewModal button[type="submit"]:hover,
+#cancelModal button[type="submit"]:hover {
     background-color: var(--review-btn-bg-hover);
 }
 
-#reviewModal button[type="submit"]:active {
+#reviewModal button[type="submit"]:active,
+#cancelModal button[type="submit"]:active {
     transform: scale(0.98);
-}
-
-/* ==========================================================================
-   8. Custom Message Modal
-   ========================================================================== */
-
-/* * NOTE: These rules are very specific and override 
- * general modal content styles for simple success/error messages.
- */
-
-.modal-content #messageModalTitle {
-    margin-bottom: 15px;
-    font-weight: 500;
-}
-
-.modal-content.success #messageModalTitle {
-    color: #28a745; /* Green */
-}
-
-.modal-content.error #messageModalTitle {
-    color: #dc3545; /* Red */
-}
-
-.modal-content #messageModalButton {
-    margin-top: 20px;
-    align-self: flex-end;
-    width: 80px;
 }
 
 /* ==========================================================================
@@ -657,19 +646,25 @@ body.dark-mode {
     }
 
     /* --- 9.6. Review Modal --- */
-    #reviewModal {
+    #reviewModal,
+    #cancelModal,
+    #messageModal {
         overflow-y: auto; /* Allow modal to scroll if content overflows */
         padding: 0.5rem; /* Tighter padding on the backdrop */
         align-items: flex-start; /* Align modal to top */
     }
 
-    #reviewModal .modal-content {
+    #reviewModal .modal-content,
+    #cancelModal .modal-content,
+    #messageModal .modal-content {
         padding: 1.5rem; /* Reduced from 2.5rem */
         margin-top: 2rem; /* Add space from top edge */
         margin-bottom: 2rem;
     }
 
-    #reviewModal h2 {
+    #reviewModal h2,
+    #cancelModal h2,
+    #messageModal h2 {
         font-size: 1.5rem; /* Reduced from 1.75rem */
     }
 
