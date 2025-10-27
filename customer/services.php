@@ -68,6 +68,7 @@ $serviceDescriptions = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DailyFix - Services</title>
   <link rel="stylesheet" href="/dailyfix/assets/css/index.css" />
+  <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
   <link rel="stylesheet" href="/dailyfix/assets/css/services.css" />
   <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
   <link

@@ -1,3 +1,6 @@
+/* =================================
+   1. Root & Dark Mode Variables
+   ================================= */
 :root {
   /* Light Mode Variables */
   --background-color: #ffffff;
@@ -16,6 +19,11 @@ body.dark-mode {
   --border-color: #444;
 }
 
+/* =================================
+   2. Main Header & Navbar Layout
+   ================================= */
+
+/* This is the full-width sticky bar */
 header {
   background-color: var(--background-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -24,16 +32,53 @@ header {
   z-index: 1000;
   transition: background-color 0.3s ease;
   border-bottom: 1px solid var(--border-color);
+  width: 100%; /* Ensure header spans full width */
 }
 
+/* Add a wrapper for the full-width background */
+.navbar-wrapper {
+  width: 100%;
+  background-color: var(--background-color);
+  position: relative;
+}
+
+/* Modify existing navbar class */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 2rem;
-  max-width: 100%;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0.5rem 1.5rem;
   min-height: 64px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Update shadow to be on wrapper instead of navbar */
+.navbar-wrapper::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 8px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.04),
+    rgba(0, 0, 0, 0)
+  );
+  pointer-events: none;
+}
+
+/* Dark mode adjustment */
+body.dark-mode .navbar::after {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0)
+  );
 }
 
 /* Logo */
@@ -41,9 +86,13 @@ header {
   vertical-align: middle;
 }
 
+/* =================================
+   3. Desktop Navigation Links
+   ================================= */
+
 /* Main Navigation Links Container */
 .navbar .nav-links {
-  flex-grow: 1;
+  flex-grow: 1; /* Allows links to sit in the center */
   justify-content: center;
   display: flex;
   gap: 1.5rem;
@@ -58,51 +107,66 @@ header {
     text-decoration: none;
     font-weight: 500;
     padding: 8px 12px;
-    padding-bottom: 6px; /* Added space for the underline */
+    padding-bottom: 6px;
     border-radius: 4px;
-    transition: color 0.3s ease;
-    position: relative; /* Crucial for positioning the pseudo-element */
-    background-color: transparent; /* Ensure no background color by default */
+    transition: color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    background-color: transparent;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* 2. Create the hidden underline pseudo-element - EXPANDS FROM CENTER */
+/* 2. Hidden underline pseudo-element (smooth in/out) */
 .nav-links a::after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 50%; /* Start from center */
-    transform: translateX(-50%) scaleX(0); /* Initially hidden, centered */
-    width: 80%; /* Slightly narrower than full width for better look */
+    left: 50%;
+    transform: translateX(-50%) scaleX(0.0001); /* avoid blurry 0 */
+    transform-origin: center;
+    width: 80%;
     height: 2px;
-    background: var(--primary-color); /* Uses blue in light mode, yellow in dark mode */
-    transition: transform 0.3s ease;
+    background: var(--primary-color);
+    opacity: 0;
+    transition:
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 220ms ease;
+    will-change: transform, opacity;
 }
 
-/* 3. Hover effect - expand underline from center */
-.nav-links a:hover {
-    color: var(--primary-color); /* Change text color to blue/yellow */
+/* 3. Hover / focus - expand underline from center with smooth easing */
+.nav-links a:not(.active):hover,
+.nav-links a:not(.active):focus {
+    color: var(--primary-color);
+    outline: none;
 }
 
-.nav-links a:hover::after {
-    transform: translateX(-50%) scaleX(1); /* Expand from center */
+.nav-links a:not(.active):hover::after,
+.nav-links a:not(.active):focus::after {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 1;
 }
 
-/* 4. Active state - bold text, NO underline */
+/* Keyboard-accessible focus visible state */
+.nav-links a:focus-visible {
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.04);
+    border-radius: 4px;
+}
+
+/* 4. Active state - bold text, no underline (keeps consistency) */
 .nav-links a.active {
     color: var(--primary-color);
-    font-weight: 700; /* Make active link bold */
+    font-weight: 700;
 }
 
 .nav-links a.active::after {
-    transform: translateX(-50%) scaleX(0); /* No underline for active */
+    transform: translateX(-50%) scaleX(0.0001);
+    opacity: 0;
 }
 
-/* Remove underline on hover when link is active */
-.nav-links a.active:hover::after {
-    transform: translateX(-50%) scaleX(0);
-}
+/* =================================
+   4. User Profile Dropdown
+   ================================= */
 
-/*User Profile Dropdown*/
 .user-menu {
   position: relative;
   display: flex;
@@ -194,111 +258,111 @@ header {
 }
 
 /* =================================
- Custom Logout Modal Styling
- ================================= */
+   5. Custom Logout Modal Styling
+   ================================= */
 .modal {
-display: none;
-position: fixed;
-z-index: 1000;
-left: 0;
-top: 0;
-width: 100%;
-height: 100%;
-overflow: auto;
-background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
-backdrop-filter: blur(5px);
--webkit-backdrop-filter: blur(5px);
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .modal-content {
-background-color: #f0f8ff;
-color: #2c3e50;
-margin: 15% auto;
-padding: 30px;
-border: none;
-width: 90%;
-max-width: 450px;
-text-align: center;
-border-radius: 12px;
-box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-animation: fadeIn 0.3s ease-out;
+  background-color: #f0f8ff;
+  color: #2c3e50;
+  margin: 15% auto;
+  padding: 30px;
+  border: none;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .modal-content h2 {
-font-size: 1.5rem;
-margin-top: 0;
-color: #2c3e50;
-font-weight: 600;
+  font-size: 1.5rem;
+  margin-top: 0;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .modal-content p {
-font-size: 1rem;
-color: #34495e;
+  font-size: 1rem;
+  color: #34495e;
 }
 
 .modal-buttons {
-display: flex;
-justify-content: center;
-gap: 15px;
-margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
 }
 
 .modal-buttons button {
-padding: 12px 25px;
-border: none;
-border-radius: 6px;
-cursor: pointer;
-font-size: 1rem;
-font-weight: 500;
-transition: transform 0.2s ease, background-color 0.2s ease;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .modal-buttons button:hover {
-transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 
 #confirm-logout-btn {
-background-color: #ffc107;
-color: #fff;
+  background-color: #ffc107;
+  color: #fff;
 }
 
 #confirm-logout-btn:hover {
-background-color: #e0a800;
+  background-color: #e0a800;
 }
 
 #cancel-logout-btn {
-background-color: #007bff;
-color: #fff;
+  background-color: #007bff;
+  color: #fff;
 }
 
 #cancel-logout-btn:hover {
-background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 .close-button {
-color: #2c3e50;
-font-size: 2rem;
-font-weight: normal;
-line-height: 1;
-position: absolute;
-top: 10px;
-right: 15px;
-transition: color 0.2s ease;
+  color: #2c3e50;
+  font-size: 2rem;
+  font-weight: normal;
+  line-height: 1;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  transition: color 0.2s ease;
 }
 
 .close-button:hover,
 .close-button:focus {
-color: #ffc107;
+  color: #ffc107;
 }
 
 @keyframes fadeIn {
-from { opacity: 0; transform: scale(0.95); }
-to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* =================================
- Dark Mode Specific Overrides
- ================================= */
+   6. Dark Mode Specific Overrides
+   ================================= */
 body.dark-mode .profile-btn {
   background-color: var(--primary-color); /* Uses yellow from dark var */
   border-color: #444;
@@ -310,4 +374,82 @@ body.dark-mode .profile-btn .fas {
 
 body.dark-mode .dropdown-menu .fas {
   color: #9e9e9e;
+}
+
+
+/* =================================
+   7. Mobile Bottom Navigation
+   ================================= */
+.mobile-bottom-nav {
+  display: none; /* Hidden by default on desktop */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--background-color);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.08);
+  z-index: 999;
+}
+
+.mobile-bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1; /* Each item takes equal space */
+  padding: 8px 0;
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 0.7rem; /* Small text */
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.mobile-bottom-nav a .fas {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.mobile-bottom-nav a:hover {
+  color: var(--primary-color);
+}
+
+.mobile-bottom-nav a.active {
+  color: var(--primary-color);
+  font-weight: 700; /* Minimal active effect */
+}
+
+/* =================================
+   8. Responsive Media Queries
+   ================================= */
+
+/* Using 768px as the breakpoint for tablets and mobile */
+@media (max-width: 768px) {
+
+  /* * On mobile, we override the desktop max-width
+   * and use 100% width with smaller padding.
+  */
+  .navbar {
+    padding: 0.5rem 1rem; /* Use the mobile padding */
+    max-width: 100%;   /* Ensure it's full-width on mobile */
+  }
+
+  
+  /* Hide the desktop navigation links and user menu */
+  .navbar .nav-links,
+  .navbar .user-menu {
+    display: none;
+  }
+
+  /* Show the mobile bottom navigation */
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  /* Add padding to the bottom of the body to prevent content
+     from being hidden behind the new sticky nav bar */
+  body {
+    padding-bottom: 70px; 
+  }
 }
