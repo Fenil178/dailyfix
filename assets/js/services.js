@@ -5,6 +5,7 @@ const subServicesContainer = document.querySelector('.sub-services-container');
 const subServicesGrid = document.getElementById('sub-services-grid');
 const subServiceTitle = document.getElementById('sub-service-title');
 const backButton = document.getElementById('back-to-main');
+const servicesHero = document.querySelector('.services-hero');
 
 // The subServicesData constant is defined in the services.php file
 
@@ -45,6 +46,7 @@ serviceCards.forEach(card => {
             });
 
             mainServicesContainer.classList.add('hidden');
+            servicesHero.classList.add('hidden');
             subServicesContainer.classList.remove('hidden');
         } else {
             console.log(`No sub-services found for ${serviceName}`);
@@ -57,4 +59,5 @@ backButton.addEventListener('click', (e) => {
     e.preventDefault();
     subServicesContainer.classList.add('hidden');
     mainServicesContainer.classList.remove('hidden');
+    servicesHero.classList.remove('hidden');
 });

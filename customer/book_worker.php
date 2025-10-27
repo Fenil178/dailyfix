@@ -11,6 +11,35 @@ if (!empty($serviceSlug)) {
 }
 
 include_once __DIR__ . "/../api/connect.php";
+
+// --- START: Setup Back Link ---
+$subServiceId = $_GET['sub_service_id'] ?? 0; // Get sub_service_id first
+$subServiceSlug = '';
+$backLink = "/dailyfix/customer/services.php"; // Default fallback link
+$backLinkText = "Back to Services";       // Default fallback text
+
+if ($subServiceId > 0) {
+    try {
+        // Fetch the slug for the current sub-service to build the correct back link
+        $stmtSlug = $conn->prepare("SELECT slug FROM public.sub_services WHERE id = ?");
+        $stmtSlug->execute([$subServiceId]);
+        $subServiceSlug = $stmtSlug->fetchColumn();
+
+        if ($subServiceSlug) {
+            // If slug found, set the correct link and text
+            $backLink = "/dailyfix/customer/find_workers.php?service=" . htmlspecialchars($subServiceSlug);
+            $backLinkText = "Back to Find Worker"; // Updated Text
+        } else {
+             error_log("Could not find slug for sub_service_id: " . $subServiceId);
+             // Keep the fallback link/text if slug lookup fails
+        }
+    } catch (PDOException $e) {
+         error_log("Error fetching sub-service slug for backlink: " . $e->getMessage());
+         // Keep the fallback link/text on DB error
+    }
+}
+// --- END: Setup Back Link ---
+
 include_once __DIR__ . "/../api/header.php";
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['sub_service_id']) || !is_numeric($_GET['sub_service_id'])) {
