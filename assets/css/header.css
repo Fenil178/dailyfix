@@ -48,7 +48,7 @@ header {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0.5rem 1.5rem;
   min-height: 64px;
@@ -431,13 +431,8 @@ body.dark-mode .dropdown-menu .fas {
    * and use 100% width with smaller padding.
   */
   .navbar {
-    padding: 0.5rem 0rem; /* Use the mobile padding */
+    padding: 0.5rem 1rem; /* Use the mobile padding */
     max-width: 100%;   /* Ensure it's full-width on mobile */
-  }
-
-  .navbar .logo img {
-    vertical-align: middle;
-    margin-left: 2vh;
   }
 
   
