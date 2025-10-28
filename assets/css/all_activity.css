@@ -1,42 +1,126 @@
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    font-weight: 500;
-}
-.back-link i { transition: transform 0.3s ease; }
-.back-link:hover i { transform: translateX(-5px); }
+/* ============================================== */
+/* == Refined Minimal Activity Card Styles     == */
+/* ============================================== */
 
-/* Card-based styles for the activity list using CSS variables */
+/* --- 1. Root Variables --- */
+:root {
+    /* Define shadows for a clean "lift" effect */
+    --card-shadow-light: 0 2px 5px rgba(0, 0, 0, 0.05);
+    --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    /* Define a smooth, modern transition */
+    --card-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 2. List & Card Layout --- */
+
+/* The main container for all the cards */
 .activity-card-list {
     display: grid;
-    gap: 1.5rem;
+    gap: 1rem; /* This creates the vertical space between cards */
 }
+
+/* The individual activity card */
 .activity-card {
-    background-color: var(--background-color-card);
-    border-radius: 8px;
-    box-shadow: var(--box-shadow);
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem; /* Horizontal space between items (icon, details, etc.) */
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  transition: background-color 240ms ease;
 }
+
+/* --- 3. Card Hover Effect --- */
 .activity-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  background-color: rgba(241, 245, 249, 0.7);
 }
+
+/* --- 4. Card Content --- */
+
+/* The icon (from your PHP) */
+.activity-icon {
+    flex-shrink: 0; /* Prevents icon from shrinking */
+}
+
+/* The main text area (title and subtitle) */
 .activity-card-details {
-    flex-grow: 1;
+    flex-grow: 1; /* Tells details to take all available space */
+    min-width: 0; /* Important! Prevents text overflow issues */
 }
+
 .activity-card-details p { 
     margin: 0; 
     font-weight: 500;
     color: var(--text-color);
+
+    /* On desktop, text will cut off with "..." */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 .activity-card-details small { 
     color: var(--text-color-light); 
+    font-size: 0.9rem;
+}
+
+/* The status text and view button */
+.item-status,
+.activity-card .btn-main {
+    flex-shrink: 0; /* Stops them from shrinking */
+    white-space: nowrap; /* Keeps text on one line */
+}
+
+/* --- 5. Navigation (Back Link) --- */
+.back-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0.75;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.45rem 0.9rem;
+  margin: 0;
+  border-radius: 8px;
+}
+
+.back-link:hover {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+.back-link i {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.back-link:hover i {
+  transform: translateX(-6px);
+}
+
+/* ============================================== */
+/* == 6. Responsive Adjustments                == */
+/* ============================================== */
+
+/* * On screens 640px wide or less (phones and small tablets),
+ * we adjust the card to be more flexible.
+ */
+@media (max-width: 640px) {
+
+    .activity-card {
+        /* This allows items to wrap to the next line if they don't fit */
+        flex-wrap: wrap;
+        /* Adds a small gap for any items that wrap to the next line */
+        row-gap: 0.75rem; 
+    }
+
+    .activity-card-details p {
+        /* This allows the main title to wrap to multiple lines */
+        white-space: normal; 
+        overflow: visible;
+        text-overflow: clip;
+    }
 }

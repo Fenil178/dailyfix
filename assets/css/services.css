@@ -38,14 +38,14 @@ body {
 }
 
 .page-content {
-  padding-top: 5rem;
+  padding-top: 1rem;
 }
 
 /* Hero Section */
 .services-hero {
   background: var(--background-color-light);
   color: var(--text-color-dark);
-  padding: 4rem 2rem;
+  padding: 2rem 2rem;
   text-align: center;
   margin-top: 0;
 }

@@ -113,11 +113,11 @@ body {
 }
 
 .btn-main {
-  background-color: #fff;
+  background-color: transparent;
   color: var(--primary-color-v1);
-  padding: 12px 24px;
-  border: none;
-  border-radius: 30px;
+  border: 2px solid var(--primary-color-v1);
+  padding: 10px 20px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
@@ -126,7 +126,6 @@ body {
 }
 
 .btn-main:hover {
-  font-size: 1.1rem;
   background-color: var(--primary-color-v1);
   color: #fff;
 }
@@ -485,7 +484,7 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
-  padding-top: 90px;
+  padding-top: 40px;
 }
 
 .welcome-banner {

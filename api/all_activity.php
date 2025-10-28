@@ -76,10 +76,10 @@ try {
                                     Scheduled for <?php echo date("M d, Y", strtotime($activity['booking_time'])); ?>
                                 </small>
                             </div>
-                            <div class="item-status <?php echo htmlspecialchars($activity['status']); ?>" style="margin: 0 1rem;">
+                            <div class="item-status <?php echo htmlspecialchars($activity['status']); ?>">
                                 <?php echo str_replace('_', ' ', htmlspecialchars($activity['status'])); ?>
                             </div>
-                            <a href="/dailyfix/booking-details.php?id=<?php echo $activity['id']; ?>" class="btn-main" style="padding: 8px 20px;">View Details</a>
+                            <a href="/dailyfix/booking-details.php?id=<?php echo $activity['id']; ?>" class="btn-main">View Details</a>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>

@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .page-content {
-    padding-top: 80px; /* Ensures content is below the fixed header */
+    padding-top: 50px; /* Ensures content is below the fixed header */
 }
 
 .management-container {
