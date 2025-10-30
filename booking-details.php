@@ -321,7 +321,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                        <div class="action-panel" style="border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);">
                             <h2><i class="fas fa-check-circle" style="color: #10b981;"></i> Job Completed & Paid</h2>
                             <p style="color: #10b981;">This transaction is complete. Thank you for using DailyFix.</p>
-                            <a href="/dailyfix/generate_invoice.php?id=<?php echo $booking['id']; ?>" target="_blank" class="btn btn-main" style="background-color: #10b981; color: white; margin-top: 1rem;">
+                            <a href="/dailyfix/generate_invoice.php?id=<?php echo $booking['id']; ?>" target="_blank" class="btn btn-invoice">
                                 <i class="fas fa-file-invoice"></i> Download Invoice
                             </a>
                       </div> <?php // End of the green action-panel div ?>
