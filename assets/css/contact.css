@@ -43,11 +43,6 @@ body {
   background-color: var(--background-color-light);
   transition: background-color 0.3s ease;
 }
-
-.page-content {
-  padding-top: 5rem;
-}
-
 /*
  * -------------------------------------------------------------------
  * 3. Hero Section
@@ -276,11 +271,10 @@ body.dark-mode .faq-section details:hover {
   .contact-grid {
     grid-template-columns: 1fr;
     padding: 1rem;
-    margin: 2rem auto;
+    margin: 2rem 1.5rem;
   }
 
   .faq-section {
       padding-left: 0;
-      margin-top: 2rem;
   }
 }

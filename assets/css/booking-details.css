@@ -20,10 +20,6 @@ body.dark-mode {
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.page-content {
-    padding-top: 1rem;
-}
-
 .management-container {
     max-width: 1200px;
     margin: 2rem auto 4rem auto;

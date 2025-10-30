@@ -26,10 +26,6 @@ body {
   transition: background-color 0.3s ease;
 }
 
-.page-content {
-  padding-top: 5rem;
-}
-
 .about-hero {
   background: var(--primary-color);
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);

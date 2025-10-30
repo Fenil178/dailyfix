@@ -27,12 +27,6 @@ body.dark-mode {
 /* ===================================================================
    2. General Page Layout
    =================================================================== */
-
-.page-content {
-  /* Provides top padding to prevent content from hiding behind the sticky header */
-  padding-top: 80px; 
-}
-
 .page-header {
   margin: 2rem auto;
   padding: 0 1rem;

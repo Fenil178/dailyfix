@@ -37,10 +37,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.page-content {
-  padding-top: 1rem;
-}
-
 /* Hero Section */
 .services-hero {
   background: var(--background-color-light);

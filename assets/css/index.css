@@ -484,7 +484,6 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
-  padding-top: 40px;
 }
 
 .welcome-banner {
@@ -1330,7 +1329,6 @@ body.dark-mode .slider-dot.active {
   }
   .dashboard-container-v4 {
     padding: 1.5rem 1rem;
-    padding-top: 80px;
   }
   .welcome-banner {
     padding: 1.5rem;

@@ -66,8 +66,8 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             }
 
             foreach ($links as $file => $text) {
-                // *** MODIFICATION: Skip Reports and Help from main nav ***
-                if ($text === 'My Reports' || $text === 'Help') {
+                // *** MODIFICATION: Skip "Help" from main nav, but keep "My Reports" ***
+                if ($text === 'Help') {
                     continue;
                 }
                 
@@ -100,13 +100,25 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             <?php endif; ?>
         </button>
         <div class="dropdown-menu" id="dropdownMenu">
-            <a href="/dailyfix/profile.php"><i class="fas fa-user-circle"></i> My Profile</a>
             
+            <a href="/dailyfix/profile.php">
+                <?php if (!empty($profile_imagePath)): ?>
+                    <?php 
+                        // This logic ensures the path is always correct
+                        $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
+                        if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
+                            $avatarUrl = '/dailyfix/' . $profile_imagePath;
+                        }
+                    ?>
+                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar">
+                <?php else: ?>
+                    <i class="fas fa-user-circle"></i>
+                <?php endif; ?>
+                My Profile
+            </a>
             <?php
-                $reportsUrl = ($role === 'worker') ? '/dailyfix/worker/reports.php' : '/dailyfix/customer/reports.php';
+                // *** MODIFICATION: "My Reports" was removed from here ***
                 $helpUrl = '/dailyfix/contact.php';
-                
-                echo "<a href='{$reportsUrl}'><i class='fas fa-chart-bar'></i> My Reports</a>";
                 echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
             ?>
             <button id="theme-toggle-btn"><i class="fas fa-moon"></i> Theme</button>
@@ -167,15 +179,104 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             <span>Jobs</span>
         </a>
         <a href="<?php echo $basePath; ?>earnings.php" class="<?php echo $isEarnings; ?>">
-            <i class="fas fa-dollar-sign"></i>
+            <i class="fa-solid fa-indian-rupee-sign"></i>
             <span>Earnings</span>
         </a>
     <?php endif; ?>
     
-    <a href="/dailyfix/profile.php" class="<?php echo $isProfile; ?>">
-        <i class="fas fa-user"></i>
-        <span>Profile</span>
-    </a>
+    <div class="mobile-profile-menu">
+        <button class="mobile-profile-btn <?php echo $isProfile; ?>" id="mobileProfileBtnTrigger">
+            <?php if (!empty($profile_imagePath)): ?>
+                <?php 
+                    // This logic ensures the path is always correct
+                    $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
+                    if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
+                        $avatarUrl = '/dailyfix/' . $profile_imagePath;
+                    }
+                ?>
+                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="mobile-profile-avatar">
+            <?php else: ?>
+                <i class="fas fa-user"></i>
+            <?php endif; ?>
+            <span>Profile</span>
+        </button>
+        
+        <div class="mobile-dropdown-menu" id="mobileDropdownMenu">
+            
+            <a href="/dailyfix/profile.php">
+                <?php if (!empty($profile_imagePath)): ?>
+                    <?php 
+                        // Re-use the same trusted logic for path
+                        $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
+                        if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
+                            $avatarUrl = '/dailyfix/' . $profile_imagePath;
+                        }
+                    ?>
+                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar">
+                <?php else: ?>
+                    <i class="fas fa-user-circle"></i>
+                <?php endif; ?>
+                My Profile
+            </a>
+            <?php
+                // *** MODIFICATION: Added "My Reports" back for the mobile dropdown ***
+                $reportsUrl = ($role === 'worker') ? '/dailyfix/worker/reports.php' : '/dailyfix/customer/reports.php';
+                echo "<a href='{$reportsUrl}'><i class='fas fa-chart-bar'></i> My Reports</a>";
+                
+                // "Help" is here in the mobile dropdown
+                $helpUrl = '/dailyfix/contact.php';
+                echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
+            ?>
+            <button id="theme-toggle-btn-mobile"><i class="fas fa-moon"></i> Theme</button>
+            <a href="#" id="logout-link-mobile"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
 </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Mobile Dropdown Toggle ---
+    const mobileProfileBtn = document.getElementById('mobileProfileBtnTrigger');
+    const mobileDropdown = document.getElementById('mobileDropdownMenu');
+
+    if (mobileProfileBtn && mobileDropdown) {
+        mobileProfileBtn.addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevent click from closing it immediately
+            mobileDropdown.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (mobileDropdown.classList.contains('active') && !mobileProfileBtn.contains(event.target)) {
+                mobileDropdown.classList.remove('active');
+            }
+        });
+    }
+
+    // --- Mobile Button "Proxy" Clicks ---
+    // This ensures the (unseen) original JS for the desktop buttons is triggered
+    // by the new mobile buttons.
+
+    // 1. Theme Toggle
+    const mobileThemeBtn = document.getElementById('theme-toggle-btn-mobile');
+    const desktopThemeBtn = document.getElementById('theme-toggle-btn');
+    if (mobileThemeBtn && desktopThemeBtn) {
+        mobileThemeBtn.addEventListener('click', function() {
+            desktopThemeBtn.click(); // Triggers the original theme toggle
+        });
+    }
+
+    // 2. Logout Link
+    const mobileLogoutLink = document.getElementById('logout-link-mobile');
+    const desktopLogoutLink = document.getElementById('logout-link');
+    if (mobileLogoutLink && desktopLogoutLink) {
+        mobileLogoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            desktopLogoutLink.click(); // Triggers the original logout modal
+        });
+    }
+});
+</script>
 </body>
 </html>
