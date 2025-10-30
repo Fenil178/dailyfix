@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .page-content {
-    padding-top: 50px; /* Ensures content is below the fixed header */
+    padding-top: 12px; /* Ensures content is below the fixed header */
 }
 
 .management-container {
@@ -133,7 +133,6 @@ body.dark-mode .job-card-header { border-color: #333; }
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.95rem;
-    border: none;
     cursor: pointer;
     
     /* Proper text alignment */
@@ -323,26 +322,99 @@ body.dark-mode .empty-state { border-color: #444; }
 /* ==========================================================================
    6. Miscellaneous Components
    ========================================================================== */
-
-/* Custom button, e.g., for empty state or other CTAs */
-.btn-main-custom {
-    background-color: #fff;
-    color: #007bff;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 30px;
+   
+.btn-main-custom,
+.btn-secondary {
+    /* Make buttons single-line, vertically centered and consistent height */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;               /* space between icon + text */
+    height: 46px;              /* match job-card action buttons */
+    padding: 0 20px;           /* horizontal padding only */
+    white-space: nowrap;       /* keep inner content on one line */
+    overflow: hidden;
+    text-overflow: ellipsis;   /* safe truncation if content is too long */
+    line-height: 1;            /* avoid extra internal line height */
+    min-width: 0;              /* allow shrinking inside flex containers */
+    font-size: 0.85rem;
     font-weight: 600;
+    border-radius: 8px;
     cursor: pointer;
     text-decoration: none;
-    transition: font-size 0.3s, background-color 0.3s, color 0.3s;
-    font-size: 1rem;
+    transition:
+      background-color 0.28s cubic-bezier(0.4,0,0.2,1),
+      color 0.28s cubic-bezier(0.4,0,0.2,1),
+      box-shadow 0.28s ease;
+}
+
+/* ensure icons/text do not force wrap */
+.btn-main-custom i,
+.btn-secondary i {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+/* If text is wrapped in span */
+.btn-main-custom > *:not(i),
+.btn-secondary > *:not(i) {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* preserve original colors/behaviour but harmonize spacing */
+.btn-main-custom {
+    background-color: transparent;
+    color: #007bff;
+    border: 2px solid #007bff;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.btn-main-custom:hover {
+    background-color: #007bff;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.08);
 }
 
 body.dark-mode .btn-main-custom {
     background-color: #333;
     color: #ffc107;
+    border-color: #ffc107;
 }
 
+body.dark-mode .btn-main-custom:hover {
+    background-color: #ffc107;
+    color: #111;
+}
+
+/* Secondary button */
+.btn-secondary {
+    color: #6c757d;
+    background-color: #fff;
+    border: 2px solid #6c757d;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(108,117,125,0.08);
+}
+
+body.dark-mode .btn-secondary {
+    background-color: #333;
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+}
 
 /* ==========================================================================
    7. Review Modal (Enhanced UI)

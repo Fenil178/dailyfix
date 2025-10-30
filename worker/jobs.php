@@ -378,10 +378,10 @@ try {
                                     <?php endif; ?>
                                 </div>
                                 <div class="job-card-actions">
-                                    <a href="/dailyfix/booking-details.php?id=<?php echo $job['id']; ?>" class="btn btn-secondary">
+                                    <a href="/dailyfix/booking-details.php?id=<?php echo $job['id']; ?>" class="btn-secondary">
                                         <i class="fas fa-info-circle"></i> See Details
                                     </a>
-                                    <a href="/dailyfix/generate_invoice.php?id=<?php echo $job['id']; ?>" class="btn btn-main-custom" target="_blank">
+                                    <a href="/dailyfix/generate_invoice.php?id=<?php echo $job['id']; ?>" class="btn-main-custom" target="_blank">
                                         <i class="fas fa-download"></i> Download Invoice
                                     </a>
                                 </div>
