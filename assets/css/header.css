@@ -703,7 +703,7 @@ body.dark-mode .close-button {
 /* Small mobile devices */
 @media (max-width: 480px) {
   .navbar {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 1rem;
   }
   
   .navbar .logo img {

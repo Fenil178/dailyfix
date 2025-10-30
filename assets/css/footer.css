@@ -45,3 +45,13 @@ body.dark-mode .social-icons a:hover {
     color: var(--primary-color);
 }
 
+/* =================================
+   3. Responsive Media Queries
+   ================================= */
+
+/* Hide the footer on tablets and mobile devices */
+@media (max-width: 1024px) {
+    footer {
+        display: none;
+    }
+}

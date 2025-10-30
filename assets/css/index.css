@@ -1288,7 +1288,6 @@ body.dark-mode .slider-dot.active {
 @media (max-width: 768px) {
   .navbar {
     padding: 0.5rem 1rem;
-    width: 95%;
   }
   .menu-toggle {
     display: block;
