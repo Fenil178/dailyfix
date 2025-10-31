@@ -335,9 +335,14 @@ body.dark-mode .filter-select option {
 
 /* Professional hover: Lifts shadow, no scaling needed */
 .report-card:hover {
-  transform: scale(1); /* Keep scale consistent */
   box-shadow: 0 8px 24px var(--shadow-color);
   background-color: var(--bg-card);
+    /* Optional: Add a very subtle primary color tint on hover */
+  background-image: linear-gradient(
+    145deg,
+    var(--bg-card) 0%,
+    rgba(59, 130, 246, 0.08) 100%
+  );
 }
 
 .report-card h4 {
@@ -383,7 +388,7 @@ body.dark-mode .report-card:hover {
   background-image: linear-gradient(
     145deg,
     var(--bg-card) 0%,
-    rgba(59, 130, 246, 0.03) 100%
+    rgba(251, 191, 36, 0.1) 100%
   );
 }
 

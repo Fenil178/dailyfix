@@ -185,30 +185,37 @@ body.dark-mode .btn.cancel:hover {
 }
 
 body.dark-mode .btn.accept {
-    background-color: #333;
+    background-color: transparent;
     color: #32c060;
+    border: 2px solid #32c060;
 }
 
 body.dark-mode .btn.accept:hover {
     background-color: #32c060;
-    color: #fff;
+    color: #333;
 }
 
 .btn.decline {
+    background-color: transparent;
+    color: #ff5f6d;
+    border: 2px solid #ff5f6d;
+}
+
+.btn.decline:hover {
     background-color: #ff5f6d;
     color: #fff;
 }
 
-.btn.decline:hover {
-    background-color: #ff4757;
-    box-shadow: 0 2px 8px rgba(255, 95, 109, 0.2);
+body.dark-mode .btn.decline {
+    background-color: transparent;
+    color: #ff5f6d;
+    border: 2px solid #ff5f6d;
 }
 
-/* Dark mode subtle shadows */
-body.dark-mode .job-card-actions .btn:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+body.dark-mode .btn.decline:hover {
+    background-color: #ff5f6d;
+    color: #333;
 }
-
 /* ==========================================================================
    4. Summary Cards & Lists (Earnings/Bookings)
    ========================================================================== */
@@ -499,27 +506,14 @@ body.dark-mode {
 #reviewModal .close,
 #cancelModal .close,
 #messageModal .close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 1.5rem;
-    font-weight: 300;
-    line-height: 1;
-    color: var(--review-modal-close-icon);
-    cursor: pointer;
-    transition: color 0.2s ease, transform 0.2s ease;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#reviewModal .close:hover,
-#cancelModal .close:hover,
-#messageModal .close:hover {
-    color: var(--review-modal-close-icon-hover);
-    transform: rotate(90deg);
+  color: #2c3e50;
+  font-size: 2rem;
+  font-weight: normal;
+  line-height: 1;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  cursor: pointer;
 }
 
 #reviewModal h2,
@@ -588,9 +582,9 @@ body.dark-mode {
 /* --- 7.6. Submit Button --- */
 #reviewModal button[type="submit"],
 #cancelModal button[type="submit"] {
-    background-color: var(--review-btn-bg);
-    color: var(--review-btn-text);
-    border: none;
+    color: var(--review-btn-bg);
+    background-color: transparent;
+    border: 2px solid var(--review-btn-bg);
     padding: 0.875rem 2rem;
     border-radius: 12px;
     font-size: 1rem;
@@ -602,7 +596,8 @@ body.dark-mode {
 
 #reviewModal button[type="submit"]:hover,
 #cancelModal button[type="submit"]:hover {
-    background-color: var(--review-btn-bg-hover);
+    background-color: var(--review-btn-bg);
+    color: var(--review-btn-text);
 }
 
 #reviewModal button[type="submit"]:active,
