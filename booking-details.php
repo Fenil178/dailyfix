@@ -116,7 +116,16 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         .modal-icon-custom.success { color: #10b981; } .modal-icon-custom.error { color: #ef4444; } .modal-icon-custom.warning { color: #f59e0b; }
         .custom-modal-content h3 { color: var(--text-color-dark); font-size: 1.5rem; margin-bottom: 0.5rem; }
         .custom-modal-content p { color: var(--text-color-light); margin-bottom: 1.5rem; line-height: 1.6; }
-        .custom-modal-content .ok-btn { background-color: var(--primary-color); color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100px; }
+        .custom-modal-content .ok-btn { 
+            color: var(--primary-color);
+            background-color: transparent;
+            border: 2px solid var(--primary-color);
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100px; 
+        }
+        .custom-modal-content .ok-btn:hover { background-color: var(--primary-color); color: #fff; }
         body.dark-mode .custom-modal-content .ok-btn { color: #111; }
         .modal-close-icon { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; background: none; border: none; cursor: pointer; color: var(--text-color-light); padding: 5px; }
         .modal-buttons-container { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
