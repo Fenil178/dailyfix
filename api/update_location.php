@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 // Include necessary files
 include_once __DIR__ . "/connect.php";
-include_once __DIR__ . "/header.php"; // Provides $userId
+include_once __DIR__ . "/user_session.php"; // Provides $userId and $role
 
 // --- Security Checks ---
 

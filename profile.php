@@ -1,4 +1,5 @@
 <?php
+ob_start();
 include_once __DIR__ . "/api/connect.php";
 include_once __DIR__ . "/api/header.php";
 
@@ -223,13 +224,7 @@ sort($states);
          .offer-actions button { /* Style toggle/delete buttons */
             padding: 5px 10px; font-size: 0.8em; cursor: pointer; border-radius: 5px; border: 1px solid; background: none; transition: background-color 0.2s, color 0.2s;
          }
-         .offer-actions .toggle-btn.active { border-color: var(--success-color); color: var(--success-color); }
-         .offer-actions .toggle-btn.active:hover { background-color: var(--success-color); color: white;}
-         .offer-actions .toggle-btn.inactive { border-color: var(--text-color-light); color: var(--text-color-light); }
-         .offer-actions .toggle-btn.inactive:hover { background-color: var(--text-color-light); color: white; }
-         .offer-actions .delete-btn { border-color: var(--danger-color); color: var(--danger-color); }
-         .offer-actions .delete-btn:hover { background-color: var(--danger-color); color: white; }
-
+         
          #offer-form-message.success { color: var(--success-color); font-weight: 500;}
          #offer-form-message.error { color: var(--danger-color); font-weight: 500;}
 
@@ -1295,3 +1290,4 @@ sort($states);
     <?php include_once __DIR__ . "/api/footer.php"; ?>
 </body>
 </html>
+<?php ob_end_flush(); ?>
