@@ -66,7 +66,6 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             }
 
             foreach ($links as $file => $text) {
-                // *** MODIFICATION: Skip "Help" from main nav, but keep "My Reports" ***
                 if ($text === 'Help') {
                     continue;
                 }
@@ -84,11 +83,17 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         ?>
     </ul>
 
+    <button class="profile-btn mobile-search-btn" id="search-icon-mobile" title="Search">
+        <i class="fas fa-search"></i>
+    </button>
+    
     <div class="user-menu">
+        <button class="profile-btn navbar-search-btn" id="search-icon-desktop" title="Search">
+            <i class="fas fa-search"></i>
+        </button>
         <button class="profile-btn" id="profileBtn" title="User Menu">
             <?php if (!empty($profile_imagePath)): ?>
                 <?php 
-                    // This logic ensures the path is always correct
                     $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
                     if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
                         $avatarUrl = '/dailyfix/' . $profile_imagePath;
@@ -100,11 +105,9 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             <?php endif; ?>
         </button>
         <div class="dropdown-menu" id="dropdownMenu">
-            
             <a href="/dailyfix/profile.php">
                 <?php if (!empty($profile_imagePath)): ?>
                     <?php 
-                        // This logic ensures the path is always correct
                         $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
                         if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
                             $avatarUrl = '/dailyfix/' . $profile_imagePath;
@@ -117,14 +120,15 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                 My Profile
             </a>
             <?php
-                // *** MODIFICATION: "My Reports" was removed from here ***
                 $helpUrl = '/dailyfix/contact.php';
                 echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
             ?>
             <button id="theme-toggle-btn"><i class="fas fa-moon"></i> Theme</button>
             <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
-    </div>
+        
+        </div>
+    
     <div id="custom-logout-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -142,7 +146,6 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
 
 <nav class="mobile-bottom-nav">
     <?php 
-        // Define active states for cleaner HTML
         $isDashboard = ($currentPage === 'dashboard.php') ? 'active' : '';
         $isProfile = ($currentPage === 'profile.php') ? 'active' : '';
     ?>
@@ -157,7 +160,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             <span>Dashboard</span>
         </a>
         <a href="<?php echo $basePath; ?>services.php" class="<?php echo $isServices; ?>">
-            <i class="fas fa-search"></i>
+            <i class="fas fa-concierge-bell"></i>
             <span>Services</span>
         </a>
         <a href="<?php echo $basePath; ?>bookings.php" class="<?php echo $isBookings; ?>">
@@ -166,7 +169,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         </a>
 
     <?php elseif ($role === 'worker'): ?>
-            <?php
+        <?php
             $isJobs = ($currentPage === 'jobs.php') ? 'active' : '';
             $isEarnings = ($currentPage === 'earnings.php') ? 'active' : '';
         ?>
@@ -188,7 +191,6 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         <button class="mobile-profile-btn <?php echo $isProfile; ?>" id="mobileProfileBtnTrigger">
             <?php if (!empty($profile_imagePath)): ?>
                 <?php 
-                    // This logic ensures the path is always correct
                     $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
                     if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
                         $avatarUrl = '/dailyfix/' . $profile_imagePath;
@@ -202,11 +204,9 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         </button>
         
         <div class="mobile-dropdown-menu" id="mobileDropdownMenu">
-            
             <a href="/dailyfix/profile.php">
                 <?php if (!empty($profile_imagePath)): ?>
                     <?php 
-                        // Re-use the same trusted logic for path
                         $avatarUrl = $profile_imagePath ?: '/dailyfix/assets/images/default-avatar.png';
                         if ($profile_imagePath && strpos($profile_imagePath, '/') !== 0) {
                             $avatarUrl = '/dailyfix/' . $profile_imagePath;
@@ -219,11 +219,9 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                 My Profile
             </a>
             <?php
-                // *** MODIFICATION: Added "My Reports" back for the mobile dropdown ***
                 $reportsUrl = ($role === 'worker') ? '/dailyfix/worker/reports.php' : '/dailyfix/customer/reports.php';
                 echo "<a href='{$reportsUrl}'><i class='fas fa-chart-bar'></i> My Reports</a>";
                 
-                // "Help" is here in the mobile dropdown
                 $helpUrl = '/dailyfix/contact.php';
                 echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
             ?>
@@ -233,6 +231,60 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
     </div>
 </nav>
 
+<div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+        <div class="search-modal-header">
+            <i class="fas fa-search search-modal-icon"></i>
+            <input type="text" id="search-modal-input" placeholder="Search for Services, Workers, or Customers..." autocomplete="off">
+            <button id="search-modal-close" class="search-modal-close-btn" title="Close Search">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="search-results-wrapper" class="search-results-wrapper">
+            
+            <div classs="search-tabs-container">
+                <div class="search-tabs">
+                    
+                    <?php if ($role === 'customer'): ?>
+                        <button class="search-tab active" data-tab="services">Services</button>
+                        <button class="search-tab" data-tab="workers">Workers</button>
+                    <?php elseif ($role === 'worker'): ?>
+                        <button class="search-tab active" data-tab="navigation">Navigate</button>
+                    <?php endif; ?>
+                    </div>
+            </div>
+
+            <div id="search-recent" class="search-recent-container">
+                <h3>Recent Searches</h3>
+                <ul id="search-recent-list">
+                    </ul>
+                <p id="search-recent-empty" style="display: none;">No recent searches.</p>
+            </div>
+
+            <div id="search-tab-content" class="search-tab-content">
+            
+                <?php if ($role === 'customer'): ?>
+                    <div id="search-tab-services" class="search-tab-panel active">
+                        <ul id="search-results-services" class="search-results-list"></ul>
+                    </div>
+                    <div id="search-tab-workers" class="search-tab-panel">
+                        <ul id="search-results-workers" class="search-results-list"></ul>
+                    </div>
+                <?php elseif ($role === 'worker'): ?>
+                    <div id="search-tab-navigation" class="search-tab-panel active">
+                        <ul id="search-results-navigation" class="search-results-list"></ul>
+                    </div>
+                <?php endif; ?>
+                <div id="search-no-results" class="search-no-results" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h4>No results found for "<span id="search-no-results-term"></span>"</h4>
+                    <p>Try searching for something else.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -242,11 +294,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (mobileProfileBtn && mobileDropdown) {
         mobileProfileBtn.addEventListener('click', function(event) {
-            event.stopPropagation(); // Prevent click from closing it immediately
+            event.stopPropagation();
             mobileDropdown.classList.toggle('active');
         });
-
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             if (mobileDropdown.classList.contains('active') && !mobileProfileBtn.contains(event.target)) {
                 mobileDropdown.classList.remove('active');
@@ -255,28 +305,66 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Mobile Button "Proxy" Clicks ---
-    // This ensures the (unseen) original JS for the desktop buttons is triggered
-    // by the new mobile buttons.
-
-    // 1. Theme Toggle
     const mobileThemeBtn = document.getElementById('theme-toggle-btn-mobile');
     const desktopThemeBtn = document.getElementById('theme-toggle-btn');
     if (mobileThemeBtn && desktopThemeBtn) {
         mobileThemeBtn.addEventListener('click', function() {
-            desktopThemeBtn.click(); // Triggers the original theme toggle
+            desktopThemeBtn.click();
         });
     }
-
-    // 2. Logout Link
     const mobileLogoutLink = document.getElementById('logout-link-mobile');
     const desktopLogoutLink = document.getElementById('logout-link');
     if (mobileLogoutLink && desktopLogoutLink) {
         mobileLogoutLink.addEventListener('click', function(e) {
             e.preventDefault();
-            desktopLogoutLink.click(); // Triggers the original logout modal
+            desktopLogoutLink.click();
+        });
+    }
+    
+    // --- NEW SEARCH MODAL JS ---
+    const searchModal = document.getElementById('search-modal');
+    const searchIconDesktop = document.getElementById('search-icon-desktop');
+    const searchIconMobile = document.getElementById('search-icon-mobile'); // This is the new mobile button
+    const searchCloseBtn = document.getElementById('search-modal-close');
+    const searchInput = document.getElementById('search-modal-input');
+
+    if (searchModal) {
+        const openSearch = (e) => {
+            e.preventDefault();
+            searchModal.classList.add('active');
+            
+            // --- UPDATED: Set placeholder based on role ---
+            <?php if ($role === 'worker'): ?>
+                searchInput.placeholder = "Search dashboard sections...";
+            <?php else: ?>
+                searchInput.placeholder = "Search for Services or Workers...";
+            <?php endif; ?>
+            
+            setTimeout(() => searchInput.focus(), 300);
+        };
+
+        const closeSearch = () => {
+            searchModal.classList.remove('active');
+            searchInput.value = '';
+            const resetEvent = new CustomEvent('search:reset');
+            document.dispatchEvent(resetEvent);
+        };
+        
+        if (searchIconDesktop) searchIconDesktop.addEventListener('click', openSearch);
+        if (searchIconMobile) searchIconMobile.addEventListener('click', openSearch); // Listen on the new button
+        if (searchCloseBtn) searchCloseBtn.addEventListener('click', closeSearch);
+
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                closeSearch();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && searchModal.classList.contains('active')) {
+                closeSearch();
+            }
         });
     }
 });
 </script>
 </body>
-</html>
