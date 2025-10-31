@@ -830,6 +830,9 @@ body {
 .btn-view-v4:hover i {
   transform: translateX(2px);
 }
+.btn-view-v4:hover .fas.fa-eye {
+  transform: translateX(0px);
+}
 
 .agenda-list-v4 {
   padding: 0.5rem;

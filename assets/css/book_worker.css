@@ -1,339 +1,489 @@
+/* ==================================== */
+/* === 1. Main Booking Container === */
+/* ==================================== */
 .booking-container {
-    max-width: 1100px;
-    margin: 2rem auto;
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 2rem;
-    border-radius: 12px;
-    overflow: hidden;
+ max-width: 1100px;
+ margin: 2rem auto;
+ display: grid;
+ grid-template-columns: 1fr 1.5fr; /* Desktop: 2-column layout */
+ gap: 2rem;
+ border-radius: 12px;
+ overflow: hidden;
 }
 
+/* ==================================== */
+/* === 2. Worker Profile Panel (Left) === */
+/* ==================================== */
 .worker-profile-panel {
-    padding: 2rem;
-    background: transparent;
+ padding: 2rem;
+ background: transparent;
 }
 
 .profile-avatar-custom {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    display: block;
-    margin: 0 auto 1rem;
-    border: 4px solid var(--primary-color);
-    object-fit: cover; 
+ width: 120px;
+ height: 120px;
+ border-radius: 50%;
+ display: block;
+ margin: 0 auto 1rem;
+ border: 4px solid var(--primary-color);
+ object-fit: cover;
 }
 
 .worker-profile-panel h1 {
-    text-align: center;
-    color: var(--text-color);
+ text-align: center;
+ color: var(--text-color);
 }
 
 .profile-meta {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin: 1rem 0;
-    color: var(--text-color-light);
+ display: flex;
+ justify-content: center;
+ gap: 1.5rem;
+ margin: 1rem 0;
+ color: var(--text-color-light);
 }
 
 .profile-bio {
-    line-height: 1.6;
-    color: var(--text-color-light);
+ line-height: 1.6;
+ color: var(--text-color-light);
 }
 
+/* Back navigation link */
+.back-link {
+ font-size: 0.9rem;
+ font-weight: 500;
+ color: var(--primary-color);
+ text-decoration: none;
+ display: inline-flex;
+ align-items: center;
+ gap: 0.4rem;
+ opacity: 0.75;
+ transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+ padding: 0.45rem 0.9rem;
+ margin: 0;
+ border-radius: 8px;
+}
+
+.back-link:hover {
+ opacity: 1;
+ background-color: rgba(59, 130, 246, 0.08);
+}
+
+.back-link i {
+transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.back-link:hover i {
+transform: translateX(-6px);
+}
+
+/* ==================================== */
+/* === 3. Booking Form Panel (Right) === */
+/* ==================================== */
 .booking-form-panel {
-    padding: 2rem;
+padding: 0 2rem;
 }
 
 .booking-form-panel h2 {
-    color: var(--text-color);
-    margin-bottom: 2rem;
+color: var(--text-color);
+margin-bottom: 2rem;
 }
 
 .booking-form-panel form {
-    display: grid;
-    gap: 1.5rem;
+ display: grid;
+ gap: 1.5rem;
 }
 
+/* Form Groups & Inputs */
 .form-group-split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+ display: grid;
+ grid-template-columns: 1fr 1fr; /* Desktop: 2-column split */
+ gap: 1.5rem;
 }
 
 .form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
+display: block;
+font-weight: 600;
+margin-bottom: 0.5rem;
+color: var(--text-color);
 }
 
-.form-group input, 
+.form-group input,
 .form-group textarea,
 .time-picker-group select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    background-color: var(--hover-color);
-    color: var(--text-color);
-    box-sizing: border-box;
+ width: 100%;
+ padding: 12px;
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ font-family: "Poppins", sans-serif;
+ font-size: 1rem;
+ background-color: var(--hover-color);
+ color: var(--text-color);
+ box-sizing: border-box;
 }
 
+/* Time Picker */
 .time-picker-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+ display: flex;
+ align-items: center;
+ gap: 0.5rem;
 }
 .time-picker-group .time-separator {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--text-color-light);
+ font-size: 1.2rem;
+ font-weight: bold;
+ color: var(--text-color-light);
 }
 
+/* Submit Button */
 .submit-btn {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 15px;
-    border: none;
-    background-color: var(--primary-color);
-    color: var(--text-color-white);
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
+ color: var(--primary-color);
+ background-color: transparent;
+ border: 2px solid var(--primary-color);
+ width: 100%;
+ box-sizing: border-box;
+ padding: 15px;
+ font-size: 1.1rem;
+ font-weight: 600;
+ border-radius: 8px;
+ cursor: pointer;
+ transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+ background-color: var(--primary-color);
+ color: #fff;
+}
+
+/* Autofill & Dark Mode Form Overrides */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+-webkit-text-fill-color: #333 !important;
+caret-color: #333 !important;
+-webkit-box-shadow: 0 0 0px 1000px #f0f0f0 inset !important;
+transition: background-color 5000s ease-in-out 0s;
 }
 
 body.dark-mode .submit-btn {
-    color: #000;
+color: var(--primary-color);
+background-color: transparent;
+border: 2px solid var(--primary-color);
 }
 
-body.dark-mode .form-group input, 
+body.dark-mode .submit-btn:hover {
+ background-color: var(--primary-color);
+ color: #333;
+}
+
+body.dark-mode .form-group input,
 body.dark-mode .form-group textarea,
 body.dark-mode .time-picker-group select {
-    background-color: var(--hover-color);
-    color: var(--text-color-dark);
-    border: 1px solid var(--border-color);
+background-color: var(--hover-color);
+color: var(--text-color-dark);
+border: 1px solid var(--border-color);
 }
 
 body.dark-mode .form-group input::placeholder,
 body.dark-mode .form-group textarea::placeholder {
-    color: #888;
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: var(--primary-color);
-    font-weight: 500;
-}
-
-.back-link i {
-    transition: transform 0.3s ease;
-}
-
-.back-link:hover i {
-    transform: translateX(-5px);
-}
-
-input:-webkit-autofill,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
-    -webkit-text-fill-color: #333 !important;
-    caret-color: #333 !important;
-    -webkit-box-shadow: 0 0 0px 1000px #f0f0f0 inset !important;
-    transition: background-color 5000s ease-in-out 0s;
+ color: #888;
 }
 
 body.dark-mode input:-webkit-autofill,
 body.dark-mode textarea:-webkit-autofill,
 body.dark-mode select:-webkit-autofill {
-    -webkit-text-fill-color: #e0e0e0 !important;
-    caret-color: #e0e0e0 !important;
-    -webkit-box-shadow: 0 0 0px 1000px #2c2c2c inset !important;
+-webkit-text-fill-color: #e0e0e0 !important;
+caret-color: #e0e0e0 !important;
+-webkit-box-shadow: 0 0 0px 1000px #2c2c2c inset !important;
 }
 
+/* ==================================== */
+/* === 4. Form Components (Grids) === */
+/* ==================================== */
+
+/* --- Calendar Grid --- */
 .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+gap: 1rem;
+margin-top: 1rem;
 }
 
 .calendar-day {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem 0;
-    background-color: var(--hover-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    font-size: 0.9em;
-    text-align: center;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ padding: 1rem 0;
+ background-color: var(--hover-color);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ cursor: pointer;
+ transition: background-color 0.2s, border-color 0.2s;
+ font-size: 0.9em;
+ text-align: center;
 }
 
 .calendar-day:hover {
-    border-color: var(--primary-color);
+ border-color: var(--primary-color);
 }
 
 .calendar-day.selected {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: var(--text-color-white);
+background-color: var(--primary-color);
+border-color: var(--primary-color);
+color: var(--text-color-white);
+}
+
+.calendar-day .date-day {
+font-weight: 500;
+}
+.calendar-day .date-number {
+font-size: 1.8em;
+font-weight: 700;
+line-height: 1;
+margin-top: 5px;
+}
+.calendar-day .date-month {
+text-transform: uppercase;
+font-size: 0.8em;
+margin-top: 5px;
 }
 
 body.dark-mode .calendar-day.selected {
-    color: #000;
+ color: #000;
 }
 
-.calendar-day .date-day { font-weight: 500; }
-.calendar-day .date-number { font-size: 1.8em; font-weight: 700; line-height: 1; margin-top: 5px; }
-.calendar-day .date-month { text-transform: uppercase; font-size: 0.8em; margin-top: 5px; }
-
+/* --- Time Slots Grid --- */
 .slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.75rem;
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+gap: 0.75rem;
 }
 
 .time-slot {
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    text-align: center;
-    transition: background-color 0.2s;
-    font-size: 0.9em;
-    font-weight: 500;
-    color: var(--text-color-light);
+ padding: 10px;
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ text-align: center;
+ transition: background-color 0.2s;
+ font-size: 0.9em;
+ font-weight: 500;
+ color: var(--text-color-light);
 }
 
 .time-slot.available {
-    cursor: pointer;
+ cursor: pointer;
 }
-.time-slot.available:hover {
-    background-color: var(--hover-color);
+.time-slot.available:not(.selected):hover {
+ background-color: var(--hover-color);
+ border-color: var(--primary-color);
 }
 .time-slot.unavailable {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
-    cursor: not-allowed;
+ background-color: #f8d7da;
+ border-color: #f5c6cb;
+ color: #721c24;
+ cursor: not-allowed;
 }
 .time-slot.selected {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: var(--text-color-white);
-}
-
-body.dark-mode .time-slot.selected {
-    color: #000;
+ background-color: var(--primary-color);
+ border-color: var(--primary-color);
+ color: var(--text-color-white);
 }
 
 .no-slots-message {
-    text-align: center;
-    color: var(--text-color-light);
-    font-style: italic;
-    grid-column: 1 / -1;
+text-align: center;
+color: var(--text-color-light);
+font-style: italic;
+grid-column: 1 / -1;
 }
 
+body.dark-mode .time-slot.selected {
+ color: #000;
+}
+
+/* --- Services Grid --- */
 .booking-container .services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
-    margin-top: 0.5rem;
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+gap: 1rem;
+margin-top: 0.5rem;
 }
 
 .booking-container .service-option {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem; /* Adjusted padding */
-    background-color: var(--hover-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 1rem;
+background-color: var(--hover-color); 
+border: 2px solid transparent; /* 2px transparent border prevents layout jiggle */
+border-radius: 8px;
+cursor: pointer;
+transition: all 0.2s ease;
 }
 
 .booking-container .service-option:hover {
-    border-color: var(--primary-color);
+background-color: #eef2f7; 
+border-color: var(--primary-color);
 }
 
 .booking-container .service-option.selected {
-    background-color: var(--primary-color);
-    color: var(--text-color-white);
-    border-color: var(--primary-color);
+ background-color: var(--primary-color);
+ color: var(--text-color-white);
+ border-color: var(--primary-color);
+}
+
+.booking-container .service-option i {
+ font-size: 2rem;
+ margin-bottom: 0.5rem;
+ color: var(--primary-color);
+ transition: color 0.2s ease;
+}
+
+.booking-container .service-option span {
+ font-weight: 600;
+ font-size: 0.9rem;
+ text-align: center;
+ color: var(--text-color);
+ transition: color 0.2s ease;
 }
 
 .booking-container .service-option.selected i,
 .booking-container .service-option.selected span {
-    color: var(--text-color-white);
+ color: var(--text-color-white);
 }
 
-.booking-container .service-option i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: var(--primary-color);
-}
-
-.booking-container .service-option span {
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-align: center;
-    color: var(--text-color);
-}
-
-/* Dark mode overrides */
-body.dark-mode .booking-container .service-option:hover {
-    background-color: #3a3a3a;
-    border-color: var(--accent-color);
-}
-
-body.dark-mode .booking-container .service-option.selected {
-    color: #000;
-}
-
-body.dark-mode .booking-container .service-option i {
-    color: var(--accent-color);
-}
-
-body.dark-mode .booking-container .service-option.selected i,
-body.dark-mode .booking-container .service-option.selected span {
-    color: #000;
-}
-
-
-/* ==================================== */
-/* === NEW STYLES FOR SERVICE PRICE === */
-/* ==================================== */
+/* --- Service Price --- */
 .service-price {
-    margin-top: 0.75rem;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #28a745; /* Green color for price */
-    background-color: rgba(40, 167, 69, 0.1);
-    padding: 4px 12px;
-    border-radius: 12px;
+ margin-top: 0.75rem;
+ font-size: 1rem;
+ font-weight: 700;
+ color: #28a745;
+ background-color: rgba(40, 167, 69, 0.1);
+ padding: 4px 12px;
+ border-radius: 12px;
 }
 
 .booking-container .service-option.selected .service-price {
-    color: var(--text-color-white);
-    background-color: rgba(255, 255, 255, 0.2);
+ color: var(--text-color-white);
+ background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Services Dark Mode */
+body.dark-mode .booking-container .service-option {
+ background-color: #2a2a2a;
+}
+body.dark-mode .booking-container .service-option:hover {
+ background-color: #333333;
+ border-color: var(--primary-color);
+}
+body.dark-mode .booking-container .service-option.selected {
+ color: #000;
+}
+body.dark-mode .booking-container .service-option i {
+ color: var(--accent-color);
+}
+body.dark-mode .booking-container .service-option.selected i,
+body.dark-mode .booking-container .service-option.selected span {
+color: #000;
+}
 body.dark-mode .service-price {
-    color: #20c997; /* Teal color for dark mode */
-    background-color: rgba(32, 201, 151, 0.15);
+color: #20c997;
+background-color: rgba(32, 201, 151, 0.15);
+}
+body.dark-mode .booking-container .service-option.selected .service-price {
+color: #000;
+background-color: rgba(0, 0, 0, 0.2);
 }
 
-body.dark-mode .booking-container .service-option.selected .service-price {
-    color: #000;
-    background-color: rgba(0, 0, 0, 0.2);
+
+/* =================================================================== */
+/* === 5. RESPONSIVE STYLES (Tablet & Mobile) ======================== */
+/* =================================================================== */
+
+/* --- Tablet (Medium Screens: <= 992px) --- */
+@media (max-width: 992px) {
+ .booking-container {
+ /* Stack the profile panel and form panel vertically */
+ grid-template-columns: 1fr;
+ margin: 1.5rem auto;
+ gap: 1rem;
+ /* Add horizontal padding to prevent content from touching edges */
+ padding-left: 1rem;
+ padding-right: 1rem;
+ max-width: 720px; /* Set a new max-width for single-column */
+}
+
+.worker-profile-panel {
+ /* Reduce padding for a tighter fit */
+ padding: 1.5rem;
+ }
+
+ .booking-form-panel {
+ /* Standardize padding and remove top/bottom margin */
+ padding: 1.5rem;
+ }
+
+.booking-form-panel h2 {
+ /* Reduce top margin as it's no longer next to the profile */
+ margin-top: 0;
+ margin-bottom: 1.5rem;
+ }
+}
+
+/* --- Mobile (Small Screens: <= 600px) --- */
+@media (max-width: 600px) {
+ .booking-container {
+ /* Further reduce margins/padding for small screens */
+ margin: 1rem auto;
+ padding-left: 0.75rem;
+ padding-right: 0.75rem;
+ gap: 1rem;
+ }
+ .worker-profile-panel,
+ .booking-form-panel {
+ /* Further reduce padding */
+ padding: 1rem;
+ }
+ .profile-avatar-custom {
+ /* Make avatar smaller */
+ width: 100px;
+ height: 100px;
+ }
+ .worker-profile-panel h1 {
+ font-size: 1.75rem;
+ }
+ .booking-form-panel h2 {
+ font-size: 1.5rem;
+ }
+ .profile-meta {
+  /* Stack the meta items (e.g., rating, location) */
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center; /* Center them when stacked */
+ }
+ .form-group-split {
+  /* Stack form fields that were side-by-side */
+  grid-template-columns: 1fr;
+  gap: 1.5rem; /* Keep the vertical gap */
+ }
+ /* Adjust grid min-widths for smaller screens */
+ .calendar-grid {
+   /* Allows for 3 columns on most phones */
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.75rem;
+ }
+ .calendar-day .date-number {
+  font-size: 1.5em; /* Make date number smaller */
+ }
+ .slots-grid {
+   /* Allows for 3 columns on most phones */
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.5rem;
+ }
+ .booking-container .services-grid {
+   /* Allows for 2-3 columns on most phones */
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+ }
+ .booking-container .service-option i {
+  font-size: 1.75rem; /* Make service icon smaller */
+ }
 }
