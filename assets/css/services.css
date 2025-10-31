@@ -238,7 +238,7 @@ body {
 /* Back navigation link */
 .back-link {
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--primary-color);
   text-decoration: none;
   display: inline-flex;

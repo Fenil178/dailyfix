@@ -393,36 +393,40 @@ body.dark-mode .navbar-wrapper::after {
   flex-wrap: wrap;
 }
 
-.modal-buttons button {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.modal-buttons button:hover {
-  transform: translateY(-2px);
-}
-
 #confirm-logout-btn {
-  background-color: #ffc107;
-  color: #fff;
+  background-color: transparent;
+  color: #e0a800;
+  border: 2px solid #e0a800;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: font-size 0.3s, background-color 0.3s, color 0.3s;
+  font-size: 1rem;
 }
 
 #confirm-logout-btn:hover {
   background-color: #e0a800;
+  color: #fff;
 }
 
 #cancel-logout-btn {
-  background-color: #007bff;
-  color: #fff;
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: font-size 0.3s, background-color 0.3s, color 0.3s;
+  font-size: 1rem;
 }
 
 #cancel-logout-btn:hover {
   background-color: #0056b3;
+  color: #fff;
 }
 
 .close-button {
@@ -434,17 +438,60 @@ body.dark-mode .navbar-wrapper::after {
   top: 10px;
   right: 15px;
   cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.close-button:hover,
-.close-button:focus {
-  color: #ffc107;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* =================================
+   Responsive Modal Styling
+   ================================= */
+
+@media (max-width: 600px) {
+  .modal-content {
+    /* Use a bit more of the screen width */
+    width: 95%;
+
+    /* Reduce padding for a tighter look on small screens */
+    padding: 25px 20px;
+
+    /* Adjust the top margin. 
+      '15%' can be high on a tall screen. 
+      '20vh' (20% of the viewport height) often feels more centered and stable.
+    */
+    margin: 20vh auto;
+  }
+
+  .modal-content h2 {
+    font-size: 1.35rem; /* Slightly smaller title */
+  }
+
+  .modal-content p {
+    font-size: 0.95rem; /* Slightly smaller text */
+  }
+
+  /* Your buttons will already wrap nicely. 
+     We can just reduce the gap between them. */
+  .modal-buttons {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  /* Make buttons a bit smaller to fit side-by-side more easily */
+  #confirm-logout-btn,
+  #cancel-logout-btn {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust close button position */
+  .close-button {
+    top: 5px;
+    right: 12px;
+    font-size: 1.8rem;
+  }
 }
 
 /* =================================

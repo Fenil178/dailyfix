@@ -1130,6 +1130,7 @@ body.dark-mode .feature-info p {
 body.dark-mode .btn-main {
   background-color: #333;
   color: var(--primary-color);
+  border: 2px solid var(--primary-color);
 }
 body.dark-mode .btn-main:hover {
   background-color: #ffc107;
@@ -1463,5 +1464,22 @@ body.dark-mode .slider-dot.active {
   }
   .slider-dots {
     bottom: 0.75rem;
+  }
+}
+
+/* --- Desktop Style (your original layout) --- */
+.management-header {
+  display: flex;
+  justify-content: space-between; /* Pushes items apart */
+  align-items: center;
+  padding: 1rem; /* Add some padding for spacing */
+}
+
+/* --- Mobile Style (for screens 768px or smaller) --- */
+@media (max-width: 768px) {
+  .management-header {
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Align to the center */
+    gap: 1.5rem; /* This creates the "well spaced" vertical gap */
   }
 }

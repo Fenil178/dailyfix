@@ -138,7 +138,7 @@ try {
 <body>
     <main class="page-content">
         <div class="management-container">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="management-header">
                 <h1 class="page-title">Job Management</h1>
                 <a href="/dailyfix/profile.php#availability" class="btn btn-main" style="text-decoration:none;">Manage Availability</a>
             </div>
