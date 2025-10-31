@@ -85,9 +85,32 @@ try {
                                 </div>
                             </div>
                             <div class="job-card-body">
-                                <p><strong>Details:</strong> <?php echo nl2br(htmlspecialchars($booking['service_details'])); ?></p>
-                                <p><strong>Status:</strong> <span class="item-status <?php echo $booking['status']; ?>"><?php echo ucfirst($booking['status']); ?></span></p>
+                                <p><strong>Details:</strong> <br><?php echo nl2br(htmlspecialchars($booking['service_details'])); ?></p>
+
+                                <?php
+
+                                $originalCost = (float)($booking['final_cost'] ?? 0.00);
+                                $discountAmount = (float)($booking['discount_amount'] ?? 0.00);
+                                $finalCostAfterDiscount = max(0, $originalCost - $discountAmount);
+                                ?>
+
+                                <p style="margin-top: 10px;"><strong>Base Cost:</strong> ₹<?php echo number_format($originalCost, 2); ?></p>
+                                
+                                <?php if ($discountAmount > 0): ?>
+                                    <p><strong>Discount:</strong> <span style="color: var(--success-color);">-₹<?php echo number_format($discountAmount, 2); ?></span></p>
+                                    <p><strong>Final Cost:</strong> <strong style="font-size: 1.05em;">₹<?php echo number_format($finalCostAfterDiscount, 2); ?></strong></p>
+                                <?php endif; ?>
+
+                                <?php if (!empty($booking['rejection_reason'])): ?>
+                                    <p style="margin-top: 10px;"><strong>Rejection Reason:</strong> <br><span style="color: var(--danger-color); font-style: italic;"><?php echo htmlspecialchars($booking['rejection_reason']); ?></span></p>
+                                <?php endif; ?>
+
+                                <?php if (!empty($booking['cancellation_reason'])): ?>
+                                    <p style="margin-top: 10px;"><strong>Cancellation Reason:</strong> <br><span style="color: var(--danger-color); font-style: italic;"><?php echo htmlspecialchars($booking['cancellation_reason']); ?></span></p>
+                                <?php endif; ?>
+                                <p style="margin-top: 10px;"><strong>Status:</strong> <span class="item-status <?php echo $booking['status']; ?>"><?php echo ucfirst($booking['status']); ?></span></p>
                             </div>
+
                             <div class="job-card-actions">
                                 <a href="/dailyfix/booking-details.php?id=<?php echo $booking['id']; ?>" class="btn btn-main">View Details</a>
                                 
