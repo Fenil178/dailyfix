@@ -17,5 +17,7 @@
         <a href="https://www.instagram.com/_jayrajsinh_parmar_/" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
     </div>
 </footer>
+
+<script defer src="/dailyfix/assets/js/search.js"></script>
 </body>
 </html>
