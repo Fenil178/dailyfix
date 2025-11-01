@@ -616,9 +616,6 @@ body {
 .stat-card-v4:hover .stat-icon > * {
   transform: scale(1.12);
 }
-.stat-card-v4:hover .stat-icon {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
 
 .stat-primary .stat-icon {
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
@@ -744,7 +741,10 @@ body {
   transition: background-color 240ms ease;
 }
 .activity-item-v4:hover {
-  background-color: var(--hover-color);
+  background-color: rgba(59, 130, 246, 0.08);
+}
+body.dark-mode .activity-item-v4:hover {
+  background-color: rgba(251, 191, 36, 0.1); /* Light yellow background on hover */ 
 }
 
 .activity-icon-v4 {
