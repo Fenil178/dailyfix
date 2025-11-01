@@ -132,6 +132,7 @@ try {
         }
     </style>
     <style>
+        /* Common skeleton styles (loader, shimmer, dark-mode) */
         .skeleton-loader {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: var(--background-color-body, #f9f9f9);
@@ -142,10 +143,8 @@ try {
             max-width: 1100px; width: 100%;
             padding: 0 1rem;
             margin: 1rem auto;
-            margin-top: 80px; 
+            margin-top: 80px; /* Adjust to match your header's height */
         }
-
-        /* Shimmer animation */
         @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
         .skeleton {
             animation: shimmer 1.5s infinite linear;
@@ -164,17 +163,46 @@ try {
             background-size: 800px 104px;
         }
 
-        /* Worker Jobs Page Specific Skeleton Layout */
-        .skeleton-title-bar { display: flex; justify-content: space-between; align-items: center; margin: 2rem 0; }
+        /* Page-specific skeleton layout for worker/jobs.php */
+        .skeleton-header-bar {
+            display: flex; justify-content: space-between; align-items: center; margin: 2rem 0;
+        }
         .skeleton-title { height: 38px; width: 300px; }
-        .skeleton-button { height: 42px; width: 180px; }
+        .skeleton-header-btn { height: 42px; width: 180px; }
+        
         .skeleton-tabs { display: flex; gap: 1rem; height: 36px; margin-bottom: 2rem; }
-        .skeleton-tab-item { width: 120px; height: 100%; }
+        .skeleton-tab-item { width: 140px; height: 100%; }
         
         .skeleton-job-grid {
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
         }
-        .skeleton-job-card { height: 300px; }
+        .skeleton-job-card {
+            padding: 1.5rem;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+        }
+        body.dark-mode .skeleton-job-card {
+            background-color: var(--background-color-card, #1f1f1f);
+            border: 1px solid var(--border-color, #334155);
+        }
+
+        .skeleton-card-header { display: flex; align-items: center; margin-bottom: 1.5rem; }
+        .skeleton-avatar { height: 50px; width: 50px; border-radius: 50%; margin-right: 1rem; }
+        .skeleton-info { flex-grow: 1; }
+        .skeleton-line { height: 16px; border-radius: 4px; }
+        .skeleton-line.name { height: 20px; width: 60%; margin-bottom: 0.5rem; }
+        .skeleton-line.date { height: 14px; width: 40%; }
+        
+        .skeleton-card-body { padding-top: 1rem; border-top: 1px solid var(--border-color, #e2e8f0); }
+        body.dark-mode .skeleton-card-body { border-top-color: var(--border-color, #334155); }
+        .skeleton-line.detail { width: 90%; margin-bottom: 0.75rem; }
+        .skeleton-line.detail-short { width: 70%; margin-bottom: 1.5rem; }
+        .skeleton-map { height: 150px; width: 100%; }
+
+        .skeleton-card-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .skeleton-action-btn { height: 40px; flex-grow: 1; }
+
         @media (max-width: 768px) {
             .skeleton-job-grid { grid-template-columns: 1fr; }
         }
@@ -183,24 +211,59 @@ try {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
-<body>
+<body>        
     <div class="skeleton-loader" id="page-loader">
         <div class="skeleton-container">
-            <div class="skeleton-title-bar">
+            <div class="skeleton-header-bar">
             <div class="skeleton skeleton-title"></div>
-            <div class="skeleton skeleton-button"></div>
+            <div class="skeleton skeleton-header-btn"></div>
             </div>
             
             <div class="skeleton-tabs">
             <div class="skeleton skeleton-tab-item"></div>
             <div class="skeleton skeleton-tab-item"></div>
-            <div class="skeleton skeleton-tab-item"></div>
+            <div class.skeleton skeleton-tab-item"></div>
             <div class="skeleton skeleton-tab-item"></div>
             </div>
             
             <div class="skeleton-job-grid">
-            <div class="skeleton skeleton-job-card"></div>
-            <div class="skeleton skeleton-job-card"></div>
+            <div class="skeleton-job-card">
+                <div class="skeleton-card-header">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton skeleton-line name"></div>
+                    <div class="skeleton skeleton-line date"></div>
+                </div>
+                </div>
+                <div class="skeleton-card-body">
+                <div class="skeleton skeleton-line detail"></div>
+                <div class.skeleton skeleton-line detail-short"></div>
+                <div class="skeleton skeleton-map"></div>
+                </div>
+                <div class="skeleton-card-actions">
+                <div class="skeleton skeleton-action-btn"></div>
+                <div class.skeleton skeleton-action-btn"></div>
+                </div>
+            </div>
+            
+            <div class="skeleton-job-card">
+                <div class="skeleton-card-header">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton skeleton-line name"></div>
+                    <div class.skeleton skeleton-line date"></div>
+                </div>
+                </div>
+                <div class="skeleton-card-body">
+                <div class="skeleton skeleton-line detail"></div>
+                <div class.skeleton skeleton-line detail-short"></div>
+                <div class="skeleton skeleton-map"></div>
+                </div>
+                <div class="skeleton-card-actions">
+                <div class="skeleton skeleton-action-btn"></div>
+                <div class.skeleton skeleton-action-btn"></div>
+                </div>
+            </div>
             </div>
         </div>
     </div>
