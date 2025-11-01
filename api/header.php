@@ -99,7 +99,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                         $avatarUrl = '/dailyfix/' . $profile_imagePath;
                     }
                 ?>
-                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="profile-avatar">
+                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="profile-avatar user-avatar-img">
             <?php else: ?>
                 <i class="fas fa-user"></i>
             <?php endif; ?>
@@ -113,7 +113,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                             $avatarUrl = '/dailyfix/' . $profile_imagePath;
                         }
                     ?>
-                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar">
+                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar user-avatar-img">
                 <?php else: ?>
                     <i class="fas fa-user-circle"></i>
                 <?php endif; ?>
@@ -195,7 +195,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                         $avatarUrl = '/dailyfix/' . $profile_imagePath;
                     }
                 ?>
-                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="mobile-profile-avatar">
+                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="mobile-profile-avatar user-avatar-img">
             <?php else: ?>
                 <i class="fas fa-user"></i>
             <?php endif; ?>
@@ -211,7 +211,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                             $avatarUrl = '/dailyfix/' . $profile_imagePath;
                         }
                     ?>
-                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar">
+                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar user-avatar-img">
                 <?php else: ?>
                     <i class="fas fa-user-circle"></i>
                 <?php endif; ?>

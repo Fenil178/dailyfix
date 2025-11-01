@@ -885,3 +885,167 @@ input[type="datetime-local"] {
     height: 40px;
   }
 }
+
+/* =================================================================== */
+/* === NEW STYLES FOR PROFILE IMAGE UPLOAD ========================= */
+/* =================================================================== */
+
+.profile-avatar-container {
+  position: relative;
+  width: 100px; /* Must match .profile-header-avatar */
+  height: 100px; /* Must match .profile-header-avatar */
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  overflow: hidden; /* Ensures blur doesn't escape */
+  cursor: pointer;
+}
+
+.profile-avatar-container label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.profile-avatar-container input[type="file"] {
+  display: none;
+}
+
+/* --- The Overlay Icon --- */
+.profile-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 1.75rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none; /* Allows click to go to label */
+}
+
+/* --- The Spinner --- */
+.avatar-upload-spinner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none; /* Hidden by default */
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 3;
+}
+.avatar-upload-spinner i {
+  font-size: 1.75rem;
+  color: #fff;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.profile-avatar-container.uploading .avatar-upload-spinner {
+  display: flex;
+}
+.profile-avatar-container.uploading .profile-header-avatar {
+  filter: blur(2px);
+  opacity: 0.8;
+}
+
+/* --- Hover Effects --- */
+.profile-avatar-container:hover .profile-header-avatar {
+  filter: blur(3px);
+  opacity: 0.7;
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+.profile-avatar-container:hover .profile-avatar-overlay {
+  opacity: 1;
+}
+
+/* Adjust original avatar style */
+.profile-header-avatar {
+  /* ... existing styles ... */
+  transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+  z-index: 1;
+}
+
+/* =================================================================== */
+/* === NEW STYLES FOR PASSWORD VALIDATION ========================== */
+/* =================================================================== */
+.form-error-message { 
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 1.5rem;
+  display: none; /* Hide by default */
+}
+
+/* Style for password input when there's an error */
+input.password-error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* =================================================================== */
+/* === NEW COMPACT INLINE FORM MESSAGES ========================== */
+/* =================================================================== */
+
+/* Base style for inline messages (can be .success or .error) */
+.form-message-inline {
+  padding: 0.75rem 1rem; /* Smaller padding */
+  border-radius: 8px;
+  border: 1px solid transparent;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem; /* Slightly smaller font */
+  display: block;
+}
+
+/* Error state */
+.form-message-inline.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+/* Success state */
+.form-message-inline.success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border-color: #badbcc;
+}
+
+/* Hide if it's not supposed to be shown (e.g., the JS password error) */
+.form-message-inline[style*="display: none"] {
+  display: none !important;
+}
+
+/* Keep the original large message for general page errors */
+/* We still need this for any errors outside a tab */
+.form-error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+.form-error-message:empty {
+  display: none;
+}

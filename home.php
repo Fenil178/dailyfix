@@ -256,7 +256,7 @@ function timeAgo($datetime) {
     
     <style>
         /* Existing base styles remain the same... */
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); padding-bottom: 0 !important; }
         .navbar { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.9); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); transition: all 0.3s ease; }
         .navbar.scrolled { box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1); background: rgba(255, 255, 255, 0.95); }
         .navbar .guest-actions { display: flex; align-items: center; gap: 15px; }
