@@ -457,8 +457,7 @@ body.dark-mode .report-card:hover {
 }
 
 .detailed-report-table tbody tr:hover {
-    background-color: var(--bg-row-hover);
-    transform: translateZ(0); /* Promotes smoother animation */
+    background-color:  rgba(59, 130, 246, 0.08);
 }
 
 /* Default styling for all cells in the body */
@@ -559,7 +558,7 @@ body.dark-mode .detailed-report-table tbody tr {
     border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 body.dark-mode .detailed-report-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: rgba(251, 191, 36, 0.1);
 }
 
 /* Responsive shadows for better depth on desktop */

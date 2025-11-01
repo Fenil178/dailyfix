@@ -15,38 +15,272 @@ $login_path = ($from === 'admin') ? '/dailyfix/admin/login.php' : '/dailyfix/log
     <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
     <style>
-        /* Using the same styles from your new login.php for consistency */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #1F2334; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; }
-        body::before, body::after { content: ''; position: absolute; background: rgba(59, 130, 246, 0.15); border-radius: 50%; animation: float 8s ease-in-out infinite; }
-        body::before { width: 400px; height: 400px; top: -200px; left: -200px; animation-duration: 6s; }
-        body::after { width: 300px; height: 300px; bottom: -150px; right: -150px; }
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(20px); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .form-container { width: 100%; max-width: 440px; position: relative; z-index: 1; animation: slideIn 0.6s ease-out; }
-        .form-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; padding: 48px 40px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .logo-container { text-align: center; margin-bottom: 32px; }
-        .logo { width: 80px; height: 80px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 16px; padding: 2px; display: inline-block; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4); }
-        .logo-inner { width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-        .logo-inner img { width: 50px; height: auto; }
-        .form-title { font-size: 28px; font-weight: 700; color: #1a202c; margin-bottom: 8px; letter-spacing: -0.5px; }
-        .form-subtitle { font-size: 15px; color: #718096; margin-bottom: 0; }
-        .form-group { margin-bottom: 24px; position: relative; }
-        .form-label { display: block; font-size: 14px; font-weight: 600; color: #2d3748; margin-bottom: 8px; }
-        .input-wrapper { position: relative; }
-        .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 16px; transition: color 0.3s; }
-        .form-control { width: 100%; padding: 14px 16px 14px 48px; font-size: 15px; border: 2px solid #e2e8f0; border-radius: 12px; background: #f7fafc; transition: all 0.3s; font-family: 'Inter', sans-serif; }
-        .form-control:focus { outline: none; border-color: #3b82f6; background: white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        .form-control:focus ~ .input-icon { color: #3b82f6; }
-        .btn-submit { width: 100%; padding: 14px; font-size: 16px; font-weight: 600; color: white; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4); }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30, 58, 138, 0.5); }
-        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-        .back-link { text-align: center; margin-top: 24px; font-size: 14px; }
-        .back-link a { color: #3b82f6; text-decoration: none; font-weight: 600; }
-        .alert { padding: 14px 16px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; border: none; display: flex; align-items: center; gap: 10px; }
-        .alert-danger { background: #f8d7da; color: #721c24; }
-        .step { display: none; }
-        .step.active { display: block; animation: slideIn 0.5s ease-out; }
+/* Using the same styles from your new login.php for consistency */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: "Inter", sans-serif;
+  background: #1f2334;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+body::before,
+body::after {
+  content: "";
+  /*
+    FIX: Changed 'position: absolute' to 'position: fixed'.
+    This pins the elements to the viewport (the screen) and
+    stops them from creating an extra scrollbar.
+  */
+  position: fixed;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+  z-index: 0; /* Ensures it's behind the form */
+}
+body::before {
+  width: 400px;
+  height: 400px;
+  top: -200px;
+  left: -200px;
+  animation-duration: 6s;
+}
+body::after {
+  width: 300px;
+  height: 300px;
+  bottom: -150px;
+  right: -150px;
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.form-container {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
+  animation: slideIn 0.6s ease-out;
+}
+.form-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.logo-container {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.logo {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  border-radius: 16px;
+  padding: 2px;
+  display: inline-block;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4);
+}
+.logo-inner {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-inner img {
+  width: 50px;
+  height: auto;
+}
+.form-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.form-subtitle {
+  font-size: 15px;
+  color: #718096;
+  margin-bottom: 0;
+}
+.form-group {
+  margin-bottom: 24px;
+  position: relative;
+}
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+.input-wrapper {
+  position: relative;
+}
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 16px;
+  transition: color 0.3s;
+}
+.form-control {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  font-size: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f7fafc;
+  transition: all 0.3s;
+  font-family: "Inter", sans-serif;
+}
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+.form-control:focus ~ .input-icon {
+  color: #3b82f6;
+}
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
+}
+.btn-submit:hover {
+  box-shadow: 0 6px 20px rgba(30, 58, 138, 0.5);
+}
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+.back-link {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+}
+.back-link a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+}
+.alert {
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.alert-danger {
+  background: #f8d7da;
+  color: #721c24;
+}
+.step {
+  display: none;
+}
+.step.active {
+  display: block;
+  animation: slideIn 0.5s ease-out;
+}
+
+/* ==================================================
+  Responsive Media Queries
+================================================== */
+
+@media (max-width: 576px) {
+  .form-card {
+    /* Reduce padding on the main card */
+    padding: 32px 24px;
+  }
+
+  /* Smaller logo */
+  .logo {
+    width: 60px;
+    height: 60px;
+  }
+  .logo-inner img {
+    width: 40px;
+  }
+
+  /* Smaller titles */
+  .form-title {
+    font-size: 22px;
+  }
+  .form-subtitle {
+    font-size: 14px;
+  }
+
+  /* Make form groups a bit closer */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  /* Smaller input boxes */
+  .form-control {
+    padding: 12px 14px 12px 44px; /* Reduced padding */
+    font-size: 14px;
+  }
+  .input-icon {
+    left: 14px;
+    font-size: 15px;
+  }
+
+  /* Smaller submit button */
+  .btn-submit {
+    padding: 12px;
+    font-size: 15px;
+  }
+  
+  /* Adjust back link */
+  .back-link {
+    margin-top: 20px;
+  }
+}
+
     </style>
 </head>
 <body>

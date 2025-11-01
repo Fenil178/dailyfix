@@ -1,9 +1,32 @@
+/*
+==================================================
+  LOGIN PAGE STYLESHEET
+==================================================
+  Table of Contents:
+  1. Global Reset
+  2. Page Body & Background
+  3. Animations (float, slideIn)
+  4. Login Container & Card
+  5. Logo & Header
+  6. Form Elements (Group, Label, Input, Toggle)
+  7. Buttons & Links (Forgot Password, Login Button)
+  8. Helpers & Utilities (Divider, Signup Text, Alert)
+  9. Responsive Media Queries
+==================================================
+*/
+
+/* ==================================================
+  1. Global Reset
+================================================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ==================================================
+  2. Page Body & Background
+================================================== */
 body {
   font-family: 'Inter', sans-serif;
   background: #1F2334;
@@ -13,12 +36,18 @@ body {
   justify-content: center;
   padding: 20px;
   position: relative;
-  overflow-x: hidden;
+  /* overflow: hidden; was the problem, now fixed with position:fixed */
+  overflow-x: hidden; /* Keep this for horizontal overflow */
 }
 
+/*
+  FIX: Changed 'position: absolute' to 'position: fixed'
+  This pins the elements to the viewport, not the document,
+  preventing them from adding extra height and scrollbars.
+*/
 body::before {
   content: '';
-  position: absolute;
+  position: fixed; /* Was: absolute */
   width: 400px;
   height: 400px;
   background: rgba(59, 130, 246, 0.15);
@@ -26,11 +55,12 @@ body::before {
   top: -200px;
   left: -200px;
   animation: float 6s ease-in-out infinite;
+  z-index: 0;
 }
 
 body::after {
   content: '';
-  position: absolute;
+  position: fixed; /* Was: absolute */
   width: 300px;
   height: 300px;
   background: rgba(59, 130, 246, 0.15);
@@ -38,28 +68,40 @@ body::after {
   bottom: -150px;
   right: -150px;
   animation: float 8s ease-in-out infinite;
+  z-index: 0;
 }
 
+/* ==================================================
+  3. Animations (float, slideIn)
+================================================== */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(20px); }
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
 }
 
 @keyframes slideIn {
   from {
-      opacity: 0;
-      transform: translateY(30px);
+    opacity: 0;
+    transform: translateY(30px);
   }
   to {
-      opacity: 1;
-      transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
+/* ==================================================
+  4. Login Container & Card
+================================================== */
 .login-container {
   width: 100%;
   max-width: 440px;
   position: relative;
+  /* z-index ensures this is on top of the ::before/::after elements */
   z-index: 1;
   animation: slideIn 0.6s ease-out;
 }
@@ -73,6 +115,9 @@ body::after {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* ==================================================
+  5. Logo & Header
+================================================== */
 .logo-container {
   text-align: center;
   margin-bottom: 32px;
@@ -81,7 +126,7 @@ body::after {
 .logo {
   width: 80px;
   height: 80px;
-  /* This is now the gradient for the border */
+  /* This is the gradient for the border */
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
   border-radius: 16px;
   padding: 2px; /* This sets the border thickness */
@@ -120,6 +165,9 @@ body::after {
   margin-bottom: 0;
 }
 
+/* ==================================================
+  6. Form Elements (Group, Label, Input, Toggle)
+================================================== */
 .form-group {
   margin-bottom: 24px;
   position: relative;
@@ -185,6 +233,9 @@ body::after {
   color: #3b82f6;
 }
 
+/* ==================================================
+  7. Buttons & Links (Forgot Password, Login Button)
+================================================== */
 .forgot-password {
   text-align: right;
   margin-top: -12px;
@@ -218,7 +269,6 @@ body::after {
 }
 
 .btn-login:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(30, 58, 138, 0.5);
 }
 
@@ -232,6 +282,9 @@ body::after {
   transform: none;
 }
 
+/* ==================================================
+  8. Helpers & Utilities (Divider, Signup Text, Alert)
+================================================== */
 .divider {
   display: flex;
   align-items: center;
@@ -317,18 +370,71 @@ body::after {
   border-width: 2px;
 }
 
+/* ==================================================
+  9. Responsive Media Queries
+================================================== */
+
 @media (max-width: 576px) {
+  /* Reduce padding on the main card */
   .login-card {
-      padding: 36px 28px;
+    padding: 32px 24px;
   }
 
-  .login-title {
-      font-size: 24px;
-  }
-
+  /* Smaller logo */
   .logo {
-      width: 70px;
-      height: 70px;
-      font-size: 28px;
+    width: 60px;
+    height: 60px;
+  }
+  .logo-inner img {
+    width: 40px;
+  }
+
+  /* Smaller titles */
+  .login-title {
+    font-size: 22px;
+  }
+  .login-subtitle {
+    font-size: 14px;
+  }
+  
+  /* Make form groups a bit closer */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  /* Smaller input boxes */
+  .form-control {
+    padding: 12px 14px 12px 44px; /* Reduced padding */
+    font-size: 14px;
+  }
+  .input-icon {
+    left: 14px;
+    font-size: 15px;
+  }
+  .password-toggle {
+    right: 14px;
+    font-size: 15px;
+  }
+  
+  /* Smaller login button */
+  .btn-login {
+    padding: 12px;
+    font-size: 15px;
+  }
+  
+  /* Tighter divider */
+  .divider {
+    margin: 28px 0;
+  }
+  .divider span {
+    padding: 0 16px;
+  }
+
+  /* Smaller signup text */
+  .signup-text {
+    font-size: 14px;
+  }
+  .signup-text a {
+    gap: 4px;
   }
 }

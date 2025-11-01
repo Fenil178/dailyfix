@@ -1,0 +1,948 @@
+/* ================================================== 
+1. Global & Root Variables (Note)
+================================================== 
+*/
+
+/* NOTE: You are using CSS variables like:
+  var(--card-bg-light)
+  var(--border-color)
+  var(--card-shadow-light)
+  var(--text-color-light)
+  var(--text-color)
+  var(--primary-color)
+
+  You should define these in a :root {} block at
+  the top of your file for them to work properly.
+  
+  Example:
+  :root {
+    --primary-color: #2563eb;
+    --text-color: #1f2937;
+    --text-color-light: #6b7280;
+    --border-color: #e5e7eb;
+    --card-bg-light: #ffffff;
+    --card-shadow-light: rgba(0, 0, 0, 0.05);
+  }
+*/
+
+/* ================================================== 
+2. Base Typography & Body
+================================================== 
+*/
+body {
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  /* Assuming default text colors are set in :root */
+}
+
+/* ================================================== 
+3. Reusable Components (Buttons, Badges, etc.)
+================================================== 
+*/
+
+/* --- Guest Action Buttons (Navbar) --- */
+.navbar .guest-actions .btn-login,
+.navbar .guest-actions .btn-signup {
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid #ddd;
+}
+
+.navbar .guest-actions .btn-login {
+  background-color: transparent;
+  color: #333;
+}
+
+.navbar .guest-actions .btn-login:hover {
+  background-color: #2563eb;
+  color: white;
+}
+
+.navbar .guest-actions .btn-signup {
+  color: #fff;
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.navbar .guest-actions .btn-signup:hover {
+  opacity: 0.9;
+}
+
+/* --- Primary Button (v4) --- */
+.btn-primary-v4 {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: var(--primary-color);
+  padding: 12px 28px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.btn-primary-v4:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+}
+
+/* --- Trust Badge --- */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 20px;
+  color: #f59e0b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* --- Generic Section Card --- */
+.section-card-v4 {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.section-card-v4:hover {
+  box-shadow: 0 8px 35px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+/* ================================================== 
+4. Page Layout (Navbar, Footer)
+================================================== 
+*/
+
+/* --- Navbar --- */
+.navbar {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* Class added by JS on scroll */
+.navbar.scrolled {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.navbar .guest-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.nav-links a {
+  transition: all 0.3s ease;
+  position: relative;
+  color: #333;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  color: #2563eb;
+}
+
+/* Animated underline effect */
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+/* --- Footer --- */
+footer {
+  background-color: #ffffff;
+  color: #333;
+  padding: 0.5rem 0;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.social-icons {
+  margin-top: 1rem;
+}
+
+.social-icons a {
+  color: #333;
+  margin: 0 0.8rem;
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.social-icons a:hover {
+  color: var(--primary-color);
+}
+
+/* ================================================== 
+5. Page Sections
+================================================== 
+*/
+
+/* --- 5.1 Welcome Banner (Hero) --- */
+.welcome-banner {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+  position: relative;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+/* Floating orb effect */
+.welcome-banner::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
+  animation: float 20s ease-in-out infinite;
+}
+
+.welcome-content {
+  position: relative;
+  z-index: 1; /* Ensures content is above ::before pseudo-element */
+}
+
+.welcome-text h1 {
+  animation: fadeInUp 0.8s ease;
+  text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.welcome-text p {
+  animation: fadeInUp 1s ease;
+  text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* --- 5.2 Statistics Cards (v4) --- */
+.stat-card-v4 {
+  background-color: var(--card-bg-light);
+  border-radius: 16px;
+  padding: 1.75rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px -8px var(--card-shadow-light);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out backwards; /* Staggered fade-in */
+}
+
+.stat-card-v4:hover {
+  box-shadow: 0 12px 32px -8px var(--card-shadow-light);
+}
+
+/* Staggered animation delays */
+.stat-card-v4:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.stat-card-v4:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.stat-card-v4:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.stat-card-v4:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  transition: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-icon > * {
+  display: inline-block;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(1);
+}
+
+.stat-card-v4:hover .stat-icon > * {
+  transform: scale(1.12);
+}
+
+/* Color variations for stats */
+.stat-primary .stat-icon {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #3b82f6;
+}
+.stat-danger .stat-icon {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #ef4444;
+}
+.stat-success .stat-icon {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #10b981;
+}
+.stat-warning .stat-icon {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #f59e0b;
+}
+.stat-info .stat-icon {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #8b5cf6;
+}
+
+.stat-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-color-light);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.stat-desc {
+  font-size: 0.85rem;
+  color: var(--text-color-light);
+}
+
+/* Loading pule animation for stat value */
+.stat-value.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* --- 5.3 How It Works Steps --- */
+.how-it-works-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2.5rem 1.5rem;
+  gap: 2rem;
+  position: relative;
+}
+
+.how-it-works-step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding: 0 1rem;
+  z-index: 1;
+}
+
+/* Connecting line between steps */
+.how-it-works-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 40px; /* Aligns with center of icon */
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, #dbeafe, #60a5fa, #dbeafe);
+  z-index: -1;
+}
+
+.step-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+  transition: all 0.3s ease cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* Icon scale transition (base state) */
+.step-icon-wrapper > * {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Icon scale effect (hover state) */
+.how-it-works-step:hover .step-icon-wrapper > * {
+  transform: scale(1.12);
+}
+
+.step-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.step-description {
+  color: var(--text-color-light);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* --- 5.4 Testimonials & Trust --- */
+.testimonial-card {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Decorative quote */
+.testimonial-card::before {
+  content: '"';
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 4rem;
+  color: rgba(102, 126, 234, 0.1);
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+.testimonial-stars {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+/* --- 5.5 CTA Banner --- */
+.cta-banner {
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+/* Rotating orb effect */
+.cta-banner::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 60%
+  );
+  animation: rotate 30s linear infinite;
+}
+
+/* --- 5.6 Service Grid (v-new) --- */
+.service-grid-new {
+  display: grid;
+  /* This grid is already responsive! 
+     auto-fit creates as many columns as fit.
+     minmax(250px, 1fr) means columns are at least
+     250px wide and share remaining space (1fr).
+     On small screens, they stack automatically. */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.service-card-new {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.service-card-new:hover {
+  box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.2);
+  border-color: #60a5fa;
+}
+
+.service-icon-new {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+  color: #2563eb;
+  font-size: 1.75rem;
+}
+
+.service-title-new {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.service-description-new {
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+  flex-grow: 1; /* Ensures description fills space */
+  margin-bottom: 1rem;
+}
+
+.service-meta-new {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.85rem;
+  color: #4b5563;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 1rem;
+  margin-top: auto; /* Pushes to bottom */
+}
+
+.service-meta-new span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* --- 5.7 Top Workers Grid (v3) --- */
+.top-workers-grid {
+  display: grid;
+  /* This grid is also already responsive!
+     Uses the same auto-fit + minmax technique. */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.top-worker-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.top-worker-card:hover {
+  border-color: #bfdbfe;
+}
+
+.top-worker-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 1.25rem;
+  border: 5px solid #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.top-worker-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.top-worker-location {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.top-worker-stats {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.top-worker-stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.top-worker-stats .fa-star {
+  color: #f59e0b;
+}
+
+.top-worker-stats .fa-briefcase {
+  color: #60a5fa;
+}
+
+.top-worker-specializations {
+  flex-grow: 1; /* Pushes button to bottom */
+  margin-bottom: 1.5rem;
+}
+
+.top-worker-specializations h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.top-worker-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.top-worker-pill {
+  background-color: #f0f9ff;
+  color: #0284c7;
+  padding: 0.3rem 0.8rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.top-worker-profile-link {
+  display: inline-block;
+  width: auto;
+  padding: 0.7rem 1.5rem;
+  color: #3b82f6;
+  background-color: transparent;
+  border: 2px solid #3b82f6;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: auto; /* Pushes to bottom */
+  transition: all 0.25s ease-in-out;
+}
+
+.top-worker-profile-link:hover {
+  color: #fff;
+  background-color: #3b82f6;
+}
+
+/* --- 5.8 Utility & Misc --- */
+
+/* Scroll reveal animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s ease;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Margin utility class */
+.custom {
+  margin-bottom: 1.5rem;
+}
+
+/* Empty state placeholder */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+  animation: fadeIn 1s ease;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.empty-state small {
+  font-size: 0.9rem;
+}
+
+/* ================================================== 
+6. Animations & Keyframes
+================================================== 
+*/
+
+/* Used by .welcome-banner and .cta-banner */
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Used by .welcome-banner::before */
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-30px, -30px) rotate(180deg);
+  }
+}
+
+/* Used by .welcome-text, .stat-card-v4 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Used by .testimonial-stars */
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Used by .cta-banner::before */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Used by .stat-value.loading */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Used by .empty-state */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ================================================== 
+7. Responsive Media Queries (Tablet & Mobile)
+================================================== 
+*/
+
+/* --- Tablet (max-width: 992px) --- */
+@media (max-width: 992px) {
+  /* Reduce heading sizes for tablets */
+  .welcome-text h1 {
+    font-size: 2.5rem; /* Example size, adjust as needed */
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .top-workers-grid,
+  .service-grid-new {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .top-worker-card {
+    padding: 1.5rem;
+  }
+}
+
+/* --- Mobile (max-width: 768px) --- */
+@media (max-width: 768px) {
+  /* NOTE: For a full mobile navbar, you would typically 
+    use JavaScript to toggle a 'mobile-menu' class, 
+    which would show/hide the nav links.
+    The rule below just stacks the existing guest buttons.
+  */
+  .navbar .guest-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 10px; /* Add some space if they wrap */
+  }
+
+  /* Adjust hero text for mobile */
+  .welcome-text h1 {
+    font-size: 2rem;
+  }
+  .welcome-text p {
+    font-size: 1rem;
+  }
+
+/* Stack stat cards vertically */
+  .stat-card-v4 {
+    flex-direction: column;
+    align-items: center; /* <--- THIS CENTERS the icon and info block */
+    text-align: center; /* <--- THIS CENTERS the text inside the info block */
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  /* Stat Card V4 (Mobile Layout Adjustment) */
+  .stat-card-v4 {
+    /* Set back to row for icon and text side-by-side */
+    flex-direction: row; 
+    /* Vertically align icon and text block */
+    align-items: center; 
+    /* Remove center text alignment from the card,
+       the .stat-info will handle its own text alignment */
+    text-align: left; /* Ensure the card itself is left-aligned */
+    
+    gap: 1.25rem; /* Adjust gap between icon and text, similar to desktop */
+    padding: 1.25rem; /* Adjust padding for mobile cards */
+  }
+
+  /* Ensure the info section's text is left-aligned */
+  .stat-card-v4 .stat-info {
+    text-align: left;
+    flex-grow: 1; /* Allow info to take up remaining space */
+  }
+
+  /* Adjust icon size for mobile if desired */
+  .stat-icon {
+    width: 50px; /* Smaller icon for mobile */
+    height: 50px;
+    font-size: 1.4rem; /* Adjust icon font size */
+  }
+
+  .stat-label {
+    font-size: 0.8rem; /* Smaller label */
+  }
+
+  .stat-value {
+    font-size: 1.8rem; /* Smaller value for mobile */
+  }
+
+  .stat-desc {
+    font-size: 0.8rem; /* Smaller description */
+  }
+
+  /* Stack "How it Works" steps vertically */
+  .how-it-works-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem; /* Add more gap for vertical stacking */
+  }
+
+  /* Change connecting line to be vertical */
+  .how-it-works-step:not(:last-child)::after {
+    width: 2px; /* Vertical line width */
+    height: 100%; /* Full height to connect to next step */
+    left: calc(50% - 1px); /* Center the line */
+    top: 50%; /* Start from center of icon */
+    background: linear-gradient(to bottom, #dbeafe, #60a5fa, #dbeafe);
+  }
+
+  /* Reduce padding on grids for mobile */
+  .top-workers-grid,
+  .service-grid-new {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .top-worker-card {
+    padding: 1.5rem;
+  }
+  /* Make pills smaller to fit 2-3 per line on mobile */
+  .top-worker-pills {
+    /* Reduce the gap between pills */
+    gap: 0.4rem;
+  }
+
+  .top-worker-pill {
+    font-size: 0.75rem; /* Make font slightly smaller */
+    padding: 0.25rem 0.6rem; /* Reduce horizontal & vertical padding */
+  }
+
+/* This will completely hide the connecting line */
+  .how-it-works-step:not(:last-child)::after {
+    display: none;
+  }
+
+  /* Reduce padding on banners */
+  .welcome-banner,
+  .cta-banner {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}     

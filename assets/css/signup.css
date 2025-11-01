@@ -1,12 +1,38 @@
+/*
+==================================================
+  SIGNUP PAGE STYLESHEET
+==================================================
+  Table of Contents:
+  1. Global Reset
+  2. Page Body & Background
+  3. Animations
+  4. Main Container & Card
+  5. Header & Logo
+  6. General Form Elements
+  7. Buttons (Submit/Login, Back)
+  8. Multi-Step Form Styles
+  9. Step-Specific Styles
+  10. Step Indicator
+  11. Utility & Alert Styles
+  12. Responsive Media Queries (Tablet & Mobile)
+==================================================
+*/
+
+/* ==================================================
+  1. Global Reset
+================================================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ==================================================
+  2. Page Body & Background
+================================================== */
 body {
-  font-family: 'Inter', sans-serif;
-  background: #1F2334;
+  font-family: "Inter", sans-serif;
+  background: #1f2334;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -16,40 +42,75 @@ body {
   overflow-x: hidden;
 }
 
-body::before {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
+/*
+  FIX: Changed 'position: absolute' to 'position: fixed'.
+  This pins the elements to the viewport (the screen) and
+  stops them from creating an extra scrollbar.
+*/
+body::before,
+body::after {
+  content: "";
+  position: fixed; /* Was: absolute */
   background: rgba(59, 130, 246, 0.15);
   border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+  z-index: 0; /* Ensures it's behind the content */
+}
+
+body::before {
+  width: 400px;
+  height: 400px;
   top: -200px;
   left: -200px;
-  animation: float 6s ease-in-out infinite;
+  animation-duration: 6s;
 }
 
 body::after {
-  content: '';
-  position: absolute;
   width: 300px;
   height: 300px;
-  background: rgba(59, 130, 246, 0.15);
-  border-radius: 50%;
   bottom: -150px;
   right: -150px;
   animation: float 8s ease-in-out infinite;
 }
 
+/* ==================================================
+  3. Animations
+================================================== */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(20px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================================================
+  4. Main Container & Card
+================================================== */
 .login-container {
   width: 100%;
   max-width: 480px;
@@ -67,6 +128,9 @@ body::after {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* ==================================================
+  5. Header & Logo
+================================================== */
 .logo-container {
   text-align: center;
   margin-bottom: 32px;
@@ -112,6 +176,9 @@ body::after {
   margin-bottom: 0;
 }
 
+/* ==================================================
+  6. General Form Elements
+================================================== */
 .form-group {
   margin-bottom: 20px;
   position: relative;
@@ -147,11 +214,11 @@ body::after {
   border-radius: 12px;
   background: #f7fafc;
   transition: all 0.3s;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .input-wrapper .form-control {
-    padding-left: 48px;
+  padding-left: 48px;
 }
 
 .form-control:focus {
@@ -192,6 +259,9 @@ select.form-control {
   color: #3b82f6;
 }
 
+/* ==================================================
+  7. Buttons (Submit/Login, Back)
+================================================== */
 .btn-login {
   width: 100%;
   padding: 14px;
@@ -221,20 +291,293 @@ select.form-control {
   transform: none;
 }
 
+.back-btn {
+  background: none;
+  border: none;
+  color: #718096;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-btn:hover {
+  color: #1a202c;
+}
+
+/* ==================================================
+  8. Multi-Step Form Styles
+================================================== */
+.step {
+  display: none;
+  animation: fadeIn 0.5s ease;
+}
+.step.active {
+  display: block;
+}
+
+.step-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 8px;
+}
+.step-subtitle {
+  text-align: center;
+  font-size: 15px;
+  color: #718096;
+  margin-bottom: 24px;
+}
+
+/* ==================================================
+  9. Step-Specific Styles
+================================================== */
+
+/* Role Selection */
+.role-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.role-card {
+  padding: 1.5rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.role-card:hover {
+  border-color: #3b82f6;
+  background-color: #f7fafc;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.role-card i {
+  font-size: 2rem;
+  color: #3b82f6;
+  margin-bottom: 1rem;
+}
+.role-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1a202c;
+}
+.role-card p {
+  font-size: 0.85rem;
+  color: #718096;
+  margin: 0;
+}
+
+/* File Upload */
+.file-drop-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border: 2px dashed #3b82f6;
+  border-radius: 12px;
+  background-color: #f7fafc;
+  color: #718096;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+.file-drop-area.is-active {
+  background-color: #e9ecef;
+  border-color: #1e40af;
+}
+.file-drop-area .file-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #3b82f6;
+}
+.file-drop-area .file-msg {
+  font-size: 0.9rem;
+}
+.file-input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+  opacity: 0;
+}
+.file-preview-container {
+  margin: 1rem auto 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: none;
+}
+.file-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Service Selection */
+.services-category-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+.service-category-group {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+.service-category-group h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+.service-category-group h4 i {
+  font-size: 1.1rem;
+  color: #3b82f6;
+  margin-right: 0.75rem;
+}
+.services-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+.checkbox-item {
+  position: relative;
+}
+.checkbox-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.checkbox-item label {
+  display: block;
+  cursor: pointer;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.checkbox-item input[type="checkbox"]:checked + label {
+  background-color: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+.checkbox-item input[type="checkbox"]:hover:not(:checked) + label {
+  border-color: #a0aec0;
+}
+
+/* Map */
+#map {
+  height: 200px;
+  width: 100%;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  margin-bottom: 1rem;
+  z-index: 5;
+}
+
+/* ==================================================
+  10. Step Indicator
+================================================== */
+.step-indicator-wrapper {
+  margin-bottom: 2rem;
+}
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  position: relative;
+}
+.step-indicator::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background-color: #e2e8f0;
+  z-index: 1;
+}
+.step-indicator-item {
+  text-align: center;
+  flex: 1;
+  padding: 0 5px;
+  color: #a0aec0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 3;
+  line-height: 1.3;
+}
+.step-indicator-item span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid #e2e8f0;
+  margin: 0 auto 0.5rem auto;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  color: #a0aec0;
+}
+.step-indicator-item.completed span {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  font-size: 1rem;
+}
+.step-indicator-item.active {
+  color: #3b82f6;
+}
+.step-indicator-item.active span {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* ==================================================
+  11. Utility & Alert Styles
+================================================== */
 .divider {
   display: flex;
   align-items: center;
   margin: 32px 0;
 }
-
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: #94a3b8;
 }
-
 .divider span {
   padding: 0 20px;
   color: #94a3b8;
@@ -246,7 +589,6 @@ select.form-control {
   text-align: center;
   font-size: 15px;
 }
-
 .signup-text a {
   color: #3b82f6;
   text-decoration: none;
@@ -256,7 +598,6 @@ select.form-control {
   align-items: center;
   gap: 6px;
 }
-
 .signup-text a:hover {
   color: #1e40af;
 }
@@ -271,73 +612,230 @@ select.form-control {
   align-items: center;
   gap: 10px;
 }
+.alert-success {
+  background: #d4edda;
+  color: #155724;
+}
+.alert-danger {
+  background: #f8d7da;
+  color: #721c24;
+}
+.alert i {
+  font-size: 16px;
+}
+.btn-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+.btn-close:hover {
+  opacity: 1;
+}
+.spinner-border-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
 
-.alert-success { background: #d4edda; color: #155724; }
-.alert-danger { background: #f8d7da; color: #721c24; }
-.alert i { font-size: 16px; }
-.btn-close { margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.5; transition: opacity 0.3s; }
-.btn-close:hover { opacity: 1; }
-.spinner-border-sm { width: 16px; height: 16px; border-width: 2px; }
+/* ==================================================
+  12. Responsive Media Queries
+================================================== */
 
-/* --- SIGNUP-SPECIFIC STYLES --- */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.step { display: none; animation: fadeIn 0.5s ease; }
-.step.active { display: block; }
+/* --- Tablet (max-width: 768px) --- */
+@media (max-width: 768px) {
+  .login-card {
+    padding: 40px 32px;
+  }
+  
+  /* --- STEP INDICATOR (Tablet: Horizontal Scroll) --- */
+  .step-indicator-wrapper {
+    margin-bottom: 2.5rem;
+    overflow-x: auto; /* Allow horizontal scrolling */
+    
+    /* Hide scrollbar */
+    scrollbar-width: none; /* Firefox */
+  }
+  .step-indicator-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+  
+  .step-indicator {
+    justify-content: flex-start; /* Align items to the start */
+    min-width: 600px; /* Force the list to be wide */
+    padding: 0 10px;
+  }
+  .step-indicator::before {
+    /* Make line span the full width */
+    left: 26px;
+    right: 26px;
+  }
+  .step-indicator-item {
+    flex: 0 0 75px; /* Give each item a fixed width, no shrinking */
+    font-size: 0.7rem;
+  }
+  /* --- END STEP INDICATOR --- */
 
-.step-title { text-align: center; font-size: 24px; font-weight: 700; color: #1a202c; margin-bottom: 8px; }
-.step-subtitle { text-align: center; font-size: 15px; color: #718096; margin-bottom: 24px; }
+  /* Role cards look better stacked on tablet */
+  .role-selection {
+    grid-template-columns: 1fr;
+  }
+}
 
-.back-btn { background: none; border: none; color: #718096; font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 24px; padding: 0; display: flex; align-items: center; gap: 8px; }
-.back-btn:hover { color: #1a202c; }
-
-/* Role Selection */
-.role-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
-.role-card { padding: 1.5rem 1rem; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
-.role-card:hover { border-color: #3b82f6; background-color: #f7fafc; transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-.role-card i { font-size: 2rem; color: #3b82f6; margin-bottom: 1rem; }
-.role-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a202c;}
-.role-card p { font-size: 0.85rem; color: #718096; margin: 0; }
-
-/* File Upload */
-.file-drop-area { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 2px dashed #3b82f6; border-radius: 12px; background-color: #f7fafc; color: #718096; cursor: pointer; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; }
-.file-drop-area.is-active { background-color: #e9ecef; border-color: #1e40af; }
-.file-drop-area .file-icon { font-size: 1.5rem; margin-bottom: 0.5rem; color: #3b82f6; }
-.file-drop-area .file-msg { font-size: 0.9rem; }
-.file-input { position: absolute; left: 0; top: 0; height: 100%; width: 100%; cursor: pointer; opacity: 0; }
-.file-preview-container { margin: 1rem auto 0; width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; display: none; }
-.file-preview { width: 100%; height: 100%; object-fit: cover; }
-
-/* Service Selection */
-.services-category-list { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
-.service-category-group { background-color: #f8f9fa; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
-.service-category-group h4 { font-size: 1rem; font-weight: 600; color: #2d3748; margin-bottom: 1rem; display: flex; align-items: center; }
-.service-category-group h4 i { font-size: 1.1rem; color: #3b82f6; margin-right: 0.75rem; }
-.services-checkbox-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
-.checkbox-item { position: relative; }
-.checkbox-item input[type="checkbox"] { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
-.checkbox-item label { display: block; cursor: pointer; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 12px; background-color: #fff; transition: all 0.2s ease; text-align: center; font-size: 0.9rem; font-weight: 500; }
-.checkbox-item input[type="checkbox"]:checked + label { background-color: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-.checkbox-item input[type="checkbox"]:hover:not(:checked) + label { border-color: #a0aec0; }
-
-/* Step Indicator */
-.step-indicator-wrapper { margin-bottom: 2rem; }
-.step-indicator { display: flex; justify-content: space-between; list-style: none; padding: 0; position: relative; }
-.step-indicator::before { content: ''; position: absolute; top: 12px; left: 16px; right: 16px; height: 2px; background-color: #e2e8f0; z-index: 1; }
-.step-indicator-item { text-align: center; flex: 1; padding: 0 5px; color: #a0aec0; font-size: 0.7rem; font-weight: 600; position: relative; z-index: 3; line-height: 1.3; }
-.step-indicator-item span { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background-color: #fff; border: 2px solid #e2e8f0; margin: 0 auto 0.5rem auto; font-weight: 700; transition: all 0.3s ease; color: #a0aec0; }
-.step-indicator-item.completed span { background-color: #3b82f6; border-color: #3b82f6; color: #fff; font-size: 1rem; }
-/* --- FIX: REMOVED the ::before rule as it's now handled by JS --- */
-.step-indicator-item.active { color: #3b82f6; }
-.step-indicator-item.active span { border-color: #3b82f6; color: #3b82f6; }
-
-/* Map */
-#map { height: 200px; width: 100%; border-radius: 12px; border: 2px solid #e2e8f0; margin-bottom: 1rem; z-index: 5; }
-
-/* Responsive */
+/* --- Mobile (max-width: 576px) --- */
 @media (max-width: 576px) {
-  .login-card { padding: 36px 28px; }
-  .login-title { font-size: 24px; }
-  .logo { width: 70px; height: 70px; }
-  .role-selection { grid-template-columns: 1fr; }
-  .services-category-list { grid-template-columns: 1fr; }
+  /* --- Base Card & Layout --- */
+  .login-card {
+    padding: 32px 24px;
+  }
+  .logo {
+    width: 60px;
+    height: 60px;
+  }
+  .logo-inner img {
+    width: 40px;
+  }
+  .login-title {
+    font-size: 22px;
+  }
+  .login-subtitle {
+    font-size: 14px;
+  }
+
+  /* --- Step Titles --- */
+  .step-title {
+    font-size: 20px;
+  }
+  .step-subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  /* --- STEP INDICATOR (Mobile: Horizontal Scroll) --- */
+  .step-indicator-wrapper {
+    margin-bottom: 2rem;
+    /* We inherit overflow-x: auto and scrollbar hiding from tablet styles */
+  }
+  .step-indicator {
+    /* 8 steps * 70px = 560px total width needed */
+    min-width: 560px;
+  }
+  .step-indicator::before {
+    top: 11px;
+  }
+  .step-indicator-item {
+    flex: 0 0 70px; /* 70px per item to fit 8 steps in a scrollable view */
+    font-size: 0.65rem; /* Small text */
+    line-height: 1.2;
+  }
+  .step-indicator-item span {
+    width: 24px; /* Smaller circle */
+    height: 24px;
+    margin-bottom: 0.4rem;
+  }
+  .step-indicator-item.completed span {
+    font-size: 0.8rem;
+  }
+  /* --- END STEP INDICATOR --- */
+
+  /* --- Form Inputs & Buttons --- */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-control {
+    padding: 12px 14px 12px 14px;
+    font-size: 14px;
+  }
+  .input-wrapper .form-control {
+    padding-left: 44px;
+  }
+  select.form-control {
+    padding-right: 2.2rem;
+  }
+  .input-icon {
+    left: 14px;
+    font-size: 15px;
+  }
+  .password-toggle {
+    right: 14px;
+    font-size: 15px;
+  }
+  .btn-login {
+    padding: 12px;
+    font-size: 15px;
+  }
+  .back-btn {
+    margin-bottom: 20px;
+  }
+
+  /* --- Role Selection (MATCHING IMAGE) --- */
+  .role-selection {
+    grid-template-columns: 1fr; /* Stack vertically */
+    gap: 1rem; /* Space between cards */
+    margin-top: 1.5rem; /* Adjust margin if needed */
+  }
+  .role-card {
+    padding: 20px; /* Consistent padding as per image */
+    text-align: center; /* Center content */
+    display: block; /* Important for centering the icon and text block */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+  }
+  .role-card i {
+    font-size: 2.5rem; /* Larger icon as in image */
+    margin-bottom: 0.75rem; /* Space below icon */
+    margin-right: 0; /* No right margin, as it's stacked */
+    display: block; /* Ensure icon takes full width for centering */
+  }
+  .role-card h3 {
+    font-size: 1.1rem; /* Slightly larger heading */
+    margin-bottom: 0.25rem;
+  }
+  .role-card p {
+    font-size: 0.9rem; /* Slightly larger paragraph */
+  }
+
+  /* --- File Upload --- */
+  .file-drop-area {
+    padding: 16px;
+  }
+  .file-drop-area .file-icon {
+    font-size: 1.25rem;
+  }
+  .file-drop-area .file-msg {
+    font-size: 0.85rem;
+  }
+
+  /* --- Service Selection --- */
+  .services-category-list {
+    grid-template-columns: 1fr;
+  }
+  .service-category-group {
+    padding: 0.75rem;
+  }
+  .service-category-group h4 {
+    font-size: 0.9rem;
+  }
+  .services-checkbox-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .checkbox-item label {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  /* --- Map --- */
+  #map {
+    height: 180px;
+  }
+  
+  /* --- Divider / Signup --- */
+  .divider {
+    margin: 28px 0;
+  }
+  .signup-text {
+    font-size: 14px;
+  }
 }
