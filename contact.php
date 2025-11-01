@@ -41,6 +41,67 @@ if (!$isLoggedIn) {
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+  <style>
+  /* Common skeleton styles (loader, shimmer, dark-mode) */
+  .skeleton-loader {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: var(--background-color-body, #f9f9f9);
+    z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+  }
+  .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+  .skeleton-container {
+    max-width: 1100px; width: 100%;
+    padding: 0 1rem;
+    margin: 1rem auto;
+    margin-top: 80px; /* Adjust to match your header's height */
+  }
+  @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  .skeleton {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, 
+      var(--hover-color, #f0f0f0) 8%, 
+      var(--border-color, #e2e8f0) 18%, 
+      var(--hover-color, #f0f0f0) 33%);
+    background-size: 800px 104px; border-radius: 6px;
+  }
+  body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
+  body.dark-mode .skeleton {
+    background: linear-gradient(to right, 
+      var(--hover-color, #2c2c2c) 8%, 
+      var(--border-color, #334155) 18%, 
+      var(--hover-color, #2c2c2c) 33%);
+    background-size: 800px 104px;
+  }
+
+  /* Page-specific skeleton layout for contact.php */
+  .skeleton-contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  .skeleton-panel {
+    padding: 1.5rem;
+    background-color: var(--background-color-card, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+  }
+  body.dark-mode .skeleton-panel {
+    background-color: var(--background-color-card, #1f1f1f);
+    border: 1px solid var(--border-color, #334155);
+  }
+  .skeleton-title { height: 32px; width: 50%; margin-bottom: 2rem; }
+  .skeleton-label { height: 14px; width: 100px; margin-bottom: 0.5rem; }
+  .skeleton-input { height: 40px; width: 100%; margin-bottom: 1.5rem; }
+  .skeleton-textarea { height: 120px; width: 100%; margin-bottom: 1.5rem; }
+  .skeleton-button { height: 45px; width: 100%; }
+  .skeleton-line { height: 16px; margin-bottom: 1rem; border-radius: 4px; }
+  .skeleton-faq-item { height: 50px; width: 100%; margin-bottom: 1rem; }
+  
+  @media (max-width: 900px) {
+    .skeleton-contact-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 
 <script defer src="/dailyfix/assets/js/app.js"></script>
@@ -48,6 +109,29 @@ if (!$isLoggedIn) {
 <body class="light-mode">
 <?php include_once __DIR__ . "/api/header.php"; ?>
 
+<div class="skeleton-loader" id="page-loader">
+  <div class="skeleton-container">
+    <div class="skeleton-contact-grid">
+      <div class="skeleton-panel">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-label"></div>
+        <div class="skeleton skeleton-input"></div>
+        <div class="skeleton skeleton-label"></div>
+        <div class="skeleton skeleton-input"></div>
+        <div class="skeleton skeleton-label"></div>
+        <div class="skeleton skeleton-textarea"></div>
+        <div class="skeleton skeleton-button"></div>
+      </div>
+      <div class="skeleton-panel">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-faq-item"></div>
+        <div class.skeleton skeleton-faq-item"></div>
+        <div class.skeleton skeleton-faq-item"></div>
+        <div class.skeleton skeleton-faq-item"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <main class="page-content">
   <section class="contact-grid section-fly">
     <div class="contact-form">

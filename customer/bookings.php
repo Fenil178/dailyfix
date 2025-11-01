@@ -58,8 +58,77 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+    <style>
+    .skeleton-loader {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background-color: var(--background-color-body, #f9f9f9);
+        z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+    }
+    .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+    .skeleton-container {
+        max-width: 1100px; width: 100%;
+        padding: 0 1rem;
+        margin: 1rem auto;
+        margin-top: 80px; 
+    }
+
+    /* Shimmer animation */
+    @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+    .skeleton {
+        animation: shimmer 1.5s infinite linear;
+        background: linear-gradient(to right, 
+        var(--hover-color, #f0f0f0) 8%, 
+        var(--border-color, #e2e8f0) 18%, 
+        var(--hover-color, #f0f0f0) 33%);
+        background-size: 800px 104px; border-radius: 6px;
+    }
+    body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
+    body.dark-mode .skeleton {
+        background: linear-gradient(to right, 
+        var(--hover-color, #2c2c2c) 8%, 
+        var(--border-color, #334155) 18%, 
+        var(--hover-color, #2c2c2c) 33%);
+        background-size: 800px 104px;
+    }
+
+    /* Customer Bookings Page Specific Skeleton Layout */
+    .skeleton-title-bar { 
+        display: flex; justify-content: space-between; align-items: center; margin: 2rem 0; 
+    }
+    .skeleton-title { height: 38px; width: 300px; }
+    .skeleton-tabs { display: flex; gap: 1rem; height: 36px; margin-bottom: 2rem; }
+    .skeleton-tab-item { width: 120px; height: 100%; }
+    
+    .skeleton-booking-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
+    }
+    .skeleton-booking-card { height: 250px; }
+    @media (max-width: 768px) {
+        .skeleton-booking-grid { grid-template-columns: 1fr; }
+    }
+</style>
 </head>
 <body>
+    <div class="skeleton-loader" id="page-loader">
+        <div class="skeleton-container">
+            <div class="skeleton-title-bar">
+            <div class="skeleton skeleton-title"></div>
+            </div>
+            
+            <div class="skeleton-tabs">
+            <div class="skeleton skeleton-tab-item"></div>
+            <div class="skeleton skeleton-tab-item"></div>
+            <div class="skeleton skeleton-tab-item"></div>
+            </div>
+            
+            <div class="skeleton-booking-grid">
+            <div class="skeleton skeleton-booking-card"></div>
+            <div class="skeleton skeleton-booking-card"></div>
+            <div class="skeleton skeleton-booking-card"></div>
+            <div class="skeleton skeleton-booking-card"></div>
+            </div>
+        </div>
+    </div>
     <main class="page-content">
         <div class="management-container">
             <h1 class="page-title">My Bookings</h1>

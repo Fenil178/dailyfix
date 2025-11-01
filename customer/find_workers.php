@@ -112,9 +112,109 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
-    </head>
+    <style>
+        /* Common skeleton styles (loader, shimmer, dark-mode) */
+        .skeleton-loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--background-color-body, #f9f9f9);
+            z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+        .skeleton-container {
+            max-width: 1100px; width: 100%;
+            padding: 0 1rem;
+            margin: 1rem auto;
+            margin-top: 80px; /* Adjust to match your header's height */
+        }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .skeleton {
+            animation: shimmer 1.5s infinite linear;
+            background: linear-gradient(to right, 
+            var(--hover-color, #f0f0f0) 8%, 
+            var(--border-color, #e2e8f0) 18%, 
+            var(--hover-color, #f0f0f0) 33%);
+            background-size: 800px 104px; border-radius: 6px;
+        }
+        body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
+        body.dark-mode .skeleton {
+            background: linear-gradient(to right, 
+            var(--hover-color, #2c2c2c) 8%, 
+            var(--border-color, #334155) 18%, 
+            var(--hover-color, #2c2c2c) 33%);
+            background-size: 800px 104px;
+        }
+
+        /* Page-specific skeleton layout for find_workers.php */
+        .skeleton-back-link { height: 20px; width: 150px; margin: 2rem 0 1rem 0; }
+        .skeleton-title { height: 38px; width: 40%; margin-bottom: 1.5rem; }
+        .skeleton-filter-bar { display: flex; gap: 1rem; margin-bottom: 2rem; }
+        .skeleton-filter { height: 40px; width: 120px; }
+        .skeleton-worker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .skeleton-worker-card {
+            height: 280px;
+            border: 1px solid var(--border-color, #e2e8f0);
+            background-color: var(--background-color-card, #fff);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        body.dark-mode .skeleton-worker-card {
+            background-color: var(--background-color-card, #1f1f1f);
+            border: 1px solid var(--border-color, #334155);
+        }
+        .skeleton-card-avatar { height: 60px; width: 60px; border-radius: 50%; margin-bottom: 1rem; }
+        .skeleton-line { height: 16px; margin-bottom: 1rem; border-radius: 4px; }
+        .skeleton-line.name { height: 20px; width: 60%; }
+        .skeleton-line.meta { height: 14px; width: 80%; }
+        .skeleton-card-button { height: 40px; width: 100%; margin-top: 1.5rem; }
+
+        @media (max-width: 900px) { .skeleton-worker-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .skeleton-worker-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
 <body class="light-mode">
     <?php include_once __DIR__ . "/../api/header.php"; ?>
+    
+    <div class="skeleton-loader" id="page-loader">
+        <div class="skeleton-container">
+            <div class="skeleton skeleton-back-link"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton-filter-bar">
+            <div class="skeleton skeleton-filter"></div>
+            <div class="skeleton skeleton-filter"></div>
+            </div>
+            
+            <div class="skeleton-worker-grid">
+            <div class="skeleton-worker-card">
+                <div class="skeleton skeleton-card-avatar"></div>
+                <div class="skeleton skeleton-line name"></div>
+                <div class="skeleton skeleton-line meta"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                <div class="skeleton skeleton-card-button"></div>
+            </div>
+            <div class="skeleton-worker-card">
+                <div class="skeleton skeleton-card-avatar"></div>
+                <div class="skeleton skeleton-line name"></div>
+                <div class="skeleton skeleton-line meta"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                <div class="skeleton skeleton-card-button"></div>
+            </div>
+            <div class="skeleton-worker-card">
+                <div class="skeleton skeleton-card-avatar"></div>
+                <div class="skeleton skeleton-line name"></div>
+                <div class="skeleton skeleton-line meta"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                <div class="skeleton skeleton-card-button"></div>
+            </div>
+            </div>
+        </div>
+    </div>
 
     <main class="page-content">
         <section class="worker-list-container section-fly">

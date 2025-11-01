@@ -74,6 +74,90 @@ try {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+<style>
+    /* Common skeleton styles (loader, shimmer, dark-mode) */
+    .skeleton-loader {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background-color: var(--background-color-body, #f9f9f9);
+        z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+    }
+    .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+    .skeleton-container {
+        max-width: 1100px; width: 100%;
+        padding: 0 1rem;
+        margin: 1rem auto;
+        margin-top: 80px; /* Adjust to match your header's height */
+    }
+    @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+    .skeleton {
+        animation: shimmer 1.5s infinite linear;
+        background: linear-gradient(to right, 
+        var(--hover-color, #f0f0f0) 8%, 
+        var(--border-color, #e2e8f0) 18%, 
+        var(--hover-color, #f0f0f0) 33%);
+        background-size: 800px 104px; border-radius: 6px;
+    }
+    body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
+    body.dark-mode .skeleton {
+        background: linear-gradient(to right, 
+        var(--hover-color, #2c2c2c) 8%, 
+        var(--border-color, #334155) 18%, 
+        var(--hover-color, #2c2c2c) 33%);
+        background-size: 800px 104px;
+    }
+
+    /* Page-specific skeleton layout for admin/index.php */
+    .skeleton-title { height: 38px; width: 40%; margin: 2rem 0; }
+    .skeleton-stats-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .skeleton-stat-card { height: 90px; }
+    .skeleton-main-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
+    }
+    .skeleton-main-card {
+        height: 400px;
+        background-color: var(--background-color-card, #fff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    body.dark-mode .skeleton-main-card {
+        background-color: var(--background-color-card, #1f1f1f);
+        border: 1px solid var(--border-color, #334155);
+    }
+    .skeleton-card-title { height: 24px; width: 40%; margin-bottom: 1.5rem; }
+    .skeleton-card-content { height: 300px; width: 100%; }
+
+    @media (max-width: 768px) {
+        .skeleton-stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .skeleton-main-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="skeleton-loader" id="page-loader">
+    <div class="skeleton-container">
+        <div class="skeleton skeleton-title"></div>
+        
+        <div class="skeleton-stats-grid">
+        <div class="skeleton skeleton-stat-card"></div>
+        <div class="skeleton skeleton-stat-card"></div>
+        <div class="skeleton skeleton-stat-card"></div>
+        <div class="skeleton skeleton-stat-card"></div>
+        </div>
+        
+        <div class="skeleton-main-grid">
+        <div class="skeleton-main-card">
+            <div class="skeleton skeleton-card-title"></div>
+            <div class="skeleton skeleton-card-content"></div>
+        </div>
+        <div class="skeleton-main-card">
+            <div class="skeleton skeleton-card-title"></div>
+            <div class="skeleton skeleton-card-content"></div>
+        </div>
+        </div>
+    </div>
+</div>
 
 <div class="page-header section-fly-in">
     <div>

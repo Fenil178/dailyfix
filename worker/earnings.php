@@ -66,8 +66,92 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+    <style>
+        /* Common skeleton styles (loader, shimmer, dark-mode) */
+        .skeleton-loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--background-color-body, #f9f9f9);
+            z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+        .skeleton-container {
+            max-width: 1100px; width: 100%;
+            padding: 0 1rem;
+            margin: 1rem auto;
+            margin-top: 80px; /* Adjust to match your header's height */
+        }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .skeleton {
+            animation: shimmer 1.5s infinite linear;
+            background: linear-gradient(to right, 
+            var(--hover-color, #f0f0f0) 8%, 
+            var(--border-color, #e2e8f0) 18%, 
+            var(--hover-color, #f0f0f0) 33%);
+            background-size: 800px 104px; border-radius: 6px;
+        }
+        body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
+        body.dark-mode .skeleton {
+            background: linear-gradient(to right, 
+            var(--hover-color, #2c2c2c) 8%, 
+            var(--border-color, #334155) 18%, 
+            var(--hover-color, #2c2c2c) 33%);
+            background-size: 800px 104px;
+        }
+
+        /* Page-specific skeleton layout for earnings.php */
+        .skeleton-title { height: 38px; width: 300px; margin: 2rem 0; }
+        .skeleton-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .skeleton-stat-card {
+            height: 100px;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+        }
+        .skeleton-list-card {
+            height: 300px;
+            width: 100%;
+            padding: 1.5rem;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+        }
+        body.dark-mode .skeleton-stat-card,
+        body.dark-mode .skeleton-list-card {
+            background-color: var(--background-color-card, #1f1f1f);
+            border: 1px solid var(--border-color, #334155);
+        }
+        .skeleton-list-title { height: 24px; width: 40%; margin-bottom: 1.5rem; }
+        .skeleton-list-item { height: 40px; width: 100%; margin-bottom: 1rem; }
+        
+        @media (max-width: 768px) {
+            .skeleton-stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
-<body>
+<body>  
+    <div class="skeleton-loader" id="page-loader">
+        <div class="skeleton-container">
+            <div class="skeleton skeleton-title"></div>
+            
+            <div class="skeleton-stats-grid">
+            <div class="skeleton skeleton-stat-card"></div>
+            <div class="skeleton skeleton-stat-card"></div>
+            <div class="skeleton skeleton-stat-card"></div>
+            </div>
+            
+            <div class="skeleton-list-card">
+            <div class="skeleton skeleton-list-title"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            </div>
+        </div>
+    </div>
     <main class="page-content">
         <div class="management-container">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
