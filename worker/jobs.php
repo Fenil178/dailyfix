@@ -154,14 +154,6 @@ try {
             var(--hover-color, #f0f0f0) 33%);
             background-size: 800px 104px; border-radius: 6px;
         }
-        body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
-        body.dark-mode .skeleton {
-            background: linear-gradient(to right, 
-            var(--hover-color, #2c2c2c) 8%, 
-            var(--border-color, #334155) 18%, 
-            var(--hover-color, #2c2c2c) 33%);
-            background-size: 800px 104px;
-        }
 
         /* Page-specific skeleton layout for worker/jobs.php */
         .skeleton-header-bar {
@@ -182,10 +174,6 @@ try {
             border: 1px solid var(--border-color, #e2e8f0);
             border-radius: 8px;
         }
-        body.dark-mode .skeleton-job-card {
-            background-color: var(--background-color-card, #1f1f1f);
-            border: 1px solid var(--border-color, #334155);
-        }
 
         .skeleton-card-header { display: flex; align-items: center; margin-bottom: 1.5rem; }
         .skeleton-avatar { height: 50px; width: 50px; border-radius: 50%; margin-right: 1rem; }
@@ -195,7 +183,6 @@ try {
         .skeleton-line.date { height: 14px; width: 40%; }
         
         .skeleton-card-body { padding-top: 1rem; border-top: 1px solid var(--border-color, #e2e8f0); }
-        body.dark-mode .skeleton-card-body { border-top-color: var(--border-color, #334155); }
         .skeleton-line.detail { width: 90%; margin-bottom: 0.75rem; }
         .skeleton-line.detail-short { width: 70%; margin-bottom: 1.5rem; }
         .skeleton-map { height: 150px; width: 100%; }

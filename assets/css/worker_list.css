@@ -13,17 +13,6 @@
   --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
 }
 
-body.dark-mode {
-  /* Dark Mode Overrides */
-  --primary-color: #ffc107;
-  --secondary-color: #007bff;
-  --background-color-light: #121212;
-  --background-color-card: #1f1f1f;
-  --text-color-dark: #e0e0e0;
-  --text-color-light: #bdc3c7;
-  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-}
-
 /* ===================================================================
    2. General Page Layout
    =================================================================== */
@@ -208,26 +197,6 @@ body.dark-mode {
   font-size: 3rem;
   margin-bottom: 0.5rem;
 }
-
-/* ===================================================================
-   7. Dark Mode Specific Overrides
-   =================================================================== */
-
-body.dark-mode .worker-card:hover {
-  box-shadow: 0 8px 30px -10px rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .view-profile-btn {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-body.dark-mode .view-profile-btn:hover {
-  background-color: var(--primary-color);
-  /* On dark mode, hover text color needs to be dark for contrast */
-  color: #121212; 
-}
-
 
 /* ===================================================================
    8. Responsive Media Queries (Mobile)

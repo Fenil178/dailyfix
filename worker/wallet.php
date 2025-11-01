@@ -76,14 +76,6 @@ try {
             var(--hover-color, #f0f0f0) 33%);
             background-size: 800px 104px; border-radius: 6px;
         }
-        body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
-        body.dark-mode .skeleton {
-            background: linear-gradient(to right, 
-            var(--hover-color, #2c2c2c) 8%, 
-            var(--border-color, #334155) 18%, 
-            var(--hover-color, #2c2c2c) 33%);
-            background-size: 800px 104px;
-        }
 
         /* Page-specific skeleton layout for wallet.php */
         .skeleton-title { height: 38px; width: 300px; margin: 2rem 0; }
@@ -97,10 +89,6 @@ try {
             background-color: var(--background-color-card, #fff);
             border: 1px solid var(--border-color, #e2e8f0);
             border-radius: 8px;
-        }
-        body.dark-mode .skeleton-card {
-            background-color: var(--background-color-card, #1f1f1f);
-            border: 1px solid var(--border-color, #334155);
         }
         .skeleton-balance-card {
             height: 200px;

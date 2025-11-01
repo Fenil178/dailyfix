@@ -37,11 +37,6 @@
   box-shadow: var(--card-shadow-hover); /* Slight shadow on hover */
 }
 
-body.dark-mode .activity-card:hover {
-  background-color: rgba(251, 191, 36, 0.1); /* Light yellow background on hover */
-  box-shadow: var(--card-shadow-hover); /* Slight shadow on hover */
-}
-
 /* --- 4. Card Content --- */
 
 /* The icon (from your PHP) */

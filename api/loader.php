@@ -45,19 +45,6 @@
     background-size: 800px 104px;
     border-radius: 6px;
   }
-  
-  /* Dark mode support */
-  body.dark-mode .skeleton-loader {
-     background-color: var(--background-color-body, #121212);
-  }
-  body.dark-mode .skeleton {
-    background: linear-gradient(to right, 
-      var(--hover-color, #2c2c2c) 8%, 
-      var(--border-color, #334155) 18%, 
-      var(--hover-color, #2c2c2c) 33%
-    );
-    background-size: 800px 104px;
-  }
 
   /* Example layout: A title and two boxes */
   .skeleton-title {

@@ -8,16 +8,6 @@
   --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
 }
 
-body.dark-mode {
-  --primary-color: #ffc107; /* A slight change for better contrast in dark mode */
-  --secondary-color: #007bff; /* A slight change for better contrast in dark mode */
-  --background-color-light: #121212;
-  --background-color-card: #1f1f1f;
-  --text-color-dark: #e0e0e0;
-  --text-color-light: #bdc3c7;
-  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-}
-
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;

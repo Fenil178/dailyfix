@@ -25,32 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 5000); // 5 seconds
   }
 
-  // Theme Toggler
-  const themeToggleButton = document.getElementById("theme-toggle-btn");
-  if (themeToggleButton) {
-    const icon = themeToggleButton.querySelector("i");
-
-    // Load saved theme
-    const currentTheme = localStorage.getItem("theme");
-    if (currentTheme === "dark") {
-      document.body.classList.add("dark-mode");
-      if (icon) {
-        icon.classList.remove("fa-moon");
-        icon.classList.add("fa-sun");
-      }
-    }
-
-    themeToggleButton.addEventListener("click", () => {
-      document.body.classList.toggle("dark-mode");
-      const isDark = document.body.classList.contains("dark-mode");
-      if (icon) {
-        icon.classList.toggle("fa-moon", !isDark);
-        icon.classList.toggle("fa-sun", isDark);
-      }
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-    });
-  }
-
   // User profile dropdown toggle
   const profileBtn = document.getElementById("profileBtn");
   const dropdownMenu = document.getElementById("dropdownMenu");

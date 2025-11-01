@@ -101,14 +101,6 @@ $serviceDescriptions = [
       var(--hover-color, #f0f0f0) 33%);
     background-size: 800px 104px; border-radius: 6px;
   }
-  body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
-  body.dark-mode .skeleton {
-    background: linear-gradient(to right, 
-      var(--hover-color, #2c2c2c) 8%, 
-      var(--border-color, #334155) 18%, 
-      var(--hover-color, #2c2c2c) 33%);
-    background-size: 800px 104px;
-  }
 
   /* Page-specific skeleton layout for services.php */
   .skeleton-hero {
@@ -138,10 +130,6 @@ $serviceDescriptions = [
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-  body.dark-mode .skeleton-service-card {
-    background-color: var(--background-color-card, #1f1f1f);
-    border: 1px solid var(--border-color, #334155);
   }
   .skeleton-card-icon { height: 40px; width: 40px; border-radius: 50%; margin-bottom: 1rem; }
   .skeleton-card-title { height: 20px; width: 80%; margin-bottom: 0.5rem; }

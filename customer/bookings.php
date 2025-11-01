@@ -82,14 +82,6 @@ try {
         var(--hover-color, #f0f0f0) 33%);
         background-size: 800px 104px; border-radius: 6px;
     }
-    body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
-    body.dark-mode .skeleton {
-        background: linear-gradient(to right, 
-        var(--hover-color, #2c2c2c) 8%, 
-        var(--border-color, #334155) 18%, 
-        var(--hover-color, #2c2c2c) 33%);
-        background-size: 800px 104px;
-    }
 
     /* Customer Bookings Page Specific Skeleton Layout */
     .skeleton-title-bar { 

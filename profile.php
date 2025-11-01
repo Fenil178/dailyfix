@@ -241,11 +241,6 @@ sort($states);
             border: 1px solid #f5c6cb;
             margin-bottom: 1.5rem;
         }
-        body.dark-mode .form-error-message {
-            background-color: #721c24;
-            color: #f8d7da;
-            border-color: #842029;
-        }
     </style>
     <style>
         /* Common skeleton styles (loader, shimmer, dark-mode) */
@@ -270,14 +265,6 @@ sort($states);
             var(--hover-color, #f0f0f0) 33%);
             background-size: 800px 104px; border-radius: 6px;
         }
-        body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
-        body.dark-mode .skeleton {
-            background: linear-gradient(to right, 
-            var(--hover-color, #2c2c2c) 8%, 
-            var(--border-color, #334155) 18%, 
-            var(--hover-color, #2c2c2c) 33%);
-            background-size: 800px 104px;
-        }
 
         /* Page-specific skeleton layout for profile.php */
         .skeleton-profile-grid {
@@ -291,10 +278,6 @@ sort($states);
             background-color: var(--background-color-card, #fff);
             border: 1px solid var(--border-color, #e2e8f0);
             border-radius: 8px;
-        }
-        body.dark-mode .skeleton-panel {
-            background-color: var(--background-color-card, #1f1f1f);
-            border: 1px solid var(--border-color, #334155);
         }
         .skeleton-nav-item { height: 40px; width: 100%; margin-bottom: 1rem; }
         
