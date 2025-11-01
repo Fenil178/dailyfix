@@ -217,16 +217,16 @@ sort($states);
             flex-wrap: wrap; /* Allow wrapping on small screens */
             gap: 1rem;
         }
-         .offer-details { flex-grow: 1; }
-         .offer-details strong { font-size: 1.1em; color: var(--primary-color); }
-         .offer-details p { font-size: 0.9em; color: var(--text-color-light); margin: 0.2rem 0; }
-         .offer-actions { display: flex; gap: 0.5rem; }
-         .offer-actions button { /* Style toggle/delete buttons */
+        .offer-details { flex-grow: 1; }
+        .offer-details strong { font-size: 1.1em; color: var(--primary-color); }
+        .offer-details p { font-size: 0.9em; color: var(--text-color-light); margin: 0.2rem 0; }
+        .offer-actions { display: flex; gap: 0.5rem; }
+        .offer-actions button { /* Style toggle/delete buttons */
             padding: 5px 10px; font-size: 0.8em; cursor: pointer; border-radius: 5px; border: 1px solid; background: none; transition: background-color 0.2s, color 0.2s;
-         }
-         
-         #offer-form-message.success { color: var(--success-color); font-weight: 500;}
-         #offer-form-message.error { color: var(--danger-color); font-weight: 500;}
+        }
+        
+        #offer-form-message.success { color: var(--success-color); font-weight: 500;}
+        #offer-form-message.error { color: var(--danger-color); font-weight: 500;}
 
         input[type=datetime-local] {
            padding: 11px; /* Adjust if needed based on other inputs */
@@ -299,8 +299,9 @@ sort($states);
         .skeleton-nav-item { height: 40px; width: 100%; margin-bottom: 1rem; }
         
         .skeleton-form-title { height: 24px; width: 40%; margin-bottom: 2rem; }
+        .skeleton-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
         .skeleton-label { height: 14px; width: 100px; margin-bottom: 0.5rem; }
-        .skeleton-input { height: 40px; width: 100%; margin-bottom: 1.5rem; }
+        .skeleton-input { height: 40px; width: 100%; }
         .skeleton-button { height: 45px; width: 120px; margin-top: 1rem; }
         
         @media (max-width: 900px) {
@@ -313,30 +314,30 @@ sort($states);
     <div class="skeleton-loader" id="page-loader">
         <div class="skeleton-container">
             <div class="skeleton-profile-grid">
-            <div class="skeleton-panel">
+            <div class="skeleton-panel" style="height: fit-content;">
                 <div class="skeleton skeleton-nav-item"></div>
                 <div class="skeleton skeleton-nav-item"></div>
-                <div class="skeleton skeleton-nav-item"></div>
+                <div class.skeleton skeleton-nav-item"></div>
                 <div class="skeleton skeleton-nav-item"></div>
                 <div class.skeleton skeleton-nav-item"></div>
             </div>
             <div class="skeleton-panel">
                 <div class="skeleton skeleton-form-title"></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="skeleton-form-grid">
                 <div>
                     <div class="skeleton skeleton-label"></div>
-                    <div class="skeleton skeleton-input"></div>
+                    <div class.skeleton skeleton-input"></div>
                 </div>
                 <div>
                     <div class="skeleton skeleton-label"></div>
-                    <div class="skeleton skeleton-input"></div>
+                    <div class.skeleton skeleton-input"></div>
                 </div>
                 </div>
-                <div class="skeleton skeleton-label"></div>
-                <div class="skeleton skeleton-input"></div>
-                <div class="skeleton skeleton-label"></div>
-                <div class="skeleton skeleton-input"></div>
-                <div class="skeleton skeleton-button"></div>
+                <div class.skeleton skeleton-label"></div>
+                <div class.skeleton skeleton-input" style="margin-bottom: 1.5rem;"></div>
+                <div class.skeleton skeleton-label"></div>
+                <div class.skeleton skeleton-input"></div>
+                <div class.skeleton skeleton-button"></div>
             </div>
             </div>
         </div>

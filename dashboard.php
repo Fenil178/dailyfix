@@ -221,15 +221,17 @@ try {
         }
 
         /* Page-specific skeleton layout for dashboard.php */
-        .skeleton-title { height: 38px; width: 40%; margin: 2rem 0; }
+        .skeleton-welcome-header { display: flex; justify-content: space-between; align-items: center; margin: 2rem 0; }
+        .skeleton-title { height: 38px; width: 40%; }
+        .skeleton-search { height: 40px; width: 200px; }
+        
         .skeleton-slider-card {
-            height: 200px;
+            height: 180px;
             width: 100%;
             margin-bottom: 2rem;
             background-color: var(--background-color-card, #fff);
             border: 1px solid var(--border-color, #e2e8f0);
             border-radius: 8px;
-            padding: 1.5rem;
         }
         .skeleton-dashboard-grid {
             display: grid;
@@ -254,28 +256,32 @@ try {
         @media (max-width: 900px) {
             .skeleton-dashboard-grid { grid-template-columns: 1fr; }
         }
+        @media (max-width: 600px) {
+            .skeleton-welcome-header { flex-direction: column; align-items: flex-start; }
+            .skeleton-search { width: 100%; margin-top: 1rem; }
+        }
     </style>
 </head>
-<body>        
+<body>                
     <div class="skeleton-loader" id="page-loader">
         <div class="skeleton-container">
+            <div class="skeleton-welcome-header">
             <div class="skeleton skeleton-title"></div>
-            
-            <div class="skeleton-slider-card">
-                <div class="skeleton skeleton-card-title" style="width: 200px;"></div>
-                <div class="skeleton" style="height: 100px; width: 100%;"></div>
+            <div class.skeleton skeleton-search"></div>
             </div>
+            
+            <div class="skeleton-slider-card"></div>
             
             <div class="skeleton-dashboard-grid">
             <div class="skeleton-main-card">
                 <div class="skeleton skeleton-card-title"></div>
+                <div class.skeleton skeleton-list-item"></div>
                 <div class="skeleton skeleton-list-item"></div>
-                <div class="skeleton skeleton-list-item"></div>
-                <div class="skeleton skeleton-list-item"></div>
+                <div class.skeleton skeleton-list-item"></div>
             </div>
             <div class="skeleton-main-card">
                 <div class="skeleton skeleton-card-title"></div>
-                <div class="skeleton skeleton-list-item"></div>
+                <div class.skeleton skeleton-list-item"></div>
                 <div class="skeleton skeleton-list-item"></div>
             </div>
             </div>
