@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
             if (password_verify($password, $user['password'])) {
                 // ** THIS IS THE NEW SECURITY CHECK **
                 if ($user['role'] === 'admin') {
-                    $response = ['status' => 'error', 'message' => 'Admin accounts must use the admin login page.'];
+                    $response = ['status' => 'error', 'message' => 'Invalid email or password.'];
                 } elseif ($user['account_status'] === 'suspended') {
                     $response = ['status' => 'error', 'message' => 'Your account has been suspended.'];
                 } else {
