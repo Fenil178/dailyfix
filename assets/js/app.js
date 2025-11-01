@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  document.body.style.opacity = '1';
   // Mobile menu toggle
   const menuToggle = document.getElementById("mobile-menu");
   const navLinks = document.getElementById("navLinks");

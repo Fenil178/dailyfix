@@ -416,6 +416,48 @@ try {
         const groupedSubServices = <?php echo json_encode($groupedSubServices); ?>;
         const subServiceItems = <?php echo json_encode($subServiceItems); ?>;
         const citiesByState = <?php echo json_encode($indian_states_cities); ?>;
+document.addEventListener('DOMContentLoaded', () => {
+    const stepIndicatorWrapper = document.querySelector('.step-indicator-wrapper');
+
+    function scrollToActiveStep() {
+        if (!stepIndicatorWrapper) return;
+
+        const activeStep = stepIndicatorWrapper.querySelector('.step-indicator-item.active');
+
+        if (activeStep) {
+            // Calculate the left position of the active step relative to the wrapper
+            const activeStepLeft = activeStep.offsetLeft;
+            const activeStepWidth = activeStep.offsetWidth;
+            const wrapperWidth = stepIndicatorWrapper.offsetWidth;
+
+            // Calculate the scroll position to center the active step (approximately)
+            const scrollPosition = activeStepLeft - (wrapperWidth / 2) + (activeStepWidth / 2);
+
+            // Scroll the wrapper smoothly
+            stepIndicatorWrapper.scrollTo({
+                left: scrollPosition,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    // Call it initially in case a step is active on page load
+    scrollToActiveStep();
+
+    // You'll need to call this function whenever your active step changes.
+    // For example, if you have a 'next' button:
+    // const nextButton = document.getElementById('next-step-button'); // Replace with your button ID
+    // nextButton.addEventListener('click', () => {
+    //     // ... logic to change active step ...
+    //     scrollToActiveStep(); // Call after updating the active class
+    // });
+
+    // Or, if you have a general function to update steps:
+    // function updateStep(newStepIndex) {
+    //    // ... remove 'active' from old step, add 'active' to new step ...
+    //    scrollToActiveStep();
+    // }
+});
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

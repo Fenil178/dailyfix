@@ -398,8 +398,7 @@ h3 {
 }
 
 .detailed-report-table tbody tr:hover {
-    background-color: var(--bg-row-hover);
-    transform: translateZ(0); /* Promotes smoother animation */
+    background-color:  rgba(59, 130, 246, 0.08);
 }
 
 /* Default styling for all cells in the body */

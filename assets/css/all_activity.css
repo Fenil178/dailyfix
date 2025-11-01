@@ -33,8 +33,7 @@
 
 /* --- 3. Card Hover Effect --- */
 .activity-card:hover {
-  background-color: rgba(59, 130, 246, 0.08); /* Light blue background on hover */
-  box-shadow: var(--card-shadow-hover); /* Slight shadow on hover */
+  background-color: rgba(59, 130, 246, 0.08); /* Light blue background on hover */ 
 }
 
 /* --- 4. Card Content --- */
