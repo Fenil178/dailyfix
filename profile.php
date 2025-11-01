@@ -25,10 +25,9 @@ if (isset($_GET['success'])) {
         case 'services_updated':
             $successMessage = 'Services and prices updated successfully!';
             break;
-        case 'availability_updated': // Added this case
+        case 'availability_updated':
             $successMessage = 'Availability updated successfully!';
             break;
-        // Add success message for offers if needed
         case 'offer_created':
              $successMessage = 'Offer created successfully!';
              break;
@@ -38,16 +37,44 @@ if (isset($_GET['success'])) {
          case 'offer_deleted':
               $successMessage = 'Offer deleted successfully!';
               break;
+        case 'avatar_updated':
+            $successMessage = 'Profile image updated successfully!';
+            break;
+        case 'password_updated':
+            $successMessage = 'Password updated successfully!';
+            break;
     }
 }
-// Handle error messages from URL (e.g., from offer management)
+// Handle error messages from URL
 $errorMessage = '';
  if (isset($_GET['error'])) {
     switch ($_GET['error']) {
         case 'offer_error':
             $errorMessage = 'An error occurred while managing offers. Please try again.';
             break;
-        // Add other error cases if needed
+        // Password Errors
+        case 'password_mismatch':
+            $errorMessage = 'The new passwords do not match. Please try again.';
+            break;
+        case 'password_weak':
+            $errorMessage = 'Your new password must be at least 8 characters long.';
+            break;
+        case 'current_password_invalid':
+            $errorMessage = 'Your current password was incorrect. Please try again.';
+            break;
+        case 'missing_fields':
+            $errorMessage = 'Please fill out all password fields.';
+            break;
+        // Avatar Errors
+        case 'avatar_upload':
+            $errorMessage = 'An error occurred during the image upload. Please try again.';
+            break;
+        case 'file_type':
+            $errorMessage = 'Invalid file type. Please upload a JPG, PNG, or GIF.';
+            break;
+        case 'file_size':
+            $errorMessage = 'The file is too large. Please upload an image under 5MB.';
+            break;
     }
 }
 
@@ -232,15 +259,6 @@ sort($states);
            padding: 11px; /* Adjust if needed based on other inputs */
            line-height: normal; /* Ensure consistent line height */
         }
-        /* Basic alert styling */
-        .form-error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #f5c6cb;
-            margin-bottom: 1.5rem;
-        }
     </style>
     <style>
         /* Common skeleton styles (loader, shimmer, dark-mode) */
@@ -303,6 +321,7 @@ sort($states);
                 <div class="skeleton skeleton-nav-item"></div>
                 <div class="skeleton skeleton-nav-item"></div>
                 <div class="skeleton skeleton-nav-item"></div>
+                <div class="skeleton skeleton-nav-item"></div>
             </div>
             <div class="skeleton-panel">
                 <div class="skeleton skeleton-form-title"></div>
@@ -330,17 +349,59 @@ sort($states);
             <div class="profile-header">
                 <?php
                     $profileAvatar = $userData['profile_image'] ?: '/dailyfix/assets/images/default-avatar.png';
-                    if ($userData['profile_image'] && strpos($userData['profile_image'], '/') !== 0) {
+                    if ($userData['profile_image'] && strpos($userData['profile_image'], '/') !== 0 && strpos($userData['profile_image'], 'http') !== 0) {
                         $profileAvatar = '/dailyfix/' . $userData['profile_image'];
                     }
                 ?>
-                <img src="<?php echo htmlspecialchars($profileAvatar); ?>" alt="Profile Avatar" class="profile-header-avatar">
+                <form id="avatar-form" action="/dailyfix/api/update_profile_image.php" method="POST" enctype="multipart/form-data">
+                    <div class="profile-avatar-container" id="avatar-container">
+                        <label for="profile-avatar-input" title="Change profile image">
+                            
+                            <img src="<?php echo htmlspecialchars($profileAvatar); ?>" alt="Profile Avatar" class="profile-header-avatar user-avatar-img" id="profile-avatar-img">
+                            <div class="profile-avatar-overlay">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="avatar-upload-spinner">
+                                <i class="fas fa-spinner"></i>
+                            </div>
+                        </label>
+                        <input type="file" id="profile-avatar-input" name="profile_avatar" accept="image/png, image/jpeg, image/gif">
+                    </div>
+                </form>
+
                 <h1><?php echo htmlspecialchars($userData['full_name']); ?></h1>
+
+                <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'avatar_updated')): ?>
+                <div id="success-alert" class="form-message-inline success" style="display: block; margin-top: 1rem; margin-bottom: 0.5rem; width: 100%; max-width: 400px;">
+                    <?php echo htmlspecialchars($successMessage); ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($errorMessage && (isset($_GET['error']) && (strpos($_GET['error'], 'avatar_') === 0 || strpos($_GET['error'], 'file_') === 0))): ?>
+                <div id="error-alert" class="form-message-inline error" style="display: block; margin-top: 1rem; margin-bottom: 0.5rem; width: 100%; max-width: 400px;">
+                    <?php echo htmlspecialchars($errorMessage); ?>
+                </div>
+                <?php endif; ?>
                 <p><?php echo htmlspecialchars(ucfirst($role)); ?></p>
             </div>
 
-             <?php if ($errorMessage): ?>
-                <div class="form-error-message">
+             <?php 
+                // Check if this is a tab-specific error
+                $isTabSpecificError = false;
+                if (isset($_GET['error'])) {
+                    $e = $_GET['error'];
+                    // Avatar/file errors are now handled in the header, so they are "tab specific"
+                    if (strpos($e, 'avatar_') === 0 || strpos($e, 'file_') === 0 || 
+                        strpos($e, 'password_') === 0 || $e === 'current_password_invalid' || $e === 'missing_fields' ||
+                        strpos($e, 'offer_') === 0) {
+                        $isTabSpecificError = true;
+                    }
+                }
+
+                // Only show the general error if it's NOT a tab-specific one
+                if ($errorMessage && !$isTabSpecificError): 
+             ?>
+                <div class="form-error-message" style="display: block; text-align: center;">
                     <?php echo htmlspecialchars($errorMessage); ?>
                 </div>
             <?php endif; ?>
@@ -356,16 +417,18 @@ sort($states);
                 <?php else: // Customer ?>
                 <button class="tab-link" data-tab="history">Booking History</button>
                 <?php endif; ?>
+                <button class="tab-link" data-tab="security">Security</button>
                 <button class="tab-link" data-tab="location">Location</button>
             </div>
 
             <div id="details" class="tab-content active">
                 <div class="form-section">
                     <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'details_updated')): ?>
-                    <div id="success-alert" class="form-success-message">
+                    <div id="success-alert" class="form-message-inline success">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                     <?php endif; ?>
+                    
                     <h3>Personal Information</h3>
                     <form action="profile.php#details" method="POST">
                         <input type="hidden" name="update_user_details" value="1">
@@ -395,7 +458,7 @@ sort($states);
             <div id="professional" class="tab-content">
                 <div class="form-section">
                      <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'professional_updated')): ?>
-                    <div id="success-alert" class="form-success-message">
+                    <div id="success-alert" class="form-message-inline success">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                     <?php endif; ?>
@@ -427,7 +490,7 @@ sort($states);
             <div id="availability" class="tab-content">
                 <div class="form-section">
                     <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'availability_updated')): ?>
-                    <div id="success-alert" class="form-success-message">
+                    <div id="success-alert" class="form-message-inline success">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                     <?php endif; ?>
@@ -473,8 +536,10 @@ sort($states);
                                             if (!empty($review['customer_avatar'])) {
                                                 if (strpos($review['customer_avatar'], '/') === 0) {
                                                     $reviewAvatarPath = $review['customer_avatar'];
-                                                } else {
+                                                } else if (strpos($review['customer_avatar'], 'http') !== 0) {
                                                     $reviewAvatarPath = '/dailyfix/' . $review['customer_avatar'];
+                                                } else {
+                                                    $reviewAvatarPath = $review['customer_avatar'];
                                                 }
                                             }
                                         ?>
@@ -502,7 +567,7 @@ sort($states);
             <div id="services" class="tab-content">
                 <div class="form-section">
                     <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'services_updated')): ?>
-                    <div id="success-alert" class="form-success-message">
+                    <div id="success-alert" class="form-message-inline success">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                     <?php endif; ?>
@@ -547,12 +612,12 @@ sort($states);
             <div id="offers" class="tab-content">
                 <div class="form-section">
                      <?php if ($successMessage && (isset($_GET['success']) && strpos($_GET['success'], 'offer_') === 0)): ?>
-                        <div id="success-alert" class="form-success-message">
+                        <div id="success-alert" class="form-message-inline success">
                             <?php echo htmlspecialchars($successMessage); ?>
                         </div>
                     <?php endif; ?>
                      <?php if ($errorMessage && (isset($_GET['error']) && strpos($_GET['error'], 'offer_') === 0)): ?>
-                        <div class="form-error-message">
+                        <div class="form-message-inline error" style="display: block;">
                             <?php echo htmlspecialchars($errorMessage); ?>
                         </div>
                     <?php endif; ?>
@@ -617,10 +682,53 @@ sort($states);
             </div>
             <?php endif; ?>
 
+            <div id="security" class="tab-content">
+                <div class="form-section">
+                    <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'password_updated')): ?>
+                    <div id="success-alert" class="form-message-inline success">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                    <?php endif; ?>
+                     
+                    <h3>Change Password</h3>
+                    
+                     <?php if ($errorMessage && (isset($_GET['error']) && (
+                         strpos($_GET['error'], 'password_') === 0 || 
+                         $_GET['error'] === 'current_password_invalid' ||
+                         $_GET['error'] === 'missing_fields'
+                         ))): ?>
+                    <div id="error-alert" class="form-message-inline error" style="display: block;">
+                        <?php echo htmlspecialchars($errorMessage); ?>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div id="password-match-error" class="form-message-inline error" style="display: none; margin-bottom: 1.5rem;">New passwords do not match.</div>
+                    
+                    <form id="password-change-form" action="/dailyfix/api/update_password.php" method="POST">
+                    <input type="hidden" name="update_password" value="1">
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="new_password">New Password</label>
+                                <input type="password" id="new_password" name="new_password" required minlength="8" placeholder="At least 8 characters">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm_password">Confirm New Password</label>
+                                <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn" id="save-password-btn">Update Password</button>
+                    </form>
+                </div>
+            </div>
+
             <div id="location" class="tab-content">
                 <div class="form-section">
                      <?php if ($successMessage && (isset($_GET['success']) && $_GET['success'] === 'location_updated')): ?>
-                    <div id="success-alert" class="form-success-message">
+                    <div id="success-alert" class="form-message-inline success">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                     <?php endif; ?>
@@ -689,6 +797,7 @@ sort($states);
         // --- Main DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', function () {
             // JS for auto-dismissing the success message
+            // This targets the ID, which we kept on the success alerts
             const successAlert = document.getElementById('success-alert');
             if (successAlert) {
                 setTimeout(() => {
@@ -711,6 +820,19 @@ sort($states);
             const latInput = document.getElementById('latitude');
             const lonInput = document.getElementById('longitude');
             const mapElement = document.getElementById('map'); // Map container
+
+            // NEW: Avatar Upload Elements
+            const avatarForm = document.getElementById('avatar-form');
+            const avatarInput = document.getElementById('profile-avatar-input');
+            const avatarContainer = document.getElementById('avatar-container');
+
+            // NEW: Password Change Elements
+            const passwordForm = document.getElementById('password-change-form');
+            const newPasswordField = document.getElementById('new_password');
+            const confirmPasswordField = document.getElementById('confirm_password');
+            const passwordMatchError = document.getElementById('password-match-error'); // This is the div we moved
+            const savePasswordBtn = document.getElementById('save-password-btn');
+
 
             // Worker specific elements
             const servicesTab = document.getElementById('services');
@@ -1034,9 +1156,6 @@ sort($states);
                              // Trigger change event if city is pre-selected
                              if (city === currentCity) {
                                 cityDropdown.value = city; // Explicitly set value
-                                // Optionally trigger geocode if needed:
-                                // clearTimeout(geocodeTimeout);
-                                // geocodeTimeout = setTimeout(geocodeAddress, 500);
                              }
                         }
                         cityDropdown.appendChild(option);
@@ -1069,12 +1188,9 @@ sort($states);
                                 updateCities(); // Update city dropdown based on the new state
                             }
                          } else {
-                              // If state not found in dropdown, maybe clear city?
                               cityDropdown.innerHTML = '<option value="">Select City</option>';
                               cityDropdown.disabled = true;
                          }
-
-                         // City is handled within updateCities after state is set
                      }
                  } catch (error) {
                      console.error("Reverse geocoding error:", error);
@@ -1084,21 +1200,18 @@ sort($states);
 
             async function geocodeAddress() {
                  if (!stateDropdown.value || !cityDropdown.value || !pincodeInput.value || (!address1Input.value && !address2Input.value)) {
-                    // console.log("Skipping geocode: Insufficient address info");
-                    return; // Avoid unnecessary API calls if essential info is missing
+                    return; 
                  }
-
-                // Construct a query prioritizing specific fields if available
                  let queryParts = [];
                  if (address1Input.value) queryParts.push(address1Input.value);
                  if (address2Input.value) queryParts.push(address2Input.value);
                  if (cityDropdown.value) queryParts.push(cityDropdown.value);
                  if (stateDropdown.value) queryParts.push(stateDropdown.value);
                  if (pincodeInput.value) queryParts.push(pincodeInput.value);
-                 queryParts.push("India"); // Add country for better accuracy
+                 queryParts.push("India"); 
 
                 const query = encodeURIComponent(queryParts.join(', '));
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=in&limit=1`; // Limit to 1 result
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=in&limit=1`; 
 
                 try {
                     const response = await fetch(url);
@@ -1112,7 +1225,7 @@ sort($states);
 
                         if (map && marker) {
                             const newLatLng = new L.LatLng(lat, lon);
-                            map.setView(newLatLng, 15); // Zoom in closer on geocode result
+                            map.setView(newLatLng, 15); 
                             marker.setLatLng(newLatLng);
                         }
                     } else {
@@ -1131,17 +1244,73 @@ sort($states);
                 link.addEventListener('click', () => {
                     const tabId = link.getAttribute('data-tab');
                     activateTab(tabId);
-                    // Update URL hash without causing page jump if history API is supported
                     if (history.pushState) {
                         history.pushState(null, null, `#${tabId}`);
                     } else {
                         window.location.hash = tabId;
                     }
-                     // Remove success message when switching tabs
                      const existingAlert = document.getElementById('success-alert');
                      if (existingAlert) existingAlert.remove();
+                     const existingErrorAlert = document.getElementById('error-alert');
+                     if (existingErrorAlert) existingErrorAlert.remove();
                 });
             });
+
+            // Avatar Upload Listener
+            if (avatarInput) {
+                avatarInput.addEventListener('change', () => {
+                    if (avatarInput.files && avatarInput.files[0]) {
+                        // Show spinner
+                        if(avatarContainer) avatarContainer.classList.add('uploading');
+                        
+                        const reader = new FileReader();
+                        
+                        // ======================= MODIFICATION START =======================
+                        // This function now updates ALL images with the .user-avatar-img class
+                        reader.onload = function(e) {
+                           // Get ALL images with the class 'user-avatar-img'
+                           const allAvatarImages = document.querySelectorAll('.user-avatar-img');
+                           allAvatarImages.forEach(img => {
+                               img.src = e.target.result;
+                           });
+                        }
+                        // ======================= MODIFICATION END =========================
+
+                        reader.readAsDataURL(avatarInput.files[0]);
+
+                        // Submit the form to make the change permanent and reload
+                        if(avatarForm) avatarForm.submit(); 
+                    }
+                });
+            }
+
+            // Password Validation Listener
+            if (passwordForm) {
+                const validatePasswordMatch = () => {
+                    if (newPasswordField.value && confirmPasswordField.value && newPasswordField.value !== confirmPasswordField.value) {
+                        passwordMatchError.style.display = 'block';
+                        savePasswordBtn.disabled = true;
+                        newPasswordField.classList.add('password-error');
+                        confirmPasswordField.classList.add('password-error');
+                    } else {
+                        passwordMatchError.style.display = 'none';
+                        savePasswordBtn.disabled = false;
+                        newPasswordField.classList.remove('password-error');
+                        confirmPasswordField.classList.remove('password-error');
+                    }
+                };
+
+                newPasswordField.addEventListener('input', validatePasswordMatch);
+                confirmPasswordField.addEventListener('input', validatePasswordMatch);
+
+                passwordForm.addEventListener('submit', (e) => {
+                    if (newPasswordField.value !== confirmPasswordField.value) {
+                        e.preventDefault(); // Stop form submission
+                        validatePasswordMatch(); // Show error
+                    }
+                });
+            }
+
 
             // Service Step Navigation (only if worker)
             if (isWorker && servicesTab) {
@@ -1191,14 +1360,12 @@ sort($states);
                         nextBtn.disabled = !isAnyChecked;
                         nextBtn.classList.toggle('disabled', !isAnyChecked);
                      }
-                      // Price requirement logic is already inside populateSubServiceItemsAndPrice
                  });
             }
 
 
             // Offer Management (only if worker)
             if (isWorker && offersTab) {
-                // Handle Create Offer Form Submission
                 if (createOfferForm) {
                     createOfferForm.addEventListener('submit', function(e) {
                          e.preventDefault();
@@ -1209,15 +1376,14 @@ sort($states);
                          offerFormMessage.textContent = '';
                          offerFormMessage.className = '';
 
-
                          fetch('/dailyfix/api/manage_worker_offers.php', { method: 'POST', body: formData })
                              .then(res => res.json())
                              .then(result => {
                                  if (result.status === 'success') {
                                      offerFormMessage.textContent = result.message;
                                      offerFormMessage.className = 'success';
-                                     this.reset(); // Clear form
-                                     loadOffers(); // Refresh list
+                                     this.reset(); 
+                                     loadOffers(); 
                                  } else {
                                      offerFormMessage.textContent = result.message;
                                      offerFormMessage.className = 'error';
@@ -1234,7 +1400,6 @@ sort($states);
                      });
                  }
 
-                 // Handle Toggle Active and Delete Buttons (Event Delegation)
                  if (offersListContainer) {
                     offersListContainer.addEventListener('click', function(e) {
                         const target = e.target;
@@ -1242,47 +1407,40 @@ sort($states);
                         let action = '';
                          let confirmationMessage = '';
 
-
                         if (target.classList.contains('toggle-btn')) {
                             action = 'toggle_active';
                              confirmationMessage = `Are you sure you want to ${target.textContent.toLowerCase()} this offer?`;
-
                         } else if (target.classList.contains('delete-btn')) {
                             action = 'delete';
                              confirmationMessage = 'Are you sure you want to permanently delete this offer? This cannot be undone.';
                         } else {
-                            return; // Click wasn't on a button we care about
+                            return;
                         }
 
                          if (!confirm(confirmationMessage)) {
                             return;
                         }
 
-
                         if (offerId && action) {
                             const formData = new FormData();
                             formData.append('action', action);
                             formData.append('offer_id', offerId);
-
-                            target.disabled = true; // Disable button during request
+                            target.disabled = true; 
                             target.textContent = '...';
-
 
                              fetch('/dailyfix/api/manage_worker_offers.php', { method: 'POST', body: formData })
                                 .then(res => res.json())
                                 .then(result => {
                                     if (result.status === 'success') {
-                                        loadOffers(); // Refresh the list on success
-                                         // Optionally show a temporary success message somewhere
+                                        loadOffers(); 
                                     } else {
                                         alert('Error: ' + result.message);
-                                         // Re-enable button on error - need original text
-                                         // This part is tricky without storing original text; loadOffers() handles repaint
+                                        loadOffers(); // Refresh to restore button
                                     }
                                 })
                                 .catch(() => {
                                      alert('An error occurred.');
-                                      // Re-enable button on error
+                                     loadOffers(); // Refresh to restore button
                                 });
                         }
                     });
@@ -1296,9 +1454,9 @@ sort($states);
             }
              if (address1Input && address2Input && cityDropdown && stateDropdown && pincodeInput) {
                 [address1Input, address2Input, cityDropdown, stateDropdown, pincodeInput].forEach(el => {
-                    el.addEventListener('input', () => { // Use 'input' for faster feedback than 'change'
+                    el.addEventListener('input', () => { 
                         clearTimeout(geocodeTimeout);
-                        geocodeTimeout = setTimeout(geocodeAddress, 1200); // Increased delay
+                        geocodeTimeout = setTimeout(geocodeAddress, 1200);
                     });
                 });
             }
@@ -1316,30 +1474,23 @@ sort($states);
                     linkToActivate.classList.add('active');
                     contentToActivate.classList.add('active');
 
-                    // Initialize map only when location tab is activated and map exists
                     if (tabId === 'location' && mapElement && !map) {
                         initializeMap();
-                        // Delay invalidateSize slightly to ensure container is visible
                         setTimeout(() => { if (map) map.invalidateSize(); }, 50);
                     } else if (map && L.DomUtil.isProperlyVisible(mapElement)) {
-                        // If map already initialized and tab becomes visible again, refresh size
                          setTimeout(() => { if (map) map.invalidateSize(); }, 50);
                     }
 
-
-                    // Initialize services tab (if worker)
                     if (tabId === 'services' && isWorker && serviceStep1) {
                         populateMainServices();
-                        showServiceStep(serviceStep1); // Reset to step 1
+                        showServiceStep(serviceStep1); 
                     }
 
-                    // Initialize offers tab (if worker)
                     if (tabId === 'offers' && isWorker && offersTab) {
                         loadOffers();
                     }
                 } else {
                      console.warn(`Tab or content not found for ID: ${tabId}`);
-                     // Fallback to default tab if requested tab not found
                      if (tabId !== 'details') {
                          activateTab('details');
                      }
@@ -1351,14 +1502,44 @@ sort($states);
 
             // Activate tab based on URL hash or default
             const currentHash = window.location.hash.substring(1);
-            const initialTabId = currentHash || 'details';
-            // Ensure the default tab exists before activating
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            let initialTabId = currentHash || 'details';
+            
+            // Prioritize error/success param to open correct tab
+            if (urlParams.has('error')) {
+                const errorType = urlParams.get('error');
+                if (errorType.includes('password') || errorType.includes('current_password')) {
+                    initialTabId = 'security';
+                } else if (errorType.includes('avatar') || errorType.includes('file')) {
+                    initialTabId = 'details'; // Stay on details tab even though error is in header
+                } else if (errorType.includes('offer')) {
+                    initialTabId = 'offers';
+                }
+            } else if (urlParams.has('success')) {
+                 const successType = urlParams.get('success');
+                if (successType.includes('password')) {
+                    initialTabId = 'security';
+                } else if (successType.includes('avatar')) {
+                    initialTabId = 'details'; // Stay on details tab even though success is in header
+                } else if (successType.includes('offer')) {
+                    initialTabId = 'offers';
+                }
+            }
+
              if (document.getElementById(initialTabId)) {
                 activateTab(initialTabId);
             } else {
                  activateTab('details'); // Fallback safety
             }
 
+             // Clean the URL (remove success/error params) after loading
+             if (urlParams.has('error') || urlParams.has('success')) {
+                 if (history.replaceState) {
+                    // Use the hash that was determined
+                    history.replaceState(null, null, window.location.pathname + '#' + initialTabId);
+                 }
+             }
         });
     </script>
     <?php include_once __DIR__ . "/api/footer.php"; ?>

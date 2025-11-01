@@ -39,10 +39,13 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - DailyFix</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
   <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+  <style>body { opacity: 0; transition: opacity 0.3s ease; }</style>
 </head>
 <body>
 <header>
@@ -99,7 +102,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                         $avatarUrl = '/dailyfix/' . $profile_imagePath;
                     }
                 ?>
-                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="profile-avatar">
+                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="profile-avatar user-avatar-img">
             <?php else: ?>
                 <i class="fas fa-user"></i>
             <?php endif; ?>
@@ -113,7 +116,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                             $avatarUrl = '/dailyfix/' . $profile_imagePath;
                         }
                     ?>
-                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar">
+                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar user-avatar-img">
                 <?php else: ?>
                     <i class="fas fa-user-circle"></i>
                 <?php endif; ?>
@@ -195,7 +198,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                         $avatarUrl = '/dailyfix/' . $profile_imagePath;
                     }
                 ?>
-                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="mobile-profile-avatar">
+                <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="My Profile" class="mobile-profile-avatar user-avatar-img">
             <?php else: ?>
                 <i class="fas fa-user"></i>
             <?php endif; ?>
@@ -211,7 +214,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                             $avatarUrl = '/dailyfix/' . $profile_imagePath;
                         }
                     ?>
-                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar">
+                    <img src="<?php echo htmlspecialchars($avatarUrl); ?>" alt="Profile" class="dropdown-avatar user-avatar-img">
                 <?php else: ?>
                     <i class="fas fa-user-circle"></i>
                 <?php endif; ?>
