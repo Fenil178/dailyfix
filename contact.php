@@ -113,9 +113,9 @@ if (!$isLoggedIn) {
       <div class="skeleton-panel">
         <div class="skeleton skeleton-title"></div>
         <div class="skeleton skeleton-faq-item"></div>
-        <div class.skeleton skeleton-faq-item"></div>
-        <div class.skeleton skeleton-faq-item"></div>
-        <div class.skeleton skeleton-faq-item"></div>
+        <div class="skeleton skeleton-faq-item"></div>
+        <div class="skeleton skeleton-faq-item"></div>
+        <div class="skeleton skeleton-faq-item"></div>
       </div>
     </div>
   </div>

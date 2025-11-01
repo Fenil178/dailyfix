@@ -254,7 +254,7 @@ try {
         <div class="skeleton-container">
             <div class="skeleton-welcome-header">
             <div class="skeleton skeleton-title"></div>
-            <div class.skeleton skeleton-search"></div>
+            <div class="skeleton skeleton-search"></div>
             </div>
             
             <div class="skeleton-slider-card"></div>
@@ -262,13 +262,13 @@ try {
             <div class="skeleton-dashboard-grid">
             <div class="skeleton-main-card">
                 <div class="skeleton skeleton-card-title"></div>
-                <div class.skeleton skeleton-list-item"></div>
                 <div class="skeleton skeleton-list-item"></div>
-                <div class.skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
             </div>
             <div class="skeleton-main-card">
                 <div class="skeleton skeleton-card-title"></div>
-                <div class.skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
                 <div class="skeleton skeleton-list-item"></div>
             </div>
             </div>

@@ -300,27 +300,27 @@ sort($states);
             <div class="skeleton-panel" style="height: fit-content;">
                 <div class="skeleton skeleton-nav-item"></div>
                 <div class="skeleton skeleton-nav-item"></div>
-                <div class.skeleton skeleton-nav-item"></div>
                 <div class="skeleton skeleton-nav-item"></div>
-                <div class.skeleton skeleton-nav-item"></div>
+                <div class="skeleton skeleton-nav-item"></div>
+                <div class="skeleton skeleton-nav-item"></div>
             </div>
             <div class="skeleton-panel">
                 <div class="skeleton skeleton-form-title"></div>
                 <div class="skeleton-form-grid">
                 <div>
                     <div class="skeleton skeleton-label"></div>
-                    <div class.skeleton skeleton-input"></div>
+                    <div class="skeleton skeleton-input"></div>
                 </div>
                 <div>
                     <div class="skeleton skeleton-label"></div>
-                    <div class.skeleton skeleton-input"></div>
+                    <div class="skeleton skeleton-input"></div>
                 </div>
                 </div>
-                <div class.skeleton skeleton-label"></div>
-                <div class.skeleton skeleton-input" style="margin-bottom: 1.5rem;"></div>
-                <div class.skeleton skeleton-label"></div>
-                <div class.skeleton skeleton-input"></div>
-                <div class.skeleton skeleton-button"></div>
+                <div class="skeleton skeleton-label"></div>
+                <div class="skeleton skeleton-input" style="margin-bottom: 1.5rem;"></div>
+                <div class="skeleton skeleton-label"></div>
+                <div class="skeleton skeleton-input"></div>
+                <div class="skeleton skeleton-button"></div>
             </div>
             </div>
         </div>

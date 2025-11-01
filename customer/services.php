@@ -161,7 +161,7 @@ $serviceDescriptions = [
 
 <div class="skeleton-loader" id="page-loader">
   <div class="skeleton-container" style="margin-top: 0; padding: 0; max-width: none;">
-    <div class.skeleton skeleton-hero">
+    <div class="skeleton skeleton-hero">
         <div class="skeleton skeleton-hero-title"></div>
         <div class="skeleton skeleton-hero-p"></div>
     </div>

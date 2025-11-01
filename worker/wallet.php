@@ -121,8 +121,8 @@ try {
             <div class="skeleton-card" style="height: 400px;">
                 <div class="skeleton skeleton-list-title"></div>
                 <div class="skeleton skeleton-list-item"></div>
-                <div class.skeleton skeleton-list-item"></div>
-                <div class.skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
                 <div class="skeleton skeleton-list-item"></div>
             </div>
             </div>

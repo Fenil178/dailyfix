@@ -180,7 +180,7 @@ try {
                 <div class="skeleton skeleton-item-name"></div>
                 <div class="skeleton skeleton-item-button"></div>
                 </div>
-                <div class.skeleton-list-item">
+                <div class="skeleton-list-item">
                 <div class="skeleton skeleton-item-name"></div>
                 <div class="skeleton skeleton-item-button"></div>
                 </div>

@@ -135,9 +135,9 @@ try {
         <div class="skeleton-panel" style="height: fit-content;">
             <div class="skeleton skeleton-panel-title"></div>
             <div class="skeleton skeleton-label"></div>
-            <div class.skeleton skeleton-input"></div>
+            <div class="skeleton skeleton-input"></div>
             <div class="skeleton skeleton-label"></div>
-            <div class.skeleton skeleton-input"></div>
+            <div class="skeleton skeleton-input"></div>
             <div class="skeleton skeleton-button"></div>
         </div>
         <div class="skeleton-panel">

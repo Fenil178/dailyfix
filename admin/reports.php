@@ -164,7 +164,7 @@ if ($role !== 'admin') {
         <div class="skeleton skeleton-stat-card"></div>
         <div class="skeleton skeleton-stat-card"></div>
         <div class="skeleton skeleton-stat-card"></div>
-        <div class.skeleton skeleton-stat-card"></div>
+        <div class="skeleton skeleton-stat-card"></div>
         </div>
         
         <div class="skeleton-main-card">
@@ -174,7 +174,7 @@ if ($role !== 'admin') {
 
         <div class="skeleton-main-card" style="height: 300px;">
         <div class="skeleton skeleton-card-title" style="width: 200px;"></div>
-        <div class.skeleton skeleton-card-content" style="height: 200px;"></div>
+        <div class="skeleton skeleton-card-content" style="height: 200px;"></div>
         </div>
     </div>
 </div>
