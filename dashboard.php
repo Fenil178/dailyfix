@@ -188,8 +188,92 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+    <style>
+        /* Common skeleton styles (loader, shimmer, dark-mode) */
+        .skeleton-loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--background-color-body, #f9f9f9);
+            z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+        .skeleton-container {
+            max-width: 1100px; width: 100%;
+            padding: 0 1rem;
+            margin: 1rem auto;
+            margin-top: 80px; /* Adjust to match your header's height */
+        }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .skeleton {
+            animation: shimmer 1.5s infinite linear;
+            background: linear-gradient(to right, 
+            var(--hover-color, #f0f0f0) 8%, 
+            var(--border-color, #e2e8f0) 18%, 
+            var(--hover-color, #f0f0f0) 33%);
+            background-size: 800px 104px; border-radius: 6px;
+        }
+
+        /* Page-specific skeleton layout for dashboard.php */
+        .skeleton-welcome-header { display: flex; justify-content: space-between; align-items: center; margin: 2rem 0; }
+        .skeleton-title { height: 38px; width: 40%; }
+        .skeleton-search { height: 40px; width: 200px; }
+        
+        .skeleton-slider-card {
+            height: 180px;
+            width: 100%;
+            margin-bottom: 2rem;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+        }
+        .skeleton-dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+        .skeleton-main-card {
+            height: 350px;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .skeleton-card-title { height: 24px; width: 40%; margin-bottom: 1.5rem; }
+        .skeleton-list-item { height: 40px; width: 100%; margin-bottom: 1rem; }
+
+        @media (max-width: 900px) {
+            .skeleton-dashboard-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .skeleton-welcome-header { flex-direction: column; align-items: flex-start; }
+            .skeleton-search { width: 100%; margin-top: 1rem; }
+        }
+    </style>
 </head>
-<body>
+<body>                
+    <div class="skeleton-loader" id="page-loader">
+        <div class="skeleton-container">
+            <div class="skeleton-welcome-header">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-search"></div>
+            </div>
+            
+            <div class="skeleton-slider-card"></div>
+            
+            <div class="skeleton-dashboard-grid">
+            <div class="skeleton-main-card">
+                <div class="skeleton skeleton-card-title"></div>
+                <div class="skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
+            </div>
+            <div class="skeleton-main-card">
+                <div class="skeleton skeleton-card-title"></div>
+                <div class="skeleton skeleton-list-item"></div>
+                <div class="skeleton skeleton-list-item"></div>
+            </div>
+            </div>
+        </div>
+    </div>
     <main class="dashboard-container-v4">
         <div class="welcome-banner">
             <div class="welcome-content">

@@ -163,38 +163,6 @@ caret-color: #333 !important;
 transition: background-color 5000s ease-in-out 0s;
 }
 
-body.dark-mode .submit-btn {
-color: var(--primary-color);
-background-color: transparent;
-border: 2px solid var(--primary-color);
-}
-
-body.dark-mode .submit-btn:hover {
- background-color: var(--primary-color);
- color: #333;
-}
-
-body.dark-mode .form-group input,
-body.dark-mode .form-group textarea,
-body.dark-mode .time-picker-group select {
-background-color: var(--hover-color);
-color: var(--text-color-dark);
-border: 1px solid var(--border-color);
-}
-
-body.dark-mode .form-group input::placeholder,
-body.dark-mode .form-group textarea::placeholder {
- color: #888;
-}
-
-body.dark-mode input:-webkit-autofill,
-body.dark-mode textarea:-webkit-autofill,
-body.dark-mode select:-webkit-autofill {
--webkit-text-fill-color: #e0e0e0 !important;
-caret-color: #e0e0e0 !important;
--webkit-box-shadow: 0 0 0px 1000px #2c2c2c inset !important;
-}
-
 /* ==================================== */
 /* === 4. Form Components (Grids) === */
 /* ==================================== */
@@ -246,10 +214,6 @@ font-size: 0.8em;
 margin-top: 5px;
 }
 
-body.dark-mode .calendar-day.selected {
- color: #000;
-}
-
 /* --- Time Slots Grid --- */
 .slots-grid {
 display: grid;
@@ -292,10 +256,6 @@ text-align: center;
 color: var(--text-color-light);
 font-style: italic;
 grid-column: 1 / -1;
-}
-
-body.dark-mode .time-slot.selected {
- color: #000;
 }
 
 /* --- Services Grid --- */
@@ -365,34 +325,6 @@ border-color: var(--primary-color);
  color: var(--text-color-white);
  background-color: rgba(255, 255, 255, 0.2);
 }
-
-/* Services Dark Mode */
-body.dark-mode .booking-container .service-option {
- background-color: #2a2a2a;
-}
-body.dark-mode .booking-container .service-option:hover {
- background-color: #333333;
- border-color: var(--primary-color);
-}
-body.dark-mode .booking-container .service-option.selected {
- color: #000;
-}
-body.dark-mode .booking-container .service-option i {
- color: var(--accent-color);
-}
-body.dark-mode .booking-container .service-option.selected i,
-body.dark-mode .booking-container .service-option.selected span {
-color: #000;
-}
-body.dark-mode .service-price {
-color: #20c997;
-background-color: rgba(32, 201, 151, 0.15);
-}
-body.dark-mode .booking-container .service-option.selected .service-price {
-color: #000;
-background-color: rgba(0, 0, 0, 0.2);
-}
-
 
 /* =================================================================== */
 /* === 5. RESPONSIVE STYLES (Tablet & Mobile) ======================== */

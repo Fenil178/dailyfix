@@ -29,23 +29,6 @@ footer {
 }
 
 /* =================================
-   Dark Mode Specific Overrides
-   ================================= */
-body.dark-mode footer {
-    background-color: #1f1f1f; /* Dark mode background color */
-    color: #e0e0e0; /* Dark mode text color */
-    border-top: 1px solid #444;
-}
-
-body.dark-mode .social-icons a {
-    color: #e0e0e0; /* Dark mode icon color */
-}
-
-body.dark-mode .social-icons a:hover {
-    color: var(--primary-color);
-}
-
-/* =================================
    3. Responsive Media Queries
    ================================= */
 

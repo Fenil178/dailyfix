@@ -166,23 +166,6 @@ try {
           --info-color: #3b82f6; /* Added */
         }
 
-        body.dark-mode {
-          /* === Dark Mode Variables === */
-          --primary-color: #fbbf24;
-          --accent-color: #ffc107;
-          --background-color-body: #121212;
-          --background-color-card: #1f1f1f;
-          --hover-color: #2c2c2c;
-          --border-color: #334155;
-          --text-color-dark: #f1f5f9;
-          --text-color-light: #94a3b8;
-          --text-color-white: #000000;
-          --box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.3);
-          --success-color: #34d399; /* Added */
-          --danger-color: #f87171; /* Added */
-          --info-color: #60a5fa; /* Added */
-        }
-
         /* Modal Styles */
         .modal {
             display: none; /* Hidden by default */
@@ -236,24 +219,87 @@ try {
             }
          .available-offer-btn code { background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 3px; font-weight: bold;}
          .available-offer-btn:hover { background-color: var(--primary-color); color: white; }
-         body.dark-mode .available-offer-btn { background-color: rgba(251, 191, 36, 0.1); border-color: var(--primary-color); color: var(--primary-color); }
-         body.dark-mode .available-offer-btn:hover { background-color: var(--primary-color); color: #111; }
-         body.dark-mode .available-offer-btn code { background: rgba(255,255,255,0.1); }
-         body.dark-mode .coupon-input-group input[type="text"] { background-color: #333; border-color: #555; }
-         body.dark-mode .coupon-input-group button { color: #111; } /* If primary color is light */
         /* Add style for disabled input */
          #coupon-section-wrapper input[type="text"]:disabled { /* Target specific wrapper */
              background-color: var(--border-color);
              cursor: not-allowed;
              opacity: 0.7;
          }
-         body.dark-mode #coupon-section-wrapper input[type="text"]:disabled {
-              background-color: #444;
-         }
 
     </style>
+    <style>
+        /* Common skeleton styles (loader, shimmer, dark-mode) */
+        .skeleton-loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--background-color-body, #f9f9f9);
+            z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+        .skeleton-container {
+            max-width: 1100px; width: 100%;
+            padding: 0 1rem;
+            margin: 1rem auto;
+            margin-top: 80px; /* Adjust to match your header's height */
+        }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .skeleton {
+            animation: shimmer 1.5s infinite linear;
+            background: linear-gradient(to right, 
+            var(--hover-color, #f0f0f0) 8%, 
+            var(--border-color, #e2e8f0) 18%, 
+            var(--hover-color, #f0f0f0) 33%);
+            background-size: 800px 104px; border-radius: 6px;
+        }
+
+        /* Page-specific skeleton layout for book_worker.php */
+        .skeleton-back-link { height: 20px; width: 150px; margin: 2rem 0 1rem 0; }
+        .skeleton-booking-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+        }
+        .skeleton-panel {
+            padding: 1.5rem;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+            height: fit-content;
+        }
+        .skeleton-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 1rem auto; }
+        .skeleton-line { height: 16px; margin-bottom: 1rem; border-radius: 4px; }
+        .skeleton-line.title { height: 28px; width: 60%; margin: 0 auto 1rem auto; }
+        .skeleton-line.meta { height: 14px; width: 80%; margin: 0 auto 1.5rem auto; }
+        .skeleton-map { height: 200px; width: 100%; margin-top: 1.5rem; }
+        .skeleton-form-title { height: 24px; width: 50%; margin-bottom: 1.5rem; }
+        .skeleton-box { height: 120px; width: 100%; margin-bottom: 1.5rem; }
+        .skeleton-button { height: 45px; width: 100%; }
+        
+        @media (max-width: 900px) {
+            .skeleton-booking-container { grid-template-columns: 1fr; }
+        }
+</style>
 </head>
 <body>
+    
+    <div class="skeleton-loader" id="page-loader">
+        <div class="skeleton-container">
+            <div class="skeleton skeleton-back-link"></div>
+            <div class="skeleton-booking-container">
+            <div class="skeleton-panel">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton skeleton-line title"></div>
+                <div class="skeleton skeleton-line meta"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                <div class="skeleton skeleton-map"></div>
+            </div>
+            <div class="skeleton-panel">
+                <div class="skeleton skeleton-line skeleton-form-title"></div>
+                <div class="skeleton skeleton-box"></div> <div class="skeleton skeleton-box"></div> <div class="skeleton skeleton-line" style="width: 100%; height: 40px;"></div> <div class="skeleton skeleton-button"></div>
+            </div>
+            </div>
+        </div>
+    </div>
     <main class="page-content">
         <div class="page-header" style="max-width: 1100px; margin: 2rem auto 1rem auto; padding: 0 1rem;">
             <a href="<?php echo $backLink; ?>" class="back-link"><i class="fas fa-arrow-left"></i> <?php echo $backLinkText; ?></a>

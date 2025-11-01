@@ -8,10 +8,6 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-body.dark-mode .profile-container {
-    border: 1px solid #2c2c2c;
-}
-
 .profile-container h1 {
     text-align: center;
     font-weight: 700;
@@ -42,10 +38,6 @@ body.dark-mode .profile-container {
     margin-bottom: 2rem;
 }
 
-body.dark-mode .form-section h2 {
-    border-bottom-color: #333;
-}
-
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -71,13 +63,6 @@ body.dark-mode .form-section h2 {
     background-color: var(--background-color-light);
     color: var(--text-color);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-body.dark-mode .form-group input,
-body.dark-mode .form-group textarea,
-body.dark-mode .form-group select {
-    background-color: #2d2d2d;
-    border-color: #444;
 }
 
 .form-group input:focus,
@@ -138,10 +123,6 @@ body.dark-mode .form-group select {
     font-weight: 500;
 }
 
-body.dark-mode .checkbox-item label {
-    border-color: #444;
-}
-
 .checkbox-item label:hover {
     border-color: var(--primary-color);
     background-color: var(--background-color-light);
@@ -152,10 +133,6 @@ body.dark-mode .checkbox-item label {
     border-color: var(--primary-color);
     color: #fff;
     font-weight: 600;
-}
-
-body.dark-mode .checkbox-item input[type="checkbox"]:checked+label {
-    color: #111;
 }
 
 .submit-btn {
@@ -174,9 +151,5 @@ body.dark-mode .checkbox-item input[type="checkbox"]:checked+label {
 
 .submit-btn:hover {
     background-color: var(--secondary-color);
-    color: #111;
-}
-
-body.dark-mode .submit-btn:hover {
     color: #111;
 }

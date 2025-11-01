@@ -36,10 +36,6 @@
   background-color: rgba(59, 130, 246, 0.08); /* Light blue background on hover */ 
 }
 
-body.dark-mode .activity-card:hover {
-  background-color: rgba(251, 191, 36, 0.1); /* Light yellow background on hover */ 
-}
-
 /* --- 4. Card Content --- */
 
 /* The icon (from your PHP) */

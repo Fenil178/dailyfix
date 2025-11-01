@@ -10,6 +10,15 @@
     </footer>
 
     <script defer src="assets/js/admin_app.js"></script>
-
+    <script>
+    // Wait for the entire page to be fully loaded
+    window.onload = function() {
+        const loader = document.getElementById('page-loader');
+        if (loader) {
+        // Add the 'hidden' class to fade it out
+        loader.classList.add('hidden');
+        }
+    };
+    </script>
 </body>
 </html>

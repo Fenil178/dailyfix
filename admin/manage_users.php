@@ -47,6 +47,72 @@ try {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 
+<style>
+    /* Common skeleton styles (loader, shimmer, dark-mode) */
+    .skeleton-loader {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background-color: var(--background-color-body, #f9f9f9);
+        z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+    }
+    .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+    .skeleton-container {
+        max-width: 1100px; width: 100%;
+        padding: 0 1rem;
+        margin: 1rem auto;
+        margin-top: 80px; /* Adjust to match your header's height */
+    }
+    @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+    .skeleton {
+        animation: shimmer 1.5s infinite linear;
+        background: linear-gradient(to right, 
+        var(--hover-color, #f0f0f0) 8%, 
+        var(--border-color, #e2e8f0) 18%, 
+        var(--hover-color, #f0f0f0) 33%);
+        background-size: 800px 104px; border-radius: 6px;
+    }
+    body.dark-mode .skeleton-loader { background-color: var(--background-color-body, #121212); }
+    body.dark-mode .skeleton {
+        background: linear-gradient(to right, 
+        var(--hover-color, #2c2c2c) 8%, 
+        var(--border-color, #334155) 18%, 
+        var(--hover-color, #2c2c2c) 33%);
+        background-size: 800px 104px;
+    }
+
+    /* Page-specific skeleton layout for manage_users.php */
+    .skeleton-title { height: 38px; width: 40%; margin: 2rem 0; }
+    .skeleton-panel {
+        padding: 2rem;
+        background-color: var(--background-color-card, #fff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    body.dark-mode .skeleton-panel {
+        background-color: var(--background-color-card, #1f1f1f);
+        border: 1px solid var(--border-color, #334155);
+    }
+    .skeleton-panel-title { height: 24px; width: 30%; margin-bottom: 1.5rem; }
+    .skeleton-map { height: 300px; width: 100%; }
+    .skeleton-table { height: 400px; width: 100%; }
+</style>
+
+<div class="skeleton-loader" id="page-loader">
+    <div class="skeleton-container">
+        <div class="skeleton skeleton-title"></div>
+        
+        <div class="skeleton-panel">
+        <div class="skeleton skeleton-panel-title"></div>
+        <div class="skeleton skeleton-map"></div>
+        </div>
+        
+        <div class="skeleton-panel">
+        <div class="skeleton skeleton-panel-title" style="width: 20%;"></div>
+        <div class="skeleton skeleton-table"></div>
+        </div>
+    </div>
+</div>
+
 <div class="page-header section-fly-in">
     <h1><i class="fas fa-users"></i> User Management</h1>
     <p>View, search, and manage all registered customers and workers.</p>

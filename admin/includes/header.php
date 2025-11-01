@@ -19,7 +19,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
     <style>body { opacity: 0; transition: opacity 0.3s ease; }</style>
 </head>
-<body> 
+<body>
     <nav class="navbar">
         <div class="navbar-container">
             <div class="logo">

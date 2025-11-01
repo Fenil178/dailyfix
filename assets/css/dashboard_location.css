@@ -25,28 +25,6 @@
     --location-empty-hover-bg: #ffffff;
   }
   
-  body.dark-mode {
-    --location-bg: #2d2d2d;
-    --location-border: #444;
-    --location-shadow: rgba(0, 0, 0, 0.2);
-    --location-text-primary: #e0e0e0;
-    --location-text-secondary: #a0a0a0;
-    --location-primary-accent: #ffc107; /* Using the theme's dark mode accent color */
-    --location-arrow-color: #a0a0a0;
-    --location-hover-shadow: rgba(255, 193, 7, 0.1);
-    --location-dropdown-shadow: rgba(0, 0, 0, 0.3);
-    --location-dropdown-item-hover-bg: #383838;
-    --location-dropdown-item-border: #383838;
-    --location-dropdown-item-text: #e0e0e0;
-    --location-dropdown-item-icon: #a0a0a0;
-  
-    /* Styles for when location is not set in dark mode */
-    --location-empty-bg: #222;
-    --location-empty-border: #555;
-    --location-empty-text-icon: #888;
-    --location-empty-hover-bg: var(--location-bg);
-  }
-  
   /*
    * =============================================
    * Main Component Styles

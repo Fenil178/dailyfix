@@ -107,10 +107,93 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <script defer src="/dailyfix/assets/js/app.js"></script>
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+    <style>
+        /* Common skeleton styles (loader, shimmer, dark-mode) */
+        .skeleton-loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--background-color-body, #f9f9f9);
+            z-index: 9999; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .skeleton-loader.hidden { opacity: 0; pointer-events: none; }
+        .skeleton-container {
+            max-width: 1100px; width: 100%;
+            padding: 0 1rem;
+            margin: 1rem auto;
+            margin-top: 80px; /* Adjust to match your header's height */
+        }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .skeleton {
+            animation: shimmer 1.5s infinite linear;
+            background: linear-gradient(to right, 
+            var(--hover-color, #f0f0f0) 8%, 
+            var(--border-color, #e2e8f0) 18%, 
+            var(--hover-color, #f0f0f0) 33%);
+            background-size: 800px 104px; border-radius: 6px;
+        }
+
+        /* Page-specific skeleton layout for booking-details.php */
+        .skeleton-back-link { height: 20px; width: 150px; margin: 2rem 0 1rem 0; }
+        .skeleton-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .skeleton-panel {
+            padding: 1.5rem;
+            background-color: var(--background-color-card, #fff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 8px;
+        }
+        .skeleton-line { height: 16px; margin-bottom: 1rem; border-radius: 4px; }
+        .skeleton-title { height: 24px; width: 40%; margin-bottom: 1.5rem; }
+        .skeleton-user-card { display: flex; align-items: center; margin-bottom: 1.5rem; }
+        .skeleton-avatar { height: 50px; width: 50px; border-radius: 50%; margin-right: 1rem; }
+        .skeleton-user-info { width: 60%; }
+        .skeleton-user-name { height: 20px; width: 100%; margin-bottom: 0.5rem; }
+        .skeleton-user-sub { height: 14px; width: 70%; }
+        .skeleton-button { height: 45px; width: 100%; margin-top: 1rem; }
+
+        @media (max-width: 900px) {
+            .skeleton-details-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
     <?php include_once __DIR__ . "/api/header.php"; ?>
 
+    <div class="skeleton-loader" id="page-loader">
+        <div class="skeleton-container">
+            <div class="skeleton skeleton-back-link"></div>
+            <div class="skeleton-details-grid">
+            <div class="skeleton-panel" style="height: 400px;">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton-user-card">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-user-info">
+                    <div class="skeleton skeleton-user-name"></div>
+                    <div class="skeleton skeleton-user-sub"></div>
+                </div>
+                </div>
+                <div class="skeleton-user-card">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-user-info">
+                    <div class="skeleton skeleton-user-name"></div>
+                    <div class="skeleton skeleton-user-sub"></div>
+                </div>
+                </div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-line" style="width: 80%;"></div>
+            </div>
+            <div class="skeleton-panel" style="height: 300px;">
+                <div class="skeleton skeleton-title" style="width: 60%;"></div>
+                <div class="skeleton skeleton-line" style="height: 30px; width: 50%; margin-bottom: 2rem;"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton skeleton-button"></div>
+            </div>
+            </div>
+        </div>
+    </div>
     <main class="page-content">
         <div class="management-container">
             <a href="<?php echo $backLink; ?>" class="back-link"><i class="fas fa-arrow-left"></i> Back to <?php echo ($role === 'worker') ? 'Jobs' : 'Bookings'; ?></a>

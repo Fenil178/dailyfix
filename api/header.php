@@ -123,7 +123,6 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                 $helpUrl = '/dailyfix/contact.php';
                 echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
             ?>
-            <button id="theme-toggle-btn"><i class="fas fa-moon"></i> Theme</button>
             <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
         
@@ -225,7 +224,6 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
                 $helpUrl = '/dailyfix/contact.php';
                 echo "<a href='{$helpUrl}'><i class='fas fa-question-circle'></i> Help</a>";
             ?>
-            <button id="theme-toggle-btn-mobile"><i class="fas fa-moon"></i> Theme</button>
             <a href="#" id="logout-link-mobile"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>

@@ -9,17 +9,6 @@
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-body.dark-mode {
-  --primary-color: #fbbf24;
-  --secondary-color: #3b82f6;
-  --background-color-body: #121212;
-  --background-color-card: #1f1f1f;
-  --text-color-dark: #f1f5f9;
-  --text-color-light: #94a3b8;
-  --border-color: #334155;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
 .management-container {
   max-width: 1200px;
   margin: 2rem auto 4rem auto;
@@ -193,10 +182,6 @@ body.dark-mode {
   text-align: center;
   border: 1px solid var(--primary-color);
 }
-body.dark-mode .action-panel {
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
-  border-color: var(--primary-color);
-}
 
 .action-panel h2 {
   font-size: 1.5rem;
@@ -225,16 +210,6 @@ body.dark-mode .action-panel {
 }
 
 .btn-invoice:hover {
-  background-color: #10b981;
-  color: #fff;
-}
-
-body.dark-mode .btn-invoice {
-  color: #10b981;
-  border-color: #10b981;
-}
-
-body.dark-mode .btn-invoice:hover {
   background-color: #10b981;
   color: #fff;
 }
@@ -335,19 +310,6 @@ body.dark-mode .btn-invoice:hover {
   color: #fff;
   background-color: var(--primary-color);
 }
-body.dark-mode .custom-modal-content .ok-btn {
-  color: var(--primary-color);
-  background-color: transparent;
-  border: 2px solid var(--primary-color);
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100px;
-}
-body.dark-mode .custom-modal-content .ok-btn:hover {
-  color: #111;
-  background-color: var(--primary-color);
-}
 .modal-close-icon {
   position: absolute;
   top: 10px;
@@ -383,9 +345,7 @@ body.dark-mode .custom-modal-content .ok-btn:hover {
   background-color: var(--primary-color);
   color: #fff;
 }
-body.dark-mode .modal-buttons-container .btn-primary {
-  color: #111;
-}
+
 /* Coupon Specific Styles */
 #coupon-section label {
   font-weight: 500;
@@ -450,13 +410,7 @@ body.dark-mode .modal-buttons-container .btn-primary {
   font-size: 1.1em;
   color: var(--text-color-dark);
 }
-body.dark-mode #coupon-section input[type="text"] {
-  background-color: #333;
-  border-color: #555;
-}
-body.dark-mode #coupon-section button#apply-coupon-btn {
-  color: #111;
-}
+
 /* Styles for Available Offer Buttons */
 .available-offer-btn {
   background-color: var(--hover-color);
@@ -475,9 +429,6 @@ body.dark-mode #coupon-section button#apply-coupon-btn {
   cursor: not-allowed;
   opacity: 0.7;
 }
-body.dark-mode #coupon-section input[type="text"]:disabled {
-  background-color: #444; /* Darker grey */
-}
 .available-offer-btn code {
   background: rgba(0, 0, 0, 0.05);
   padding: 2px 4px;
@@ -487,18 +438,6 @@ body.dark-mode #coupon-section input[type="text"]:disabled {
 .available-offer-btn:hover {
   background-color: var(--primary-color);
   color: white;
-}
-body.dark-mode .available-offer-btn {
-  background-color: rgba(251, 191, 36, 0.1);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-body.dark-mode .available-offer-btn:hover {
-  background-color: var(--primary-color);
-  color: #111;
-}
-body.dark-mode .available-offer-btn code {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* --- NEW STYLE FOR REVIEW BUTTON CONTAINER --- */

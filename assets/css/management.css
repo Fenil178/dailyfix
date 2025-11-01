@@ -70,7 +70,6 @@
     display: flex;
     flex-direction: column;
 }
-body.dark-mode .job-card { border-color: #333; }
 
 .job-card-header {
     display: flex;
@@ -80,7 +79,6 @@ body.dark-mode .job-card { border-color: #333; }
     padding-bottom: 1rem;
     border-bottom: 1px solid #eee;
 }
-body.dark-mode .job-card-header { border-color: #333; }
 
 .job-card-avatar {
     width: 50px;
@@ -162,16 +160,6 @@ body.dark-mode .job-card-header { border-color: #333; }
     color: #fff;
 }
 
-body.dark-mode .btn.cancel {
-    background-color: #333;
-    color: #dc3545;
-}
-
-body.dark-mode .btn.cancel:hover {
-    background-color: #dc3545;
-    color: #fff;
-}
-
 /* Minimal hover effects */
 .btn.accept {
     border: #32c060 2px solid;
@@ -182,17 +170,6 @@ body.dark-mode .btn.cancel:hover {
 .btn.accept:hover {
     background-color: #32c060;
     color: #fff;
-}
-
-body.dark-mode .btn.accept {
-    background-color: transparent;
-    color: #32c060;
-    border: 2px solid #32c060;
-}
-
-body.dark-mode .btn.accept:hover {
-    background-color: #32c060;
-    color: #333;
 }
 
 .btn.decline {
@@ -206,16 +183,6 @@ body.dark-mode .btn.accept:hover {
     color: #fff;
 }
 
-body.dark-mode .btn.decline {
-    background-color: transparent;
-    color: #ff5f6d;
-    border: 2px solid #ff5f6d;
-}
-
-body.dark-mode .btn.decline:hover {
-    background-color: #ff5f6d;
-    color: #333;
-}
 /* ==========================================================================
    4. Summary Cards & Lists (Earnings/Bookings)
    ========================================================================== */
@@ -233,7 +200,6 @@ body.dark-mode .btn.decline:hover {
     border-radius: 12px;
     padding: 1.5rem;
 }
-body.dark-mode .summary-card { border-color: #333; }
 
 .summary-card h4 {
     margin: 0 0 0.5rem 0;
@@ -264,7 +230,6 @@ body.dark-mode .summary-card { border-color: #333; }
     border-radius: 8px;
     margin-bottom: 1rem;
 }
-body.dark-mode .item-list .list-item { border-color: #333; }
 
 .item-details {
     flex-grow: 1;
@@ -308,7 +273,6 @@ body.dark-mode .item-list .list-item { border-color: #333; }
     border: 1px dashed #ddd;
     border-radius: 12px;
 }
-body.dark-mode .empty-state { border-color: #444; }
 
 .empty-state i {
     font-size: 3rem;
@@ -382,17 +346,6 @@ body.dark-mode .empty-state { border-color: #444; }
     box-shadow: 0 6px 16px rgba(0, 123, 255, 0.08);
 }
 
-body.dark-mode .btn-main-custom {
-    background-color: #333;
-    color: #ffc107;
-    border-color: #ffc107;
-}
-
-body.dark-mode .btn-main-custom:hover {
-    background-color: #ffc107;
-    color: #111;
-}
-
 /* Secondary button */
 .btn-secondary {
     color: #6c757d;
@@ -406,17 +359,6 @@ body.dark-mode .btn-main-custom:hover {
     background-color: #6c757d;
     color: #fff;
     box-shadow: 0 6px 16px rgba(108,117,125,0.08);
-}
-
-body.dark-mode .btn-secondary {
-    background-color: #333;
-    color: #6c757d;
-    border-color: #6c757d;
-}
-
-body.dark-mode .btn-secondary:hover {
-    background-color: #6c757d;
-    color: #fff;
 }
 
 /* ==========================================================================
@@ -439,23 +381,6 @@ body.dark-mode .btn-secondary:hover {
     --review-btn-bg-hover: #2563eb;
     --review-textarea-bg: #f9fafb;
     --review-textarea-focus-ring: #a5b4fc;
-}
-
-body.dark-mode {
-    /* Dark Theme Overrides */
-    --review-modal-bg: #1f2937;
-    --review-modal-text: #f3f4f6;
-    --review-modal-text-light: #9ca3af;
-    --review-modal-close-icon: #6b7280;
-    --review-modal-close-icon-hover: #d1d5db;
-    --review-border-color: #374155;
-    --star-default-color: #4b5563;
-    --star-selected-color: #f59e0b; /* ADDED: Star color is yellow in dark mode */
-    --review-btn-bg: #f59e0b; /* Yellow button */
-    --review-btn-text: #111827;
-    --review-btn-bg-hover: #d97706;
-    --review-textarea-bg: #374155;
-    --review-textarea-focus-ring: #f59e0b;
 }
 
 /* --- 7.2. Modal Backdrop & Animation --- */
