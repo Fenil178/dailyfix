@@ -13,18 +13,18 @@ $totalEarnings = 0;
 $monthEarnings = 0;
 $completedJobs = [];
 try {
-    // Calculate sum of (final_cost - discount_amount)
+    // Calculate sum of (worker_earning - discount_amount)
     $stmt = $conn->prepare("
-        SELECT SUM(COALESCE(final_cost, 0) - COALESCE(discount_amount, 0))
+        SELECT SUM(COALESCE(worker_earning, 0) - COALESCE(discount_amount, 0))
         FROM public.bookings
         WHERE worker_id = ? AND status = 'completed' AND payment_status = 'paid'
     ");
     $stmt->execute([$userId]);
     $totalEarnings = $stmt->fetchColumn() ?: 0;
 
-    // Calculate sum of (final_cost - discount_amount) for the current month
+    // Calculate sum of (worker_earning - discount_amount) for the current month
     $stmt = $conn->prepare("
-        SELECT SUM(COALESCE(final_cost, 0) - COALESCE(discount_amount, 0))
+        SELECT SUM(COALESCE(worker_earning, 0) - COALESCE(discount_amount, 0))
         FROM public.bookings
         WHERE worker_id = ?
           AND status = 'completed'
@@ -39,7 +39,7 @@ try {
         SELECT
             b.id, b.booking_time, b.service_details,
             u.full_name as customer_name,
-            (COALESCE(b.final_cost, 0) - COALESCE(b.discount_amount, 0)) AS amount_earned
+            (COALESCE(b.worker_earning, 0) - COALESCE(b.discount_amount, 0)) AS amount_earned
         FROM public.bookings b
         JOIN public.users u ON b.customer_id = u.id
         WHERE b.worker_id = ? AND b.status = 'completed' AND b.payment_status = 'paid'

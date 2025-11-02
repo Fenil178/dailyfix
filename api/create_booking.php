@@ -1,7 +1,5 @@
 <?php
-// Set up error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+
 
 include_once __DIR__ . "/connect.php";
 include_once __DIR__ . "/user_session.php";
@@ -24,18 +22,25 @@ if (!isset($userId) || $role !== 'customer') {
 // --- Get Data ---
 $worker_id = filter_input(INPUT_POST, 'worker_id', FILTER_VALIDATE_INT);
 $customer_id = filter_input(INPUT_POST, 'customer_id', FILTER_VALIDATE_INT);
-$sub_service_item_id = filter_input(INPUT_POST, 'sub_service_item_id', FILTER_VALIDATE_INT); // <<< Get sub_service_item_id
+$sub_service_item_id = filter_input(INPUT_POST, 'sub_service_item_id', FILTER_VALIDATE_INT);
 $sub_service_name = trim($_POST['sub_service_name'] ?? '');
 $service_item_name = trim($_POST['service_item_name'] ?? '');
 $address = trim($_POST['address'] ?? '');
 $booking_date = $_POST['booking_date'] ?? '';
 $booking_time = $_POST['booking_time'] ?? '';
-$price = filter_input(INPUT_POST, 'price', FILTER_VALIDATE_FLOAT); // Original item price
+
+// This 'price' is the worker's original price
+$worker_earning = filter_input(INPUT_POST, 'price', FILTER_VALIDATE_FLOAT); 
+
+// Get coupon details
 $applied_offer_id = filter_input(INPUT_POST, 'applied_offer_id', FILTER_VALIDATE_INT);
 $discount_amount = filter_input(INPUT_POST, 'discount_amount', FILTER_VALIDATE_FLOAT);
 
+// Calculate new platform fee and final cost
+$platform_fee_to_save = PLATFORM_FEE;
+$total_cost_to_customer = $worker_earning + $platform_fee_to_save;
 // --- Basic Validation ---
-if (!$worker_id || !$customer_id || !$sub_service_item_id || empty($sub_service_name) || empty($service_item_name) || empty($address) || empty($booking_date) || empty($booking_time) || $price === null || $price < 0) {
+if (!$worker_id || !$customer_id || !$sub_service_item_id || empty($sub_service_name) || empty($service_item_name) || empty($address) || empty($booking_date) || empty($booking_time) || $worker_earning === null || $worker_earning < 0) {
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Missing or invalid required fields (sub_service_item_id needed, price >= 0).']);
     exit;
@@ -137,15 +142,15 @@ try {
     }
 
     // <<< Insert the booking record (including sub_service_item_id) >>>
-    $sql_insert = "INSERT INTO public.bookings (customer_id, worker_id, sub_service_item_id, service_details, booking_time, status, final_cost"; // <<< Added item_id
-    $params = [$customer_id, $worker_id, $sub_service_item_id, $full_service_details, $formatted_for_db, $price]; // <<< Added item_id
+    $sql_insert = "INSERT INTO public.bookings (customer_id, worker_id, sub_service_item_id, service_details, booking_time, status, worker_earning, platform_fee, final_cost";
+    $params = [$customer_id, $worker_id, $sub_service_item_id, $full_service_details, $formatted_for_db, $worker_earning, $platform_fee_to_save, $total_cost_to_customer];
 
     if ($applied_offer_id) {
         $sql_insert .= ", applied_offer_id, discount_amount";
         $params[] = $applied_offer_id;
         $params[] = $discount_amount;
     }
-    $sql_insert .= ") VALUES (?, ?, ?, ?, ?, 'pending', ?"; // <<< Added placeholder
+    $sql_insert .= ") VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?";
     if ($applied_offer_id) {
         $sql_insert .= ", ?, ?";
     }
