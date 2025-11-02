@@ -212,7 +212,7 @@ try {
                                 <td><?php echo htmlspecialchars($sub['parent_name']); ?></td>
                                 <td><i class="<?php echo htmlspecialchars($sub['icon']); ?>"></i> <?php echo htmlspecialchars($sub['name']); ?></td>
                                 <td class="action-buttons">
-                                    <a href="edit_sub_service.php?id=<?php echo $sub['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="edit_sub_service.php?id=<?php echo $sub['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
                                     <a href="actions/sub_service_actions.php?action=delete&id=<?php echo $sub['id']; ?>"
                                        class="action-trigger"
                                        data-modal-title="Confirm Deletion"

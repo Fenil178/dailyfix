@@ -463,4 +463,5 @@ document.addEventListener('DOMContentLoaded', () => {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/dailyfix/assets/js/signup.js"></script>
 </body>
+
 </html>

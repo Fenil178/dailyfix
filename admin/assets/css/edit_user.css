@@ -1,105 +1,122 @@
-    /* Override font from profile.css to match the admin theme */
-    .form-group input,
-    .form-group select {
-        font-family: 'Inter', sans-serif;
-    }
+/* Override font from profile.css to match the admin theme */
+.form-group input,
+.form-group select {
+  font-family: "Inter", sans-serif;
+}
 
-    /* Style for disabled select */
-    .form-group select:disabled {
-        background-color: var(--background-tertiary); 
-        color: var(--text-muted);
-        cursor: not-allowed;
-        border-color: var(--border-color); 
-    }
+/* Style for disabled select */
+.form-group select:disabled {
+  background-color: var(--background-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border-color: var(--border-color);
+}
 
-     body.dark-mode .form-group select:disabled {
-         background-color: #334155; 
-         color: #94a3b8;
-         border-color: var(--border-color);
-     }
+body.dark-mode .form-group select:disabled {
+  background-color: #334155;
+  color: #94a3b8;
+  border-color: var(--border-color);
+}
 
+.read-only-overlay {
+  position: relative;
+}
 
-    .read-only-overlay {
-        position: relative;
-    }
+.read-only-overlay::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
+  cursor: not-allowed;
+  z-index: 1;
+}
 
-    .read-only-overlay::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: transparent;
-        cursor: not-allowed;
-        z-index: 1;
-    }
+.read-only-banner {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid #ffc107;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+body.dark-mode .read-only-banner {
+  background-color: #664d03;
+  color: #fff3cd;
+  border-color: #ffc107;
+}
 
-    .read-only-banner {
-        background-color: #fff3cd;
-        color: #856404;
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        border: 1px solid #ffc107;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    body.dark-mode .read-only-banner {
-        background-color: #664d03;
-        color: #fff3cd;
-        border-color: #ffc107;
-    }
+.calendar-day.read-only,
+.time-slot.read-only {
+  opacity: 0.8;
+}
 
-    .calendar-day.read-only,
-    .time-slot.read-only {
-        opacity: 0.8;
-    }
+.time-slot.read-only {
+  cursor: not-allowed !important;
+}
 
-    .time-slot.read-only {
-        cursor: not-allowed !important;
-    }
+.time-slot.selected.read-only {
+  background-color: var(--primary-color);
+  cursor: not-allowed !important;
+  color: #fff;
+  border-color: var(--primary-color);
+}
 
-    .time-slot.selected.read-only {
-        background-color: var(--primary-color);
-        cursor: not-allowed !important;
-        color: #fff;
-        border-color: var(--primary-color);
-    }
+/* Styles for Worker Offers Section Grid Layout */
+.worker-offers-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
 
-    /* Styles for Worker Offers Section Grid Layout */
-    .worker-offers-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
+.offer-item-admin {
+  background-color: var(--background-secondary);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 120px;
+}
 
-    .offer-item-admin {
-        background-color: var(--background-secondary);
-        padding: 1rem 1.25rem;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 0.5rem;
-        min-height: 120px;
-    }
+.offer-details-admin {
+  flex-grow: 1;
+}
+.offer-details-admin strong {
+  font-size: 1.1em;
+  color: var(--primary-color);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.offer-details-admin p {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  margin: 0.2rem 0;
+}
+.offer-status-admin {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  align-self: flex-start;
+  margin-top: 0.5rem;
+}
 
-    .offer-details-admin { flex-grow: 1; }
-    .offer-details-admin strong { font-size: 1.1em; color: var(--primary-color); font-weight: 600; display: block; margin-bottom: 0.25rem; }
-    .offer-details-admin p { font-size: 0.9em; color: var(--text-secondary); margin: 0.2rem 0; }
-    .offer-status-admin {
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: capitalize;
-        align-self: flex-start;
-        margin-top: 0.5rem;
-    }
-    
-    .offer-status-admin.active { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .offer-status-admin.inactive { background-color: rgba(107, 114, 128, 0.1); color: #6b7280; }
+.offer-status-admin.active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.offer-status-admin.inactive {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
