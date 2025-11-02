@@ -61,7 +61,7 @@ try {
     error_log("Manage Worker Keys Error: " . $e->getMessage());
 }
 ?>
-
+<link rel="stylesheet" href="/dailyfix/assets/css/admin_style.css" />
 <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
 <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 

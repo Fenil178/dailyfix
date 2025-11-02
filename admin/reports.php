@@ -8,91 +8,8 @@ if ($role !== 'admin') {
     exit;
 }
 ?>
-
+<link rel="stylesheet" href="/dailyfix/assets/css/reports.css" />
 <link rel="stylesheet" href="/dailyfix/assets/css/scrollbar_hidden.css" />
-<style>
-    /* ------------------- LIGHT MODE STYLES (Base) ------------------- */
-    .report-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-    .report-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .report-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-    .report-card h4 { font-size: 1.1em; color: #555; margin-bottom: 10px; }
-    .report-card p { font-size: 1.8em; font-weight: 700; color: var(--main-color, #007bff); }
-    .report-card.revenue p { color: #28a745; }
-    .report-card.cancelled p { color: #dc3545; }
-    /* Detailed containers use the same background as cards */
-    .detailed-report-container { background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; padding: 20px; border-radius: 8px;}
-    .detailed-report-table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-    .detailed-report-table th, .detailed-report-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9em; }
-    .detailed-report-table th { background-color: #f8f8f8; color: #333; }
-    .detailed-report-table tbody tr:hover { background-color: #f5f5f5; }
-    .export-button {
-        padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; transition: background-color 0.2s;
-        background-color: #007bff; color: white; margin-left: 5px;
-    }
-    .filter-group { display: flex; gap: 10px; align-items: center; }
-    .filter-select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; background-color: white; color: #333; }
-    .pdf-button { background-color: #dc3545 !important; }
-
-    /* ------------------- DARK MODE STYLES (FINAL CORRECTION) ------------------- */
-    
-    /* Corrected: Use a unified dark background color for admin cards/containers */
-    .dark-mode .page-header {
-        color: #f0f0f0;
-    }
-
-    .dark-mode .dashboard-card,
-    .dark-mode .report-card,
-    .dark-mode .detailed-report-container { 
-        background-color: #1e293b !important; /* Matches common dark admin theme base */
-        color: #f0f0f0;
-        border: 1px solid #334155;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    }
-    
-    .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode #reportTitle { 
-        color: #f1f5f9; 
-    }
-    .dark-mode p {
-        color: #f1f5f9;
-    }
-    .dark-mode .report-card h4 { 
-        color: #f1f5f9; 
-    }
-    
-    /* Table headers should be slightly darker or different */
-    .dark-mode .detailed-report-table th { 
-        background-color: #1e293b; /* Slightly darker than card body */
-        color: #f0f0f0; 
-        border-color: #334155;
-    }
-    .dark-mode .detailed-report-table td { 
-        color: #e0e0e0; 
-        border-color: #334155;
-    }
-    .dark-mode .detailed-report-table tbody tr:hover { 
-        background-color: #0f172a; /* Subtle dark hover effect */
-    }
-
-    /* Filters and Buttons */
-    .dark-mode .filter-select { 
-        background-color: #1e293b; 
-        color: #e0e0e0; 
-        border: 1px solid #334155; 
-    }
-    .dark-mode .export-button { 
-        background-color: #007bff; /* Primary blue */
-        color: white; 
-    }
-    .dark-mode .pdf-button { 
-        background-color: #e74c3c !important; 
-    }
-    
-    /* Status Colors */
-    .dark-mode .status-pending { color: #FFD700; }
-    .dark-mode .status-confirmed { color: #78B9FF; }
-    .dark-mode .status-completed { color: #82CD84; }
-    .dark-mode .status-cancelled { color: #E77373; }
-</style>
 
 <style>
     /* Common skeleton styles (loader, shimmer, dark-mode) */
@@ -393,14 +310,16 @@ if ($role !== 'admin') {
                 
                 // Service Details Cleanup
                 const serviceDetails = job.service_details ? job.service_details.replace(/Service: (.*)\nItem: (.*)\nAddress: (.*)/s, (match, service, item, address) => `Service: <b>${service}</b><br>Item: ${item}<br>Address: ${address.substring(0, 30)}...`) : 'N/A';
-                
-                // Status with Cancellation Reason Tooltip
-                let statusText = job.status;
-                if (job.status === 'cancelled' && job.cancellation_reason) {
-                    statusText = `<span title="Reason: ${job.cancellation_reason}">${job.status} <i class="fas fa-info-circle"></i></span>`;
-                } else {
-                    statusText = job.status;
-                }
+                    // Status with Cancellation Reason Tooltip
+                    let statusBadge;
+                    const statusClass = getStatusClass(job.status); // Get the class name, e.g., "status-completed"
+                    if (job.status === 'cancelled' && job.cancellation_reason) {
+                        // Create the badge with the status class and the title
+                        statusBadge = `<span class="${statusClass}" title="Reason: ${job.cancellation_reason}">${job.status} <i class="fas fa-info-circle"></i></span>`;
+                    } else {
+                        // Create a simple badge with the status class
+                        statusBadge = `<span class="${statusClass}">${job.status}</span>`;
+                    }
 
                 row.innerHTML = `
                     <td>${job.booking_id}</td>
@@ -409,7 +328,7 @@ if ($role !== 'admin') {
                     <td>${job.worker_name}</td>
                     <td>${serviceDetails}</td>
                     <td>${formatCurrency(job.final_cost)}</td>
-                    <td class="${getStatusClass(job.status)}">${statusText}</td>
+                    <td class="status-cell">${statusBadge}</td> 
                     <td>${reviewContent}</td>
                 `;
                 detailedReportBody.appendChild(row);

@@ -195,7 +195,7 @@ try {
                                 <td><?php echo htmlspecialchars($service['name']); ?></td>
                                 <td><?php echo htmlspecialchars($service['slug']); ?></td>
                                 <td class="action-buttons">
-                                    <a href="edit_service.php?id=<?php echo $service['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="edit_service.php?id=<?php echo $service['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
                                     <a href="actions/service_actions.php?action=delete&id=<?php echo $service['id']; ?>"
                                        class="action-trigger"
                                        data-modal-title="Confirm Deletion"
