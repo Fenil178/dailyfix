@@ -199,7 +199,7 @@ try {
                                 <td><?php echo htmlspecialchars($admin['full_name']); ?> <?php if($admin['id'] == $current_admin_id) echo '(You)'; ?></td>
                                 <td><?php echo htmlspecialchars($admin['email']); ?></td>
                                 <td class="action-buttons">
-                                    <a href="edit_admin.php?id=<?php echo $admin['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="edit_admin.php?id=<?php echo $admin['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
                                     
                                     <?php if ($admin['id'] != $current_admin_id): ?>
                                     <a href="actions/admin_actions.php?action=delete&admin_id=<?php echo $admin['id']; ?>"

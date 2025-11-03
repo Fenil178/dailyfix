@@ -398,11 +398,12 @@ try {
                      </div>
 
                     <div class="price-summary" id="price-summary-display" style="display: none;">
-                        <p>Original Price: <span id="original-price-display">₹0.00</span></p>
-                        <p>Discount: <span id="discount-applied-display" class="discount-applied">-₹0.00</span></p>
-                        <hr>
-                        <p>Final Price: <span id="final-price-display" class="final-price-display">₹0.00</span></p>
-                    </div>
+    <p>Service Price: <span id="original-price-display">₹0.00</span></p>
+    <p>Platform Fee: <span id="platform-fee-display">₹0.00</span></p>
+    <p class="discount-row" style="display:none;">Discount: <span id="discount-applied-display" class="discount-applied">-₹0.00</span></p>
+    <hr>
+    <p>Total Price: <span id="final-price-display" class="final-price-display">₹0.00</span></p>
+</div>
 
                     <button type="submit" class="submit-btn" id="submit-booking-btn">Send Booking Request</button>
                 </form>
@@ -439,9 +440,13 @@ try {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- The Platform Fee (from PHP) ---
+            const platformFee = <?php echo PLATFORM_FEE; ?>;
+            
+            // --- Get All Page Elements (This is the missing part) ---
             const serviceSelectionGrid = document.getElementById('service-selection-grid');
             const hiddenServiceItemInput = document.getElementById('service_item_name');
-            const hiddenSubServiceItemInput = document.getElementById('sub_service_item_id_hidden'); // Get new hidden input
+            const hiddenSubServiceItemInput = document.getElementById('sub_service_item_id_hidden');
             const hiddenPriceInput = document.getElementById('price');
             const bookingForm = document.getElementById('booking-form');
             const submitButton = document.getElementById('submit-booking-btn');
@@ -458,9 +463,10 @@ try {
             const hiddenOfferIdInput = document.getElementById('applied_offer_id');
             const hiddenDiscountInput = document.getElementById('discount_amount_val');
 
-            // Price summary elements
+            // Price summary elements (These were not defined before)
             const priceSummaryDisplay = document.getElementById('price-summary-display');
             const originalPriceDisplay = document.getElementById('original-price-display');
+            const platformFeeDisplay = document.getElementById('platform-fee-display'); // <-- The error was here
             const discountAppliedDisplay = document.getElementById('discount-applied-display');
             const finalPriceDisplay = document.getElementById('final-price-display');
 
@@ -513,13 +519,11 @@ try {
             }
 
             function displayAvailableOffers(offers) {
-                // Check if the container exists (safety check)
                  if (!availableOffersContainer) {
                      console.error("Available offers container not found in displayAvailableOffers!");
                      return;
                  }
 
-                // Build the HTML for the offer buttons
                 let offersHtml = '<p style="font-size: 0.9em; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-color-light);">Available Offers:</p>';
                 offersHtml += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">';
                 offers.forEach(offer => {
@@ -541,7 +545,7 @@ try {
                 });
             }
 
-            // --- Service Selection Logic (UPDATED) ---
+            // --- Service Selection Logic ---
             if (serviceSelectionGrid) {
                 serviceSelectionGrid.addEventListener('click', function(e) {
                     const clickedService = e.target.closest('.service-option');
@@ -555,9 +559,16 @@ try {
 
                     clickedService.classList.add('selected');
                     hiddenServiceItemInput.value = clickedService.dataset.itemName;
-                    hiddenSubServiceItemInput.value = clickedService.dataset.itemId; // <<< SET ITEM ID
+                    hiddenSubServiceItemInput.value = clickedService.dataset.itemId;
                     hiddenPriceInput.value = clickedService.dataset.price;
                     selectedItemPrice = parseFloat(clickedService.dataset.price);
+
+                    // Show and update the price summary
+                    priceSummaryDisplay.style.display = 'block';
+                    originalPriceDisplay.textContent = `₹${selectedItemPrice.toFixed(2)}`;
+                    platformFeeDisplay.textContent = `₹${platformFee.toFixed(2)}`;
+                    finalPriceDisplay.textContent = `₹${(selectedItemPrice + platformFee).toFixed(2)}`;
+                    document.querySelector('#price-summary-display .discount-row').style.display = 'none';
 
                     if (selectedItemPrice > 0) {
                         couponSectionWrapper.style.display = 'block';
@@ -585,159 +596,174 @@ try {
                 availableOffersContainer.innerHTML = '';
             }
 
-            // --- Apply Coupon Logic (UPDATED to send item_id) ---
-            applyCouponBtn.addEventListener('click', function() {
-                const code = couponCodeInput.value.trim().toUpperCase();
-                const subServiceItemId = hiddenSubServiceItemInput.value; // <<< GET ITEM ID
+            // --- Apply Coupon Logic ---
+            if (applyCouponBtn) {
+                applyCouponBtn.addEventListener('click', function() {
+                    const code = couponCodeInput.value.trim().toUpperCase();
+                    const subServiceItemId = hiddenSubServiceItemInput.value;
 
-                if (!code) { couponMessageDiv.textContent = 'Please enter a coupon code.'; couponMessageDiv.style.color = 'var(--danger-color)'; return; }
-                if (selectedItemPrice <= 0) { couponMessageDiv.textContent = 'Please select a service first.'; couponMessageDiv.style.color = 'var(--danger-color)'; return; }
-                if (!subServiceItemId) { // <<< Added check
-                    couponMessageDiv.textContent = 'Please select a specific service item first.';
-                    couponMessageDiv.style.color = 'var(--danger-color)';
-                    return;
-                }
-
-                applyCouponBtn.disabled = true;
-                applyCouponBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                couponMessageDiv.textContent = '';
-
-                const formData = new FormData();
-                formData.append('worker_id', workerId);
-                formData.append('coupon_code', code);
-                formData.append('item_price', selectedItemPrice);
-                formData.append('sub_service_item_id', subServiceItemId); // <<< PASS ITEM ID
-
-                fetch('/dailyfix/api/validate_offer_pre_booking.php', { method: 'POST', body: formData })
-                    .then(res => res.json().then(body => ({ ok: res.ok, body, status: res.status }))) // Get status code
-                    .then(({ ok, body, status }) => {
-                        applyCouponBtn.disabled = false; // Re-enable regardless of outcome
-
-                        if (ok && body.status === 'success') {
-                            couponMessageDiv.textContent = body.message + ` Discount: ₹${body.discount_amount}`;
-                            couponMessageDiv.style.color = 'var(--success-color)';
-                            applyCouponBtn.innerHTML = 'Applied';
-                            applyCouponBtn.disabled = true; // Disable after successful apply
-                            couponCodeInput.disabled = true; // Disable input too
-                            removeCouponBtn.style.display = 'inline'; // Show remove button
-
-                            // Update hidden fields
-                            hiddenOfferIdInput.value = body.offer_id;
-                            hiddenDiscountInput.value = parseFloat(body.discount_amount.replace(/,/g, ''));
-
-                            // Update price summary display
-                            originalPriceDisplay.textContent = `₹${body.original_price}`;
-                            discountAppliedDisplay.textContent = `-₹${body.discount_amount}`;
-                            finalPriceDisplay.textContent = `₹${body.final_price}`;
-                            priceSummaryDisplay.style.display = 'block';
-
-                        } else {
-                             // Updated Error Handling for 409 Conflict
-                             if (status === 409) { // HTTP 409 Conflict indicates already used
-                                 couponMessageDiv.textContent = body.message || 'You have already used this coupon for this item.';
-                             } else {
-                                 couponMessageDiv.textContent = body.message || 'Error validating coupon.';
-                             }
-                             couponMessageDiv.style.color = 'var(--danger-color)';
-                             applyCouponBtn.innerHTML = 'Apply';
-                             priceSummaryDisplay.style.display = 'none';
-                             hiddenOfferIdInput.value = '';
-                             hiddenDiscountInput.value = '0';
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Coupon Validation Error:", error);
-                        couponMessageDiv.textContent = 'A network error occurred during validation.';
+                    if (!code) { couponMessageDiv.textContent = 'Please enter a coupon code.'; couponMessageDiv.style.color = 'var(--danger-color)'; return; }
+                    if (selectedItemPrice <= 0) { couponMessageDiv.textContent = 'Please select a service first.'; couponMessageDiv.style.color = 'var(--danger-color)'; return; }
+                    if (!subServiceItemId) {
+                        couponMessageDiv.textContent = 'Please select a specific service item first.';
                         couponMessageDiv.style.color = 'var(--danger-color)';
-                        applyCouponBtn.disabled = false;
-                        applyCouponBtn.innerHTML = 'Apply';
-                        priceSummaryDisplay.style.display = 'none';
-                        hiddenOfferIdInput.value = '';
-                        hiddenDiscountInput.value = '0';
-                    });
-            });
+                        return;
+                    }
+
+                    applyCouponBtn.disabled = true;
+                    applyCouponBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    couponMessageDiv.textContent = '';
+
+                    const formData = new FormData();
+                    formData.append('worker_id', workerId);
+                    formData.append('coupon_code', code);
+                    formData.append('item_price', selectedItemPrice);
+                    formData.append('sub_service_item_id', subServiceItemId);
+
+                    fetch('/dailyfix/api/validate_offer_pre_booking.php', { method: 'POST', body: formData })
+                        .then(res => res.json().then(body => ({ ok: res.ok, body, status: res.status })))
+                        .then(({ ok, body, status }) => {
+                            applyCouponBtn.disabled = false; 
+
+                            if (ok && body.status === 'success') {
+                                couponMessageDiv.textContent = body.message + ` Discount: ₹${body.discount_amount}`;
+                                couponMessageDiv.style.color = 'var(--success-color)';
+                                applyCouponBtn.innerHTML = 'Applied';
+                                applyCouponBtn.disabled = true;
+                                couponCodeInput.disabled = true;
+                                removeCouponBtn.style.display = 'inline';
+                                if(availableOffersContainer) availableOffersContainer.style.display = 'none';
+
+                                const originalPrice = parseFloat(body.original_price.replace(/,/g, ''));
+                                const discount = parseFloat(body.discount_amount.replace(/,/g, ''));
+                                const finalWorkerPrice = parseFloat(body.final_price.replace(/,/g, ''));
+                                const totalToPay = finalWorkerPrice + platformFee;
+
+                                originalPriceDisplay.textContent = `₹${originalPrice.toFixed(2)}`;
+                                platformFeeDisplay.textContent = `₹${platformFee.toFixed(2)}`;
+                                discountAppliedDisplay.textContent = `-₹${discount.toFixed(2)}`;
+                                document.querySelector('#price-summary-display .discount-row').style.display = 'block';
+                                finalPriceDisplay.textContent = `₹${totalToPay.toFixed(2)}`;
+                                
+                                priceSummaryDisplay.style.display = 'block';
+                                
+                                hiddenOfferIdInput.value = body.offer_id;
+                                hiddenDiscountInput.value = discount;
+
+                            } else {
+                                if (status === 409) {
+                                    couponMessageDiv.textContent = body.message || 'You have already used this coupon for this item.';
+                                } else {
+                                    couponMessageDiv.textContent = body.message || 'Error validating coupon.';
+                                }
+                                couponMessageDiv.style.color = 'var(--danger-color)';
+                                applyCouponBtn.innerHTML = 'Apply';
+                                priceSummaryDisplay.style.display = 'block'; // Keep summary visible
+                                // Reset prices to non-discounted
+                                originalPriceDisplay.textContent = `₹${selectedItemPrice.toFixed(2)}`;
+                                platformFeeDisplay.textContent = `₹${platformFee.toFixed(2)}`;
+                                finalPriceDisplay.textContent = `₹${(selectedItemPrice + platformFee).toFixed(2)}`;
+                                document.querySelector('#price-summary-display .discount-row').style.display = 'none';
+                                
+                                hiddenOfferIdInput.value = '';
+                                hiddenDiscountInput.value = '0';
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Coupon Validation Error:", error);
+                            couponMessageDiv.textContent = 'A network error occurred during validation.';
+                            couponMessageDiv.style.color = 'var(--danger-color)';
+                            applyCouponBtn.disabled = false;
+                            applyCouponBtn.innerHTML = 'Apply';
+                            hiddenOfferIdInput.value = '';
+                            hiddenDiscountInput.value = '0';
+                        });
+                });
+            }
 
             // --- Remove Coupon Logic ---
-            removeCouponBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                couponCodeInput.value = '';
-                couponCodeInput.disabled = false;
-                applyCouponBtn.disabled = false;
-                applyCouponBtn.innerHTML = 'Apply';
-                couponMessageDiv.textContent = 'Coupon removed.';
-                couponMessageDiv.style.color = 'var(--info-color)'; // Or neutral/light grey
-                removeCouponBtn.style.display = 'none';
-                priceSummaryDisplay.style.display = 'none';
-                hiddenOfferIdInput.value = '';
-                hiddenDiscountInput.value = '0';
+            if(removeCouponBtn) {
+                removeCouponBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    couponCodeInput.value = '';
+                    couponCodeInput.disabled = false;
+                    applyCouponBtn.disabled = false;
+                    applyCouponBtn.innerHTML = 'Apply';
+                    couponMessageDiv.textContent = 'Coupon removed.';
+                    couponMessageDiv.style.color = 'var(--info-color)';
+                    removeCouponBtn.style.display = 'none';
+                    hiddenOfferIdInput.value = '';
+                    hiddenDiscountInput.value = '0';
+                    if(availableOffersContainer) availableOffersContainer.style.display = 'block';
 
-                // Re-enable coupon section and fetch offers if a service is still selected
-                if (selectedItemPrice > 0) {
-                    couponSectionWrapper.style.display = 'block';
+                    // Reset the price summary
+                    originalPriceDisplay.textContent = `₹${selectedItemPrice.toFixed(2)}`;
+                    platformFeeDisplay.textContent = `₹${platformFee.toFixed(2)}`;
+                    finalPriceDisplay.textContent = `₹${(selectedItemPrice + platformFee).toFixed(2)}`;
+                    document.querySelector('#price-summary-display .discount-row').style.display = 'none';
+                    priceSummaryDisplay.style.display = 'block';
+                    
                     fetchAndDisplayOffers();
-                } else {
-                     couponSectionWrapper.style.display = 'none';
-                }
-            });
+                });
+            }
 
+            // --- Form Submission Logic ---
+            if(bookingForm) {
+                bookingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
 
-            // --- Form Submission Logic (UPDATED to check item_id) ---
-            bookingForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+                    if (!hiddenSubServiceItemInput.value) {
+                        alert('Please select a specific service item.');
+                        return;
+                    }
+                    if (!document.getElementById('booking_date').value || !document.getElementById('booking_time_combined').value) {
+                        alert('Please select a date and time slot.');
+                        return;
+                    }
 
-                if (!hiddenSubServiceItemInput.value) { // <<< CHECK ITEM ID
-                    alert('Please select a specific service item.');
-                    return;
-                }
-                if (!document.getElementById('booking_date').value || !document.getElementById('booking_time_combined').value) {
-                    alert('Please select a date and time slot.');
-                    return;
-                }
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request...';
 
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request...';
+                    const formData = new FormData(bookingForm);
 
-                const formData = new FormData(bookingForm);
-
-                fetch('/dailyfix/api/create_booking.php', { method: 'POST', body: formData })
-                    .then(response => response.json().then(body => ({ ok: response.ok, body, status: response.status }))) // Get status code
-                    .then(({ok, body, status}) => {
-                        if (ok && body.status === 'success') {
-                            successModal.style.display = 'flex'; // Use flex for centering
-                            let countdown = 5;
-                            countdownSpan.textContent = countdown;
-                            const interval = setInterval(() => {
-                                countdown--;
+                    fetch('/dailyfix/api/create_booking.php', { method: 'POST', body: formData })
+                        .then(response => response.json().then(body => ({ ok: response.ok, body, status: response.status })))
+                        .then(({ok, body, status}) => {
+                            if (ok && body.status === 'success') {
+                                successModal.style.display = 'flex';
+                                let countdown = 5;
                                 countdownSpan.textContent = countdown;
-                                if (countdown <= 0) {
-                                    clearInterval(interval);
-                                    window.location.href = '/dailyfix/customer/bookings.php';
+                                const interval = setInterval(() => {
+                                    countdown--;
+                                    countdownSpan.textContent = countdown;
+                                    if (countdown <= 0) {
+                                        clearInterval(interval);
+                                        window.location.href = '/dailyfix/customer/bookings.php';
+                                    }
+                                }, 1000);
+                            } else {
+                                if (status === 409) {
+                                    alert('Error: ' + (body.message || 'You have already used the applied coupon for this item.'));
+                                } else {
+                                    alert('Error: ' + (body.message || 'Could not create booking.'));
                                 }
-                            }, 1000);
-                        } else {
-                             // Updated Error Handling for 409 Conflict
-                             if (status === 409) { // HTTP 409 Conflict indicates already used
-                                 alert('Error: ' + (body.message || 'You have already used the applied coupon for this item.'));
-                             } else {
-                                 alert('Error: ' + (body.message || 'Could not create booking.'));
-                             }
-                             submitButton.disabled = false;
-                             submitButton.innerHTML = 'Send Booking Request';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred. Please try again.');
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = 'Send Booking Request';
-                    });
-            });
+                                submitButton.disabled = false;
+                                submitButton.innerHTML = 'Send Booking Request';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred. Please try again.');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = 'Send Booking Request';
+                        });
+                });
+            }
 
             // Make modal clickable outside to close
             if (successModal) {
                 successModal.addEventListener('click', function(event) {
                     if (event.target === successModal) {
-                        // Redirect immediately or just hide
                         window.location.href = '/dailyfix/customer/bookings.php';
                     }
                 });

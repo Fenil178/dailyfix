@@ -218,7 +218,7 @@ try {
                         <td><?php echo htmlspecialchars($item['sub_service_name']); ?></td>
                         <td><i class="<?php echo htmlspecialchars($item['icon']); ?>"></i> <?php echo htmlspecialchars($item['name']); ?></td>
                         <td class="action-buttons">
-                            <a href="edit_sub_service_item.php?id=<?php echo $item['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="edit_sub_service_item.php?id=<?php echo $item['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
                             <a href="actions/sub_service_item_actions.php?action=delete&id=<?php echo $item['id']; ?>"
                                class="action-trigger"
                                data-modal-title="Confirm Deletion"

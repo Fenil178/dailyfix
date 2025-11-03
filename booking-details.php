@@ -20,7 +20,9 @@ try {
             w.full_name AS worker_name,
             w.profile_image AS worker_avatar,
             w.phone AS worker_phone,
-            r.id as review_id
+            r.id as review_id,
+            b.worker_earning,
+            b.platform_fee
         FROM
             public.bookings b
         JOIN
@@ -58,7 +60,17 @@ if ($booking['applied_offer_id']) {
 
 
 // Calculate final cost after discount for display
-$originalCost = (float)($booking['final_cost'] ?? 0.00); // This is the base price set during booking
+$workerEarning = (float)($booking['worker_earning'] ?? 0.00);
+$platformFee = (float)($booking['platform_fee'] ?? PLATFORM_FEE); // Use constant as fallback
+
+// If worker_earning is 0, it's likely an old booking.
+// Use final_cost as the worker_earning and set fee to 0 for old data.
+if ($workerEarning == 0.00 && (float)($booking['final_cost'] ?? 0.00) > 0) {
+    $workerEarning = (float)($booking['final_cost'] ?? 0.00);
+    $platformFee = 0.00;
+}
+
+$originalCost = $workerEarning + $platformFee; // This is the total *before* discount
 $discountAmount = (float)($booking['discount_amount'] ?? 0.00);
 $finalCostAfterDiscount = max(0, $originalCost - $discountAmount);
 
@@ -232,8 +244,12 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         </div>
                         <div class="card-section">
                             <div class="detail-item">
-                                <strong>Original Cost</strong>
-                                <span>₹<?php echo number_format($originalCost, 2); ?></span>
+                                <strong>Service Cost</strong>
+                                <span>₹<?php echo number_format($workerEarning, 2); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Platform Fee</strong>
+                                <span>₹<?php echo number_format($platformFee, 2); ?></span>
                             </div>
                             <?php if ($discountAmount > 0): ?>
                             <div class="detail-item">
@@ -339,11 +355,14 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
         <a href="#" id="remove-coupon-btn" style="display: none; font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; text-decoration: none;">Remove Coupon</a>
     <?php endif; ?>
 
-    <div id="price-summary" style="<?php echo $discountAmount > 0 ? 'display: block;' : 'display: none;'; ?>">
-         <p>Original Cost: <span id="original-cost">₹<?php echo number_format($originalCost, 2); ?></span></p>
-         <p>Discount: <span id="discount-applied">-₹<?php echo number_format($discountAmount, 2); ?></span></p>
-         <hr>
-         <p>New Total: <span id="final-cost-display">₹<?php echo number_format($finalCostAfterDiscount, 2); ?></span></p>
+    <div id="price-summary" style="display: block;">
+     <p>Service Cost: <span id="original-cost">₹<?php echo number_format($workerEarning, 2); ?></span></p>
+     <p>Platform Fee: <span>₹<?php echo number_format($platformFee, 2); ?></span></p>
+     <p class="discount-row" style="<?php echo $discountAmount > 0 ? 'display: block;' : 'display: none;'; ?>">
+         Discount: <span id="discount-applied">-₹<?php echo number_format($discountAmount, 2); ?></span>
+     </p>
+     <hr>
+     <p>New Total: <span id="final-cost-display" style="font-weight: bold; font-size: 1.1em; color: var(--text-color-dark);">₹<?php echo number_format($finalCostAfterDiscount, 2); ?></span></p>
     </div>
      <?php // This condition already correctly hides this section
      if (!($booking['applied_offer_id'] && $appliedCouponCode)): ?>

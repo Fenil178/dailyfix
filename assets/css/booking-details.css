@@ -332,6 +332,7 @@
   font-weight: 600;
   min-width: 120px;
   border-radius: 8px;
+  cursor: pointer;
 }
 .modal-buttons-container .btn-secondary {
   background-color: var(--hover-color);

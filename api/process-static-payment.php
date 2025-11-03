@@ -33,7 +33,9 @@ try {
             applied_offer_id, 
             discount_amount, 
             payment_status, 
-            work_completed_by_worker 
+            work_completed_by_worker,
+            worker_earning,
+            platform_fee
         FROM public.bookings 
         WHERE id = ? AND customer_id = ? 
         FOR UPDATE 
@@ -60,17 +62,31 @@ try {
     $applied_offer_id = $booking['applied_offer_id']; // Needed for transaction description
 
     // --- Calculate Final Amount (Server-Side) ---
-    $amount_paid = round(max(0, $original_cost - $discount_amount), 2);
+    $worker_earning  = (float)($booking['worker_earning'] ?? 0.00);
+    $platform_fee    = (float)($booking['platform_fee'] ?? PLATFORM_FEE);
+    $original_cost   = (float)$booking['final_cost']; // This is the total (worker + fee)
+    $discount_amount = (float)($booking['discount_amount'] ?? 0.00);
+
+// The total amount the customer pays
+$amount_customer_paid = round(max(0, $original_cost - $discount_amount), 2);
+
+// The amount the worker gets: their earning minus the coupon they offered
+$amount_to_worker = round(max(0, $worker_earning - $discount_amount), 2);
 
     // --- Critical Amount Validation ---
-    if (!is_numeric($original_cost) || $original_cost <= 0) {
-        throw new Exception("The original cost (₹" . number_format($original_cost, 2) . ") is invalid. Contact support.");
-    }
-    if (!is_numeric($amount_paid) || $amount_paid < 0) {
-        // This should ideally not happen with max(0, ...) but good as a safeguard
-        error_log("Payment failed for booking $booking_id: Calculated final amount negative ($amount_paid). Original: $original_cost, Discount: $discount_amount.");
-        throw new Exception("The final amount to pay (₹" . number_format($amount_paid, 2) . ") is invalid after discount. Contact support.");
-    }
+if (!is_numeric($original_cost) || $original_cost <= 0) {
+    throw new Exception("The original cost (₹" . number_format($original_cost, 2) . ") is invalid. Contact support.");
+}
+if (!is_numeric($amount_customer_paid) || $amount_customer_paid < 0) {
+    // This should ideally not happen with max(0, ...) but good as a safeguard
+    error_log("Payment failed for booking $booking_id: Calculated final amount negative ($amount_customer_paid). Original: $original_cost, Discount: $discount_amount.");
+    throw new Exception("The final amount to pay (₹" . number_format($amount_customer_paid, 2) . ") is invalid after discount. Contact support.");
+}
+// Also validate the worker's amount as a safety check
+if (!is_numeric($amount_to_worker) || $amount_to_worker < 0) {
+    error_log("Payment failed for booking $booking_id: Calculated *worker* amount negative ($amount_to_worker).");
+    throw new Exception("A calculation error occurred (Code: W-AMT). Contact support.");
+}
 
     // --- Update Booking Status ---
     $stmt_update_booking = $conn->prepare("
@@ -96,19 +112,19 @@ try {
 
     // --- Update Worker's Wallet Balance ---
     $stmt_update_wallet = $conn->prepare("UPDATE public.wallets SET balance = balance + ? WHERE id = ?");
-    $stmt_update_wallet->execute([$amount_paid, $wallet_id]); // Credit the actual amount paid
+    $stmt_update_wallet->execute([$amount_to_worker, $wallet_id]); // Credit only the worker's portion
 
     // --- Add Transaction Record ---
-    $description = 'Payment received for Booking #' . $booking_id;
+    $description = 'Payment for Booking #' . $booking_id;
     if ($discount_amount > 0) {
-        // Include original and discount in description for clarity
-        $description .= " (Original: ₹".number_format($original_cost, 2).", Discount: ₹".number_format($discount_amount, 2).")";
+        // Make the description clear about the worker's cut
+        $description .= " (Worker Price: ₹".number_format($worker_earning, 2).", Discount: ₹".number_format($discount_amount, 2).")";
     }
     $stmt_transaction = $conn->prepare("
         INSERT INTO public.transactions (wallet_id, booking_id, type, amount, description) 
         VALUES (?, ?, 'credit', ?, ?)
     ");
-    $stmt_transaction->execute([$wallet_id, $booking_id, $amount_paid, $description]); // Log the actual amount paid
+    $stmt_transaction->execute([$wallet_id, $booking_id, $amount_to_worker, $description]); // Log only the worker's portion
 
     // --- Offer Usage Count Increment REMOVED ---
     // The uses_count is now incremented in validate_apply_offer.php when the offer is first applied.

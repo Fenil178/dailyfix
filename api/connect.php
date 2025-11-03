@@ -25,4 +25,8 @@ try {
     // This will show you the exact error for debugging
     die("Connection failed: " . $e->getMessage());
 }
+
+// Define the platform-wide booking fee
+define('PLATFORM_FEE', 50.00);
+
 ?>

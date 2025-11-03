@@ -95,6 +95,7 @@ try {
     .skeleton-panel-title { height: 24px; width: 30%; margin-bottom: 1.5rem; }
     .skeleton-map { height: 300px; width: 100%; }
     .skeleton-table { height: 400px; width: 100%; }
+    
 </style>
 
 <div class="skeleton-loader" id="page-loader">
@@ -159,37 +160,31 @@ try {
                             <td><?php echo htmlspecialchars($user['city'] . ', ' . $user['state']); ?></td>
                             <td><?php echo date("M d, Y", strtotime($user['created_at'])); ?></td>
                             <td class="action-buttons">
-                                <a href="edit_user.php?id=<?php echo $user['id']; ?>" title="Edit"><i class="fas fa-edit"></i></a>
-                                
-                                <?php if ($user['account_status'] === 'active'): ?>
-                                    <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>" 
-                                       class="action-trigger"
-                                       data-modal-title="Confirm Suspension"
-                                       data-modal-description="Are you sure you want to suspend this user's account?"
-                                       data-modal-icon="fas fa-ban"
-                                       data-modal-theme="modal-warning"
-                                       data-modal-confirm-text="Yes, Suspend"
-                                       title="Suspend"><i class="fas fa-ban"></i></a>
-                                <?php else: ?>
-                                    <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>"
-                                       class="action-trigger"
-                                       data-modal-title="Confirm Activation"
-                                       data-modal-description="Are you sure you want to reactivate this user's account?"
-                                       data-modal-icon="fas fa-check-circle"
-                                       data-modal-theme="modal-warning"
-                                       data-modal-confirm-text="Yes, Activate"
-                                       title="Activate"><i class="fas fa-check-circle"></i></a>
-                                <?php endif; ?>
+    <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
+    
+    <?php if ($user['account_status'] === 'active'): ?>
+        <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>" 
+           class="action-trigger action-btn" 
+           data-modal-title="Confirm Suspension"
+           ...
+           data-modal-theme="modal-warning"
+           title="Suspend"><i class="fas fa-ban"></i></a>
+    <?php else: ?>
+        <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>"
+           class="action-trigger action-btn"
+           data-modal-title="Confirm Activation"
+           ...
+           data-modal-theme="modal-warning"
+           title="Activate"><i class="fas fa-check-circle"></i></a>
+    <?php endif; ?>
 
-                                <a href="actions/user_actions.php?action=delete&user_id=<?php echo $user['id']; ?>"
-                                   class="action-trigger"
-                                   data-modal-title="Confirm Deletion"
-                                   data-modal-description="This action is permanent and cannot be undone. Are you sure you want to delete this user?"
-                                   data-modal-icon="fas fa-trash"
-                                   data-modal-theme="modal-danger"
-                                   data-modal-confirm-text="Yes, Delete"
-                                   title="Delete"><i class="fas fa-trash"></i></a>
-                            </td>
+    <a href="actions/user_actions.php?action=delete&user_id=<?php echo $user['id']; ?>"
+       class="action-trigger action-btn" 
+       data-modal-title="Confirm Deletion"
+       ...
+       data-modal-theme="modal-danger"
+       title="Delete"><i class="fas fa-trash"></i></a>
+</td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -213,10 +208,11 @@ try {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- 1. YOUR MAP CODE (Unchanged) ---
     const userMap = document.getElementById('user-map');
     if (userMap) {
         const map = L.map('user-map').setView([21.1702, 72.8311], 10);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
@@ -225,6 +221,83 @@ document.addEventListener('DOMContentLoaded', function() {
         users.forEach(user => {
             const marker = L.marker([user.latitude, user.longitude]).addTo(map);
             marker.bindPopup(`<b>${user.full_name}</b><br>${user.role}`);
+        });
+    }
+
+    // --- 2. THE MODAL SCRIPT (This is the fix) ---
+    const modal = document.getElementById('confirmation-modal');
+    if (modal) {
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+        const modalIcon = modal.querySelector('.modal-icon i');
+        const confirmBtn = document.getElementById('confirm-action-btn');
+        const cancelBtn = document.getElementById('cancel-action-btn');
+        const closeBtn = modal.querySelector('.close-button');
+        let confirmUrl = '#';
+
+        document.querySelectorAll('.action-trigger').forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault(); // Stop the link from navigating immediately
+                
+                // Get data from the link you clicked
+                confirmUrl = this.href;
+                const title = this.dataset.modalTitle;
+                const description = this.dataset.modalDescription;
+                const icon = this.dataset.modalIcon;
+                const theme = this.dataset.modalTheme;
+                const confirmText = this.dataset.modalConfirmText; // Get the text
+
+                // Populate the modal
+                modalTitle.textContent = title;
+                modalDescription.textContent = description;
+                modalIcon.className = icon; 
+                
+                // THIS IS THE LINE THAT FIXES YOUR BUTTON
+                confirmBtn.textContent = confirmText; 
+                
+                // Reset/apply theme classes
+                modal.className = 'modal confirmation-modal'; // Reset
+                if (theme) {
+                    modal.classList.add(theme);
+                }
+                
+                // Show the modal (using .show to match your admin_style.css)
+                modal.classList.add('show');
+                modal.setAttribute('aria-hidden', 'false');
+            });
+        });
+
+        // Function to close the modal
+        function closeModal() {
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+            confirmUrl = '#'; // Clear the URL
+        }
+
+        // Add event listeners to close buttons
+        confirmBtn.addEventListener('click', () => {
+            if (confirmUrl !== '#') {
+                window.location.href = confirmUrl; // Go to the delete/suspend URL
+            }
+        });
+        
+        cancelBtn.addEventListener('click', closeModal);
+        closeBtn.addEventListener('click', closeModal);
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                closeModal();
+            }
+        });
+    }
+
+    // --- 3. SKELETON LOADER SCRIPT ---
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+        // Hide the loader once the window is fully loaded
+        window.addEventListener('load', () => {
+            loader.classList.add('hidden');
         });
     }
 });

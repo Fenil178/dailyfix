@@ -33,12 +33,13 @@ if (file_exists($logoPath)) {
 }
 
 
-// --- 3. DATA FETCHING ---
+// --- 3. DATA FETCHING (MODIFIED) ---
 try {
     // --- Fetch booking, discount, user details and ensure user has access ---
     $stmt = $conn->prepare("
         SELECT
             b.id, b.created_at, b.booking_time, b.final_cost, b.discount_amount, b.status, b.payment_status, b.service_details,
+            b.worker_earning, b.platform_fee,
             c.full_name AS customer_name, c.address_line1 AS customer_addr1, c.address_line2 AS customer_addr2, c.city AS customer_city, c.state AS customer_state, c.pincode AS customer_pincode,
             w.full_name AS worker_name, w.address_line1 AS worker_addr1, w.address_line2 AS worker_addr2, w.city AS worker_city, w.state AS worker_state, w.pincode AS worker_pincode
         FROM public.bookings b
@@ -81,14 +82,26 @@ foreach ($serviceDetails as $line) {
 }
 
 
-// --- 6. CALCULATE & FORMAT CURRENCY ---
-$originalCost = (float)($invoice['final_cost'] ?? 0.00);
-$discountAmount = (float)($invoice['discount_amount'] ?? 0.00);
-$totalPaid = max(0, $originalCost - $discountAmount); // Calculate actual paid amount
+// --- 6. CALCULATE & FORMAT CURRENCY (MODIFIED) ---
+$workerEarning = (float)($invoice['worker_earning'] ?? 0.00);
+$platformFee = (float)($invoice['platform_fee'] ?? 0.00);
 
-$originalCostFormatted = number_format($originalCost, 2);
+// Handle old bookings that don't have these fields
+if ($workerEarning == 0.00 && (float)($invoice['final_cost'] ?? 0.00) > 0) {
+    // Fallback: Assume final_cost was the worker's earning and there was no fee
+    $workerEarning = (float)($invoice['final_cost'] ?? 0.00);
+    $platformFee = 0.00;
+}
+
+$discountAmount = (float)($invoice['discount_amount'] ?? 0.00);
+// Total paid is the sum of (worker + fee) minus the discount
+$totalPaid = max(0, ($workerEarning + $platformFee) - $discountAmount);
+
+$workerEarningFormatted = number_format($workerEarning, 2);
+$platformFeeFormatted = number_format($platformFee, 2);
 $discountAmountFormatted = number_format($discountAmount, 2);
 $totalPaidFormatted = number_format($totalPaid, 2);
+
 
 // --- 7. GENERATE DYNAMIC HTML INVOICE ---
 $html = '
@@ -279,17 +292,21 @@ $html = '
                     </td>
                     <td style="text-align: center; white-space: nowrap;">' . $bookingTime->format('M d, Y, g:i A') . '</td>
                     <td style="text-align: right; font-weight: 500; color: #111827;">
-                        ₹' . $originalCostFormatted . '
+                        ₹' . $workerEarningFormatted . '
                     </td>
                 </tr>
             </tbody>
-        </table>
+            </table>
 
         <table style="margin-top: 30px; width: 40%; margin-left: auto;">
              <tbody class="summary-table">
                 <tr>
-                    <td class="label">Subtotal:</td>
-                    <td class="value">₹' . $originalCostFormatted . '</td>
+                    <td class="label">Service Cost:</td>
+                    <td class="value">₹' . $workerEarningFormatted . '</td>
+                </tr>
+                <tr>
+                    <td class="label">Platform Fee:</td>
+                    <td class="value" style="color: #ee3f3fff;">+₹' . $platformFeeFormatted . '</td>
                 </tr>';
 if ($discountAmount > 0) {
     $html .= '<tr>
@@ -297,16 +314,12 @@ if ($discountAmount > 0) {
                     <td class="value" style="color: #16A34A;">-₹' . $discountAmountFormatted . '</td>
                 </tr>';
 }
-$html .= '  <tr>
-                    <td class="label">Taxes/Fees:</td>
-                    <td class="value">₹' . number_format(0, 2) . '</td>
-                </tr>
-                <tr class="total-row">
+$html .= '  <tr class="total-row">
                     <td class="label total-paid">TOTAL PAID:</td>
-                    <td class="value total-paid">₹' . $totalPaidFormatted . '</td>
+                    <td class="value total-paid" style="color: #16A34A;"">₹' . $totalPaidFormatted . '</td>
                 </tr>
             </tbody>
-        </table>
+            </table>
 
     </main>
 </body>
