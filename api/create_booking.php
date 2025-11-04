@@ -1,6 +1,4 @@
 <?php
-
-
 include_once __DIR__ . "/connect.php";
 include_once __DIR__ . "/user_session.php";
 
@@ -179,6 +177,20 @@ try {
 
     // Commit transaction
     $conn->commit();
+
+    // --- NOTIFICATION LOGIC ---
+    include_once __DIR__ . "/notification_handler.php";
+    $link = "booking-details.php?id=$new_booking_id";
+    
+    // 1. Notify Worker
+    // We need the customer's name (which is $userName from user_session.php, already included)
+    $message_for_worker = "$userName has sent you a new booking request.";
+    create_notification($conn, $worker_id, $customer_id, $message_for_worker, $link);
+    
+    // 2. Notify Admin
+    $message_for_admin = "New booking (#$new_booking_id) from $userName for worker ID $worker_id.";
+    create_notification($conn, 'admin', $customer_id, $message_for_admin, $link);
+    // --- END NOTIFICATION ---
 
     echo json_encode(['status' => 'success', 'message' => 'Booking created successfully.']);
     exit;

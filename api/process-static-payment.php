@@ -126,6 +126,22 @@ if (!is_numeric($amount_to_worker) || $amount_to_worker < 0) {
     ");
     $stmt_transaction->execute([$wallet_id, $booking_id, $amount_to_worker, $description]); // Log only the worker's portion
 
+    // --- NOTIFICATION LOGIC ---
+    include_once __DIR__ . "/notification_handler.php";
+    // $userName is the customer's name (from user_session.php)
+    // $worker_id and $booking_id are already available
+    $link = "booking-details.php?id=$booking_id";
+    $amount_str = number_format($amount_customer_paid, 2);
+
+    // 1. Notify Worker
+    $message_for_worker = "Payment received! $userName paid ₹$amount_str for booking #$booking_id.";
+    create_notification($conn, $worker_id, $userId, $message_for_worker, $link);
+
+    // 2. Notify Admin
+    $message_for_admin = "Payment received for booking #$booking_id from $userName (₹$amount_str).";
+    create_notification($conn, 'admin', $userId, $message_for_admin, $link);
+    // --- END NOTIFICATION ---
+
     // --- Offer Usage Count Increment REMOVED ---
     // The uses_count is now incremented in validate_apply_offer.php when the offer is first applied.
     // No action needed here regarding offer count.

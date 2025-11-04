@@ -1,9 +1,24 @@
 <?php
-// This block is now in header.php and handles all session-related logic.
-
-// THIS IS THE PERMANENT FIX:
 // This stable path works correctly from any directory.
 include_once __DIR__ . "/encryption.php";
+
+/**
+ * Formats a timestamp into a user-friendly string.
+ * @param string $timestamp The database timestamp.
+ * @return string The formatted date/time.
+ */
+function format_notification_time($timestamp) {
+    if (empty($timestamp)) {
+        return '';
+    }
+    try {
+        $date = new DateTime($timestamp, new DateTimeZone('UTC')); // Assuming DB is UTC
+        $date->setTimezone(new DateTimeZone('Asia/Kolkata')); // Convert to your timezone
+        return $date->format('M j, Y \a\t g:i A');
+    } catch (Exception $e) {
+        return $timestamp; // Fallback to raw timestamp on error
+    }
+}
 
 $role = null;
 $userId = null;
@@ -32,20 +47,52 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
     header("Location: /dailyfix/login.php");
     exit;
 }
+
+// --- NOTIFICATION FETCH LOGIC ---
+$notifications = [];
+$unread_count = 0;
+if ($userId) {
+    try {
+        // Fetch last 10 notifications with actor's details
+        $stmt_notif = $conn->prepare("
+            SELECT n.*, a.full_name as actor_name, a.profile_image as actor_image
+            FROM public.notifications n
+            LEFT JOIN public.users a ON n.actor_id = a.id
+            WHERE n.user_id = ?
+            ORDER BY n.created_at DESC
+            LIMIT 10
+        ");
+        $stmt_notif->execute([$userId]);
+        $notifications = $stmt_notif->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get unread count
+        $stmt_count = $conn->prepare("SELECT COUNT(*) FROM public.notifications WHERE user_id = ? AND is_read = false");
+        $stmt_count->execute([$userId]);
+        $unread_count = $stmt_count->fetchColumn();
+
+    } catch (PDOException $e) {
+        error_log("Failed to fetch notifications: " . $e->getMessage());
+        // Set to empty values to avoid breaking the page
+        $notifications = [];
+        $unread_count = 0;
+    }
+}
+// --- END NOTIFICATION LOGIC ---
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - DailyFix</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=block" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
-  <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
-  <style>body { opacity: 0; transition: opacity 0.3s ease; }</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - DailyFix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=block" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
+    <link rel="stylesheet" href="/dailyfix/assets/css/notifications.css" />
+    <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+    <style>body { opacity: 0; transition: opacity 0.3s ease; }</style>
 </head>
 <body>
 <header>
@@ -86,14 +133,46 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         ?>
     </ul>
 
-    <button class="profile-btn mobile-search-btn" id="search-icon-mobile" title="Search">
-        <i class="fas fa-search"></i>
-    </button>
+    <div class="navbar-mobile-icons"> 
+        <div class="mobile-notification-container">
+            <button class="profile-btn mobile-notification-btn" id="notificationBellMobile" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <?php if ($unread_count > 0): ?>
+                    <span class="badge" id="unreadNotificationBadgeMobile"><?php echo $unread_count; ?></span>
+                <?php else: ?>
+                    <span class="badge" id="unreadNotificationBadgeMobile" style="display: none;">0</span>
+                <?php endif; ?>
+            </button>
+
+            <div class="dropdown-menu notification-dropdown" id="notificationDropdownMobile">
+                <?php include(__DIR__ . '/includes/notification_dropdown_content.php'); ?>
+            </div>
+        </div>
+
+        <button class="profile-btn mobile-search-btn" id="search-icon-mobile" title="Search">
+            <i class="fas fa-search"></i>
+        </button>
     
-    <div class="user-menu">
+    </div><div class="user-menu">
+        <div class="desktop-notification-container"> 
+            <button class="profile-btn navbar-notification-btn" id="notificationBellDesktop" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <?php if ($unread_count > 0): ?>
+                    <span class="badge" id="unreadNotificationBadgeDesktop"><?php echo $unread_count; ?></span>
+                <?php else: ?>
+                    <span class="badge" id="unreadNotificationBadgeDesktop" style="display: none;">0</span>
+                <?php endif; ?>
+            </button>
+
+            <div class="dropdown-menu notification-dropdown" id="notificationDropdownDesktop">
+                <?php include(__DIR__ . '/includes/notification_dropdown_content.php'); ?>
+            </div>
+        </div>
+
         <button class="profile-btn navbar-search-btn" id="search-icon-desktop" title="Search">
             <i class="fas fa-search"></i>
         </button>
+
         <button class="profile-btn" id="profileBtn" title="User Menu">
             <?php if (!empty($profile_imagePath)): ?>
                 <?php 
@@ -128,8 +207,7 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
             ?>
             <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
-        
-        </div>
+    </div>
     
     <div id="custom-logout-modal" class="modal">
         <div class="modal-content">
@@ -286,8 +364,45 @@ if ((!$role || !$userId) && $currentPage !== 'login.php' && $currentPage !== 'si
         </div>
     </div>
 </div>
+<script src="/dailyfix/assets/js/notifications.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- NEW FUNCTION TO MARK NOTIFICATIONS AS READ ---
+    function markNotificationsAsRead() {
+        const desktopBadge = document.getElementById('unreadNotificationBadgeDesktop');
+        const mobileBadge = document.getElementById('unreadNotificationBadgeMobile');
+        
+        // Check if badges are present and visible
+        const isUnread = (desktopBadge && desktopBadge.style.display !== 'none') || 
+                        (mobileBadge && mobileBadge.style.display !== 'none');
+
+        if (!isUnread) {
+            return; // No unread notifications to mark
+        }
+
+        // Call your API to mark as read
+        fetch('/dailyfix/api/mark_notifications_read.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // 1. Hide both badges
+                if (desktopBadge) desktopBadge.style.display = 'none';
+                if (mobileBadge) mobileBadge.style.display = 'none';
+
+                // 2. Remove 'unread' class from all items in both dropdowns
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Failed to mark notifications as read:', error);
+        });
+    }
     
     // --- Mobile Dropdown Toggle ---
     const mobileProfileBtn = document.getElementById('mobileProfileBtnTrigger');
@@ -298,12 +413,71 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopPropagation();
             mobileDropdown.classList.toggle('active');
         });
-        document.addEventListener('click', function(event) {
-            if (mobileDropdown.classList.contains('active') && !mobileProfileBtn.contains(event.target)) {
-                mobileDropdown.classList.remove('active');
-            }
+    }
+
+    // --- Desktop Notification Dropdown Toggle ---
+    const notifBellDesktop = document.getElementById('notificationBellDesktop');
+    const notifDropdownDesktop = document.getElementById('notificationDropdownDesktop');
+    
+    // --- Mobile Notification Dropdown Toggle ---
+    const notifBellMobile = document.getElementById('notificationBellMobile');
+    const notifDropdownMobile = document.getElementById('notificationDropdownMobile');
+    
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('dropdownMenu');
+
+    // Desktop notification bell click handler
+    if (notifBellDesktop && notifDropdownDesktop) {
+        notifBellDesktop.addEventListener('click', function(event) {
+            event.stopPropagation();
+            notifDropdownDesktop.classList.toggle('active');
+            if (profileDropdown) profileDropdown.classList.remove('active');
+            
+            markNotificationsAsRead(); // <-- MARKS AS READ
         });
     }
+
+    // Mobile notification bell click handler
+    if (notifBellMobile && notifDropdownMobile) {
+        notifBellMobile.addEventListener('click', function(event) {
+            event.stopPropagation();
+            notifDropdownMobile.classList.toggle('active');
+            if (profileDropdown) profileDropdown.classList.remove('active');
+            if (mobileDropdown) mobileDropdown.classList.remove('active');
+            
+            markNotificationsAsRead(); // <-- MARKS AS READ
+        });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        // Close mobile profile dropdown
+        if (mobileDropdown && mobileDropdown.classList.contains('active') && 
+            !mobileProfileBtn.contains(event.target)) {
+            mobileDropdown.classList.remove('active');
+        }
+        
+        // Close mobile notification dropdown
+        if (notifDropdownMobile && notifDropdownMobile.classList.contains('active') && 
+            !notifBellMobile.contains(event.target) && 
+            !notifDropdownMobile.contains(event.target)) {
+            notifDropdownMobile.classList.remove('active');
+        }
+
+        // Close desktop notification dropdown
+        if (notifDropdownDesktop && notifDropdownDesktop.classList.contains('active') && 
+            !notifBellDesktop.contains(event.target) && 
+            !notifDropdownDesktop.contains(event.target)) {
+            notifDropdownDesktop.classList.remove('active');
+        }
+
+        // Close desktop profile dropdown
+        if (profileDropdown && profileDropdown.classList.contains('active') && 
+            !profileBtn.contains(event.target) && 
+            !profileDropdown.contains(event.target)) {
+            profileDropdown.classList.remove('active');
+        }
+    });
 
     // --- Mobile Button "Proxy" Clicks ---
     const mobileThemeBtn = document.getElementById('theme-toggle-btn-mobile');
@@ -313,6 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
             desktopThemeBtn.click();
         });
     }
+    
     const mobileLogoutLink = document.getElementById('logout-link-mobile');
     const desktopLogoutLink = document.getElementById('logout-link');
     if (mobileLogoutLink && desktopLogoutLink) {
@@ -322,10 +497,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- NEW SEARCH MODAL JS ---
+    // --- SEARCH MODAL JS ---
     const searchModal = document.getElementById('search-modal');
     const searchIconDesktop = document.getElementById('search-icon-desktop');
-    const searchIconMobile = document.getElementById('search-icon-mobile'); // This is the new mobile button
+    const searchIconMobile = document.getElementById('search-icon-mobile');
     const searchCloseBtn = document.getElementById('search-modal-close');
     const searchInput = document.getElementById('search-modal-input');
 
@@ -334,7 +509,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             searchModal.classList.add('active');
             
-            // --- UPDATED: Set placeholder based on role ---
             <?php if ($role === 'worker'): ?>
                 searchInput.placeholder = "Search dashboard sections...";
             <?php else: ?>
@@ -352,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         if (searchIconDesktop) searchIconDesktop.addEventListener('click', openSearch);
-        if (searchIconMobile) searchIconMobile.addEventListener('click', openSearch); // Listen on the new button
+        if (searchIconMobile) searchIconMobile.addEventListener('click', openSearch);
         if (searchCloseBtn) searchCloseBtn.addEventListener('click', closeSearch);
 
         searchModal.addEventListener('click', (e) => {
@@ -360,6 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 closeSearch();
             }
         });
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && searchModal.classList.contains('active')) {
                 closeSearch();
@@ -369,3 +544,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </body>
+</html>

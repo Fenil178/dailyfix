@@ -1,6 +1,7 @@
 <?php
 include_once __DIR__ . "/connect.php";
 include_once __DIR__ . "/encryption.php"; // Include for the decrypt_id function
+include_once __DIR__ . "/user_session.php"; // <-- FIX: Added to get the customer's $userName
 
 header('Content-Type: application/json');
 
@@ -69,6 +70,22 @@ try {
         VALUES (?, ?, ?, ?, ?)
     ");
     $stmt->execute([$bookingId, $userId, $booking['worker_id'], $rating, $comment]);
+
+    // --- NOTIFICATION LOGIC (FIXED) ---
+    include_once __DIR__ . "/notification_handler.php";
+    // $userName is the customer's name (from user_session.php)
+    // $userId is the customer's ID (actor)
+    $link = "booking-details.php?id=$bookingId"; // <-- FIX: Use $bookingId
+
+    // 1. Notify Worker
+    // <-- FIX: Use $userName, $rating, $bookingId, and $booking['worker_id']
+    $message_for_worker = "$userName left you a $rating-star review for booking #$bookingId.";
+    create_notification($conn, $booking['worker_id'], $userId, $message_for_worker, $link);
+
+    // 2. Notify Admin
+    $message_for_admin = "New $rating-star review by $userName for booking #$bookingId.";
+    create_notification($conn, 'admin', $userId, $message_for_admin, $link);
+    // --- END NOTIFICATION ---
 
     http_response_code(201);
     echo json_encode(['status' => 'success', 'message' => 'Thank you for your review!']);

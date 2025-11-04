@@ -38,13 +38,17 @@ if (!$booking_id) {
 
 // --- Database Operation ---
 try {
+    // <-- FIX: Modified query to also fetch worker_id for notification
     $stmt_current = $conn->prepare("
-        SELECT status, confirmed_at 
+        SELECT status, confirmed_at, worker_id 
         FROM public.bookings
         WHERE id = ? AND customer_id = ?
     ");
     $stmt_current->execute([$booking_id, $userId]);
     $current_booking = $stmt_current->fetch(PDO::FETCH_ASSOC);
+
+    // <-- FIX: Store the worker_id for the notification
+    $worker_id_to_notify = $current_booking['worker_id'] ?? null;
 
     if (!$current_booking) {
         http_response_code(404);
@@ -74,14 +78,36 @@ try {
     // Update the booking status and add the reason
     $stmt = $conn->prepare(
         "UPDATE public.bookings 
-         SET status = 'cancelled', cancellation_reason = ? 
-         WHERE id = ? AND customer_id = ?"
+        SET status = 'cancelled', cancellation_reason = ? 
+        WHERE id = ? AND customer_id = ?"
     );
     
     $stmt->execute([$cancellation_reason, $booking_id, $userId]);
 
     // Check if the update was successful
     if ($stmt->rowCount() > 0) {
+        
+        // --- NOTIFICATION LOGIC (FIXED) ---
+        // <-- FIX: Only proceed if we successfully fetched a worker ID
+        if ($worker_id_to_notify) {
+            include_once __DIR__ . "/notification_handler.php";
+            // $userName is the customer's name (from user_session.php)
+            // $userId is the customer's ID (actor)
+            $link = "booking-details.php?id=$booking_id";
+            
+            // 1. Notify Worker
+            $reason_text = !empty($cancellation_reason) ? " Reason: $cancellation_reason" : "";
+            // <-- FIX: Use $userName from session, not $customer_name
+            $message_for_worker = "Customer $userName cancelled booking #$booking_id.$reason_text";
+            // <-- FIX: Use $worker_id_to_notify as the recipient
+            create_notification($conn, $worker_id_to_notify, $userId, $message_for_worker, $link);
+
+            // 2. Notify Admin
+            $message_for_admin = "Customer $userName cancelled booking #$booking_id.";
+            create_notification($conn, 'admin', $userId, $message_for_admin, $link);
+        }
+        // --- END NOTIFICATION ---
+
         http_response_code(200); // OK
         echo json_encode(['status' => 'success', 'message' => 'Booking cancelled successfully.']);
     } else {

@@ -498,20 +498,6 @@ body {
   animation: gradientShift 8s ease infinite;
 }
 
-.welcome-banner::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.1) 0%,
-    transparent 70%
-  );
-  animation: float 20s ease-in-out infinite;
-}
 
 .welcome-content {
   display: flex;

@@ -1,8 +1,7 @@
 <?php
-// api/update_booking_status.php
-session_start();
 include_once __DIR__ . "/connect.php";
 include_once __DIR__ . "/encryption.php"; // Include encryption for user ID validation
+include_once __DIR__ . "/user_session.php"; // <-- FIX: Added to get $userName for notifications
 
 header('Content-Type: application/json');
 
@@ -52,7 +51,8 @@ try {
     $conn->beginTransaction();
 
     // Check current status and ownership before updating
-    $stmtCheck = $conn->prepare("SELECT status FROM public.bookings WHERE id = ? AND worker_id = ?");
+    // <-- FIX: Modified query to also fetch customer_id for notification
+    $stmtCheck = $conn->prepare("SELECT status, customer_id FROM public.bookings WHERE id = ? AND worker_id = ?");
     $stmtCheck->execute([$bookingId, $workerId]);
     $currentBooking = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
@@ -63,6 +63,7 @@ try {
     }
 
     $currentStatus = $currentBooking['status'];
+    $customer_id_to_notify = $currentBooking['customer_id']; // <-- FIX: Store customer_id for later
 
     // Define allowed transitions
     $allowedTransitions = [
@@ -73,9 +74,9 @@ try {
 
     // Check if the transition is allowed
     if (!isset($allowedTransitions[$currentStatus]) || !in_array($newStatus, $allowedTransitions[$currentStatus])) {
-         echo json_encode(['status' => 'error', 'message' => "Cannot change status from '$currentStatus' to '$newStatus'."]);
-         $conn->rollBack();
-         exit;
+        echo json_encode(['status' => 'error', 'message' => "Cannot change status from '$currentStatus' to '$newStatus'."]);
+        $conn->rollBack();
+        exit;
     }
 
     // --- Prepare SQL Update ---
@@ -104,15 +105,48 @@ try {
     $stmt = $conn->prepare($sql);
     $success = $stmt->execute($params);
 
+    
     if ($success && $stmt->rowCount() > 0) {
-        // TODO: Add notification logic here if needed (e.g., notify customer of acceptance/rejection)
+        
+        // --- NOTIFICATION LOGIC (FIXED) ---
+        include_once __DIR__ . "/notification_handler.php";
+        // $userName is the worker's name (from user_session.php)
+        $link = "booking-details.php?id=$bookingId"; // <-- FIX: Use $bookingId
+        $message_for_customer = '';
+        $message_for_admin = '';
+
+        // <-- FIX: Check $newStatus, not $status
+        if ($newStatus === 'confirmed') { 
+            $message_for_customer = "$userName has confirmed your booking (#$bookingId).";
+            $message_for_admin = "Worker $userName confirmed booking #$bookingId.";
+        
+        // <-- FIX: Check $newStatus, not 'rejected'
+        } elseif ($newStatus === 'cancelled') { 
+            // <-- FIX: Use $reason variable from earlier
+            $reason_text = !empty($reason) ? " Reason: $reason" : ""; 
+            $message_for_customer = "$userName has rejected your booking (#$bookingId).$reason_text";
+            $message_for_admin = "Worker $userName rejected booking #$bookingId.$reason_text";
+        
+        } elseif ($newStatus === 'in_progress') {
+            $message_for_customer = "$userName has started the job for booking #$bookingId.";
+            $message_for_admin = "Worker $userName started job #$bookingId.";
+        }
+        
+        // Send notifications if a message was generated
+        if (!empty($message_for_customer)) {
+            // <-- FIX: Use $customer_id_to_notify and $workerId (which is $userId)
+            create_notification($conn, $customer_id_to_notify, $workerId, $message_for_customer, $link);
+            create_notification($conn, 'admin', $workerId, $message_for_admin, $link);
+        }
+        // --- END NOTIFICATION ---
+
         $conn->commit();
         echo json_encode(['status' => 'success', 'message' => 'Booking status updated successfully.']);
 
     } else if ($success && $stmt->rowCount() === 0) {
          // This case might happen if the WHERE clause didn't match (e.g., wrong worker ID somehow)
-         echo json_encode(['status' => 'error', 'message' => 'Booking not found or update failed (no rows affected).']);
-         $conn->rollBack();
+        echo json_encode(['status' => 'error', 'message' => 'Booking not found or update failed (no rows affected).']);
+        $conn->rollBack();
     }
     else {
         $conn->rollBack();

@@ -299,7 +299,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         <div class="action-panel">
                             <h2>New Job Request</h2>
                             <p>Review the details and either accept or decline this new request.</p>
-                            <div classs="action-buttons-container" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <div class="action-buttons-container" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                                 <button onclick="handleJobAction(<?php echo $booking['id']; ?>, 'confirmed', null, this)" class="btn btn-main" style="flex: 1;">
                                     <i class="fas fa-check"></i> Accept
                                 </button>

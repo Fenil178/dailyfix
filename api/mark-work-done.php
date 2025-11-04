@@ -23,13 +23,38 @@ try {
     // We also forcefully set the status to 'in_progress' if it was merely 'confirmed'.
     $stmt = $conn->prepare(
         "UPDATE public.bookings 
-         SET work_completed_by_worker = true, status = 'in_progress' 
-         WHERE id = ? AND worker_id = ?
-         AND status IN ('confirmed', 'in_progress')"
+        SET work_completed_by_worker = true, status = 'in_progress' 
+        WHERE id = ? AND worker_id = ?
+        AND status IN ('confirmed', 'in_progress')"
     );
     $stmt->execute([$booking_id, $userId]);
 
     if ($stmt->rowCount() > 0) {
+        
+        // --- NOTIFICATION LOGIC (FIXED) ---
+        // <-- FIX: We MUST fetch the customer_id to notify them.
+        $stmt_customer = $conn->prepare("SELECT customer_id FROM public.bookings WHERE id = ?");
+        $stmt_customer->execute([$booking_id]);
+        $booking_data = $stmt_customer->fetch(PDO::FETCH_ASSOC);
+
+        if ($booking_data) {
+            $customer_id_to_notify = $booking_data['customer_id'];
+            
+            include_once __DIR__ . "/notification_handler.php";
+            // $userName is the worker's name (from user_session.php)
+            $link = "booking-details.php?id=$booking_id";
+
+            // 1. Notify Customer
+            $message_for_customer = "$userName has marked booking #$booking_id as complete. Please proceed with payment.";
+            // <-- FIX: Use fetched $customer_id_to_notify
+            create_notification($conn, $customer_id_to_notify, $userId, $message_for_customer, $link);
+
+            // 2. Notify Admin
+            $message_for_admin = "Worker $userName completed job #$booking_id.";
+            create_notification($conn, 'admin', $userId, $message_for_admin, $link);
+        }
+        // --- END NOTIFICATION ---
+        
         echo json_encode(['status' => 'success', 'message' => 'Work marked as complete.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Job status prevents marking work as complete, or the job was not found.']);
