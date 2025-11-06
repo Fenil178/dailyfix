@@ -117,19 +117,19 @@ try {
 
         // <-- FIX: Check $newStatus, not $status
         if ($newStatus === 'confirmed') { 
-            $message_for_customer = "$userName has confirmed your booking (#$bookingId).";
-            $message_for_admin = "Worker $userName confirmed booking #$bookingId.";
+            $message_for_customer = "$userName has confirmed your booking.";
+            $message_for_admin = "Worker $userName confirmed booking.";
         
         // <-- FIX: Check $newStatus, not 'rejected'
         } elseif ($newStatus === 'cancelled') { 
             // <-- FIX: Use $reason variable from earlier
             $reason_text = !empty($reason) ? " Reason: $reason" : ""; 
-            $message_for_customer = "$userName has rejected your booking (#$bookingId).$reason_text";
-            $message_for_admin = "Worker $userName rejected booking #$bookingId.$reason_text";
+            $message_for_customer = "$userName has rejected your booking.$reason_text";
+            $message_for_admin = "Worker $userName rejected booking.$reason_text";
         
         } elseif ($newStatus === 'in_progress') {
-            $message_for_customer = "$userName has started the job for booking #$bookingId.";
-            $message_for_admin = "Worker $userName started job #$bookingId.";
+            $message_for_customer = "$userName has started the job for booking.";
+            $message_for_admin = "Worker $userName started job.";
         }
         
         // Send notifications if a message was generated

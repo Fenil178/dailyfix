@@ -14,18 +14,30 @@
     <?php else: ?>
         <?php foreach ($notifications as $notif): ?>
             <?php
-                // Logic to set default avatar and prepend path
-                $actor_avatar = $notif['actor_image'] ?? '/dailyfix/assets/images/default-avatar.png';
-                if ($notif['actor_image'] && strpos($notif['actor_image'], '/') !== 0) {
-                    $actor_avatar = '/dailyfix/' . $actor_avatar;
-                }
-                
                 $link = $notif['link'] ?? '#';
+                if ($link !== '#') {
+                    // Prepend the base path
+                    $link = '/dailyfix/' . ltrim($link, '/');
+                }
                 $is_unread_class = !$notif['is_read'] ? 'unread' : '';
             ?>
             <a href="<?php echo htmlspecialchars($link); ?>" class="notification-item <?php echo $is_unread_class; ?>">
+                
                 <div class="item-icon">
-                    <img src="<?php echo htmlspecialchars($actor_avatar); ?>" alt="Actor" class="actor-avatar">
+                    <?php if (!empty($notif['actor_image'])): ?>
+                        <?php
+                            // Actor (user) exists, show their profile image
+                            $actor_avatar = $notif['actor_image'];
+                            if (strpos($actor_avatar, '/') !== 0 && strpos($actor_avatar, 'http') !== 0) {
+                                $actor_avatar = '/dailyfix/' . $actor_avatar;
+                            }
+                        ?>
+                        <img src="<?php echo htmlspecialchars($actor_avatar); ?>" alt="Actor" class="actor-avatar">
+                    <?php else: ?>
+                        <div class="system-notification-icon-wrapper">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <div class="item-content">
                     <p><?php echo htmlspecialchars($notif['message']); ?></p>
@@ -35,6 +47,6 @@
         <?php endforeach; ?>
     <?php endif; ?>
 </div>
-<div class="notification-footer">
-    <a href="#">View All</a>
-</div>
+<a href="/dailyfix/all_activity.php" class="notification-footer">
+    View all notifications
+</a>

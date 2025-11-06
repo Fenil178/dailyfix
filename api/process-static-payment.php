@@ -134,11 +134,11 @@ if (!is_numeric($amount_to_worker) || $amount_to_worker < 0) {
     $amount_str = number_format($amount_customer_paid, 2);
 
     // 1. Notify Worker
-    $message_for_worker = "Payment received! $userName paid ₹$amount_str for booking #$booking_id.";
+    $message_for_worker = "Payment received! $userName paid ₹$amount_str for booking.";
     create_notification($conn, $worker_id, $userId, $message_for_worker, $link);
 
     // 2. Notify Admin
-    $message_for_admin = "Payment received for booking #$booking_id from $userName (₹$amount_str).";
+    $message_for_admin = "Payment received for booking from $userName (₹$amount_str).";
     create_notification($conn, 'admin', $userId, $message_for_admin, $link);
     // --- END NOTIFICATION ---
 

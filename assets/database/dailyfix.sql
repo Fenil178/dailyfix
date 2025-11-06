@@ -2695,7 +2695,8 @@ CREATE TABLE auth.mfa_factors (
     phone text,
     last_challenged_at timestamp with time zone,
     web_authn_credential jsonb,
-    web_authn_aaguid uuid
+    web_authn_aaguid uuid,
+    last_webauthn_challenge_data jsonb
 );
 
 
@@ -2706,6 +2707,13 @@ ALTER TABLE auth.mfa_factors OWNER TO supabase_auth_admin;
 --
 
 COMMENT ON TABLE auth.mfa_factors IS 'auth: stores metadata about factors';
+
+
+--
+-- Name: COLUMN mfa_factors.last_webauthn_challenge_data; Type: COMMENT; Schema: auth; Owner: supabase_auth_admin
+--
+
+COMMENT ON COLUMN auth.mfa_factors.last_webauthn_challenge_data IS 'Stores the latest WebAuthn challenge data including attestation/assertion for customer verification';
 
 
 --
@@ -2939,7 +2947,9 @@ CREATE TABLE auth.sessions (
     user_agent text,
     ip inet,
     tag text,
-    oauth_client_id uuid
+    oauth_client_id uuid,
+    refresh_token_hmac_key text,
+    refresh_token_counter bigint
 );
 
 
@@ -2957,6 +2967,20 @@ COMMENT ON TABLE auth.sessions IS 'Auth: Stores session data associated to a use
 --
 
 COMMENT ON COLUMN auth.sessions.not_after IS 'Auth: Not after is a nullable column that contains a timestamp after which the session should be regarded as expired.';
+
+
+--
+-- Name: COLUMN sessions.refresh_token_hmac_key; Type: COMMENT; Schema: auth; Owner: supabase_auth_admin
+--
+
+COMMENT ON COLUMN auth.sessions.refresh_token_hmac_key IS 'Holds a HMAC-SHA256 key used to sign refresh tokens for this session.';
+
+
+--
+-- Name: COLUMN sessions.refresh_token_counter; Type: COMMENT; Schema: auth; Owner: supabase_auth_admin
+--
+
+COMMENT ON COLUMN auth.sessions.refresh_token_counter IS 'Holds the ID (counter) of the last issued refresh token.';
 
 
 --
@@ -4085,7 +4109,7 @@ COPY auth.mfa_challenges (id, factor_id, created_at, verified_at, ip_address, ot
 -- Data for Name: mfa_factors; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-COPY auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at, secret, phone, last_challenged_at, web_authn_credential, web_authn_aaguid) FROM stdin;
+COPY auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at, secret, phone, last_challenged_at, web_authn_credential, web_authn_aaguid, last_webauthn_challenge_data) FROM stdin;
 \.
 
 
@@ -4217,6 +4241,8 @@ COPY auth.schema_migrations (version) FROM stdin;
 20250901200500
 20250903112500
 20250904133000
+20250925093508
+20251007112900
 \.
 
 
@@ -4224,7 +4250,7 @@ COPY auth.schema_migrations (version) FROM stdin;
 -- Data for Name: sessions; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_after, refreshed_at, user_agent, ip, tag, oauth_client_id) FROM stdin;
+COPY auth.sessions (id, user_id, created_at, updated_at, factor_id, aal, not_after, refreshed_at, user_agent, ip, tag, oauth_client_id, refresh_token_hmac_key, refresh_token_counter) FROM stdin;
 \.
 
 
@@ -4257,8 +4283,15 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 --
 
 COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, worker_latitude, worker_longitude, predefined_cost, customer_offer, cost_status, work_completed_by_worker, rejection_reason, applied_offer_id, discount_amount, applied_admin_offer_id, combo_id, confirmed_at, cancellation_reason, sub_service_item_id, worker_earning, platform_fee, hourly_reminder_sent, daily_reminder_sent) FROM stdin;
+97	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-06 10:30:00+00	completed	2025-11-06 09:46:01.351568+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-06 09:46:42.19897	\N	5	400.00	50.00	f	t
 1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
 2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
+51	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 13:30:00+00	completed	2025-10-24 10:11:28.693135+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f
+78	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 12:30:00+00	completed	2025-10-31 11:26:57.901594+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 11:55:53.784317	\N	6	\N	\N	f	f
+93	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 04:30:00+00	completed	2025-11-03 18:14:11.835583+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 18:20:32.820789	\N	6	400.00	50.00	f	f
+94	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 08:30:00+00	completed	2025-11-04 06:01:23.692652+00	250.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 06:28:57.000876	\N	6	200.00	50.00	f	f
+95	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-05 04:30:00+00	completed	2025-11-04 16:01:55.513187+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 17:53:48.67089	\N	8	150.00	50.00	f	f
+96	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-06 10:30:00+00	completed	2025-11-06 08:35:39.061266+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-06 08:37:10.001508	\N	6	400.00	50.00	t	t
 3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
 4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
 5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
@@ -4289,7 +4322,6 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 30	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 18:15:17.567517+00	800.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
 33	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	cancelled	2025-10-18 06:34:40.502885+00	400.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
 34	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	completed	2025-10-18 06:35:50.741859+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-51	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 13:30:00+00	completed	2025-10-24 10:11:28.693135+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f
 35	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 08:30:00+00	completed	2025-10-18 08:01:33.651839+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f
 52	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 11:30:00+00	completed	2025-10-25 09:30:56.923956+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	2025-10-25 15:50:44	\N	\N	\N	\N	f	f
 45	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-23 12:30:00+00	completed	2025-10-23 09:12:39.71435+00	300.00	paid	\N	\N	300.00	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
@@ -4315,7 +4347,6 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 62	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	cancelled	2025-10-26 15:16:14.576715+00	400.00	unpaid	\N	\N	\N	\N	pending	f	I do not want	5	25.00	\N	\N	\N	\N	6	\N	\N	f	f
 63	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	completed	2025-10-26 16:09:48.868124+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 16:10:09.124071	\N	6	\N	\N	f	f
 64	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	cancelled	2025-10-26 16:15:55.839201+00	400.00	unpaid	\N	\N	\N	\N	pending	f	I do not want	\N	\N	\N	\N	\N	\N	5	\N	\N	f	f
-78	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 12:30:00+00	completed	2025-10-31 11:26:57.901594+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 11:55:53.784317	\N	6	\N	\N	f	f
 73	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:45:17.435715+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 19:15:42	\N	8	\N	\N	f	f
 65	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 05:30:00+00	completed	2025-10-26 16:16:35.561217+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 16:16:55.218734	\N	5	\N	\N	f	f
 72	1	22	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:27:48.117062+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 18:58:15	\N	5	\N	\N	f	f
@@ -4341,9 +4372,6 @@ COPY public.bookings (id, customer_id, worker_id, service_details, booking_time,
 90	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	completed	2025-11-03 14:19:38.996347+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 14:20:11.368077	\N	5	400.00	50.00	f	f
 91	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	completed	2025-11-03 14:37:08.989454+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 14:37:27.894171	\N	6	400.00	50.00	f	f
 92	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	cancelled	2025-11-03 14:41:54.167495+00	450.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	By mistake Anna	6	400.00	50.00	f	f
-93	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 04:30:00+00	completed	2025-11-03 18:14:11.835583+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 18:20:32.820789	\N	6	400.00	50.00	f	f
-94	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 08:30:00+00	completed	2025-11-04 06:01:23.692652+00	250.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 06:28:57.000876	\N	6	200.00	50.00	f	f
-95	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-05 04:30:00+00	completed	2025-11-04 16:01:55.513187+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 17:53:48.67089	\N	8	150.00	50.00	f	f
 \.
 
 
@@ -4360,6 +4388,7 @@ COPY public.combo_items (combo_id, sub_service_item_id) FROM stdin;
 --
 
 COPY public.notifications (id, user_id, actor_id, message, link, is_read, created_at) FROM stdin;
+98	20	1	New 1-star review by Fenil Pastagia  for booking.	booking-details.php?id=97	f	2025-11-06 09:53:18.54666+00
 42	20	1	Payment received for booking #93 from Fenil Pastagia  (₹450.00).	booking-details.php?id=93	f	2025-11-03 18:21:26.395346+00
 18	20	1	New booking (#91) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=91	f	2025-11-03 14:37:09.314628+00
 44	20	1	New 5-star review by Fenil Pastagia  for booking #93.	booking-details.php?id=93	f	2025-11-03 18:21:42.004857+00
@@ -4381,11 +4410,22 @@ COPY public.notifications (id, user_id, actor_id, message, link, is_read, create
 54	20	1	Payment received for booking #94 from Fenil Pastagia  (₹250.00).	booking-details.php?id=94	f	2025-11-04 15:53:24.851285+00
 56	20	1	New 4-star review by Fenil Pastagia  for booking #94.	booking-details.php?id=94	f	2025-11-04 15:53:36.691121+00
 58	20	1	New booking (#95) from Fenil Pastagia  for worker ID 22.	booking-details.php?id=95	f	2025-11-04 16:01:55.848215+00
+70	20	1	New booking (#96) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=96	f	2025-11-06 08:35:47.29201+00
 60	20	22	Worker Hemant Sharma confirmed booking #95.	booking-details.php?id=95	f	2025-11-04 17:53:48.67089+00
 62	20	22	Worker Hemant Sharma started job #95.	booking-details.php?id=95	f	2025-11-04 18:26:57.52858+00
+82	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=96	f	2025-11-06 09:42:21.588862+00
 64	20	22	Worker Hemant Sharma completed job #95.	booking-details.php?id=95	f	2025-11-04 18:31:02.232675+00
 66	20	1	Payment received for booking #95 from Fenil Pastagia  (₹200.00).	booking-details.php?id=95	f	2025-11-04 18:31:26.086286+00
 68	20	1	New 4-star review by Fenil Pastagia  for booking #95.	booking-details.php?id=95	f	2025-11-04 18:31:58.887763+00
+84	20	1	New 3-star review by Fenil Pastagia  for booking #96.	booking-details.php?id=96	f	2025-11-06 09:43:13.459119+00
+72	20	21	Worker Veer Thakkar confirmed booking #96.	booking-details.php?id=96	f	2025-11-06 08:37:10.001508+00
+94	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=97	f	2025-11-06 09:49:56.888604+00
+78	20	21	Worker Veer Thakkar started job.	booking-details.php?id=96	f	2025-11-06 09:32:07.20943+00
+80	20	21	Worker Veer Thakkar completed job #96.	booking-details.php?id=96	f	2025-11-06 09:33:20.577928+00
+86	20	1	New booking (#97) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=97	f	2025-11-06 09:46:06.462247+00
+96	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=97	f	2025-11-06 09:52:45.303937+00
+88	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=97	f	2025-11-06 09:46:42.19897+00
+92	20	21	Worker Veer Thakkar started job.	booking-details.php?id=97	f	2025-11-06 09:49:29.473155+00
 \.
 
 
@@ -4468,6 +4508,8 @@ COPY public.reviews (id, booking_id, reviewer_id, worker_id, rating, comment, cr
 49	93	1	21	5		2025-11-03 18:21:41.499906+00
 50	94	1	22	4		2025-11-04 15:53:36.471007+00
 51	95	1	22	4		2025-11-04 18:31:58.722882+00
+52	96	1	21	3		2025-11-06 09:43:07.809117+00
+53	97	1	21	1	worst	2025-11-06 09:53:13.401744+00
 \.
 
 
@@ -4605,6 +4647,8 @@ COPY public.transactions (id, wallet_id, booking_id, type, amount, description, 
 58	1	93	credit	400.00	Payment for Booking #93	2025-11-03 18:21:26.395346+00
 59	2	94	credit	200.00	Payment for Booking #94	2025-11-04 15:53:24.851285+00
 60	2	95	credit	150.00	Payment for Booking #95	2025-11-04 18:31:26.086286+00
+61	1	96	credit	400.00	Payment for Booking #96	2025-11-06 09:42:21.588862+00
+62	1	97	credit	400.00	Payment for Booking #97	2025-11-06 09:52:45.303937+00
 \.
 
 
@@ -4659,8 +4703,8 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 --
 
 COPY public.wallets (id, worker_id, balance, created_at, updated_at) FROM stdin;
-1	21	1900.00	2025-10-11 12:57:28.098856+00	2025-11-02 11:43:51.832453+00
 2	22	2730.00	2025-10-24 09:05:34.301241+00	2025-10-24 09:05:34.301241+00
+1	21	2700.00	2025-10-11 12:57:28.098856+00	2025-11-02 11:43:51.832453+00
 \.
 
 
@@ -5379,14 +5423,14 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 95, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 97, true);
 
 
 --
 -- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.notifications_id_seq', 68, true);
+SELECT pg_catalog.setval('public.notifications_id_seq', 98, true);
 
 
 --
@@ -5407,7 +5451,7 @@ SELECT pg_catalog.setval('public.platform_payouts_id_seq', 3, true);
 -- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reviews_id_seq', 51, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 53, true);
 
 
 --
@@ -5442,7 +5486,7 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 22, true);
 -- Name: transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transactions_id_seq', 60, true);
+SELECT pg_catalog.setval('public.transactions_id_seq', 62, true);
 
 
 --

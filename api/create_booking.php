@@ -131,7 +131,7 @@ try {
                 "UPDATE public.worker_offers SET uses_count = uses_count + 1 WHERE id = ?"
             );
             if (!$stmt_increment->execute([$applied_offer_id])) {
-                 throw new Exception("Failed to update coupon usage count.");
+                throw new Exception("Failed to update coupon usage count.");
             }
         } else {
              // Conflict occurred: User already used this coupon for this ITEM

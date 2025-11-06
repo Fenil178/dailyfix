@@ -475,7 +475,7 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
 
         <?php // Only load review logic if the review button is visible
         if ($booking['status'] === 'completed' && $booking['payment_status'] === 'paid' && !$booking['review_id']): ?>
-             <script defer src="/dailyfix/assets/js/customer-review.js"></script>
+            <script defer src="/dailyfix/assets/js/customer-review.js"></script>
         <?php endif; ?>
 
     <?php endif; ?>

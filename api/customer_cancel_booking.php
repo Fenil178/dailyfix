@@ -98,12 +98,12 @@ try {
             // 1. Notify Worker
             $reason_text = !empty($cancellation_reason) ? " Reason: $cancellation_reason" : "";
             // <-- FIX: Use $userName from session, not $customer_name
-            $message_for_worker = "Customer $userName cancelled booking #$booking_id.$reason_text";
+            $message_for_worker = "Customer $userName cancelled booking.$reason_text";
             // <-- FIX: Use $worker_id_to_notify as the recipient
             create_notification($conn, $worker_id_to_notify, $userId, $message_for_worker, $link);
 
             // 2. Notify Admin
-            $message_for_admin = "Customer $userName cancelled booking #$booking_id.";
+            $message_for_admin = "Customer $userName cancelled booking.";
             create_notification($conn, 'admin', $userId, $message_for_admin, $link);
         }
         // --- END NOTIFICATION ---

@@ -45,12 +45,12 @@ try {
             $link = "booking-details.php?id=$booking_id";
 
             // 1. Notify Customer
-            $message_for_customer = "$userName has marked booking #$booking_id as complete. Please proceed with payment.";
+            $message_for_customer = "$userName has marked booking as complete. Please proceed with payment.";
             // <-- FIX: Use fetched $customer_id_to_notify
             create_notification($conn, $customer_id_to_notify, $userId, $message_for_customer, $link);
 
             // 2. Notify Admin
-            $message_for_admin = "Worker $userName completed job #$booking_id.";
+            $message_for_admin = "Worker $userName completed job.";
             create_notification($conn, 'admin', $userId, $message_for_admin, $link);
         }
         // --- END NOTIFICATION ---

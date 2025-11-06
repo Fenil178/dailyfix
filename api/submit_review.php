@@ -79,11 +79,11 @@ try {
 
     // 1. Notify Worker
     // <-- FIX: Use $userName, $rating, $bookingId, and $booking['worker_id']
-    $message_for_worker = "$userName left you a $rating-star review for booking #$bookingId.";
+    $message_for_worker = "$userName left you a $rating-star review for booking.";
     create_notification($conn, $booking['worker_id'], $userId, $message_for_worker, $link);
 
     // 2. Notify Admin
-    $message_for_admin = "New $rating-star review by $userName for booking #$bookingId.";
+    $message_for_admin = "New $rating-star review by $userName for booking.";
     create_notification($conn, 'admin', $userId, $message_for_admin, $link);
     // --- END NOTIFICATION ---
 
