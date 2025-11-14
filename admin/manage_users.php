@@ -160,31 +160,40 @@ try {
                             <td><?php echo htmlspecialchars($user['city'] . ', ' . $user['state']); ?></td>
                             <td><?php echo date("M d, Y", strtotime($user['created_at'])); ?></td>
                             <td class="action-buttons">
-    <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
-    
-    <?php if ($user['account_status'] === 'active'): ?>
-        <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>" 
-           class="action-trigger action-btn" 
-           data-modal-title="Confirm Suspension"
-           ...
-           data-modal-theme="modal-warning"
-           title="Suspend"><i class="fas fa-ban"></i></a>
-    <?php else: ?>
-        <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>"
-           class="action-trigger action-btn"
-           data-modal-title="Confirm Activation"
-           ...
-           data-modal-theme="modal-warning"
-           title="Activate"><i class="fas fa-check-circle"></i></a>
-    <?php endif; ?>
+                                <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
+                                
+                                <?php if ($user['account_status'] === 'active'): ?>
+                                    <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>" 
+                                    class="action-trigger action-btn"
+                                        data-modal-title="Confirm Suspension"
+                                        data-modal-description="Are you sure you want to suspend this user? A worker will not be able to use it to register."
+                                        data-modal-icon="fas fa-ban"
+                                        data-modal-theme="modal-warning"
+                                        data-modal-confirm-text="Yes, Suspend"
+                                        title="Suspend"><i class="fas fa-ban"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="actions/user_actions.php?action=toggle_status&user_id=<?php echo $user['id']; ?>"
+                                        class="action-trigger action-btn"
+                                        data-modal-title="Confirm Activation"
+                                        data-modal-description="Are you sure you want to active this user? A worker will not be able to use it to register."
+                                        data-modal-icon="fas fa-ban"
+                                        data-modal-theme="modal-warning"
+                                        data-modal-confirm-text="Yes, Active"
+                                        title="Activate"><i class="fas fa-check-circle"></i>
+                                    </a>
+                                <?php endif; ?>
 
-    <a href="actions/user_actions.php?action=delete&user_id=<?php echo $user['id']; ?>"
-       class="action-trigger action-btn" 
-       data-modal-title="Confirm Deletion"
-       ...
-       data-modal-theme="modal-danger"
-       title="Delete"><i class="fas fa-trash"></i></a>
-</td>
+                                <a href="actions/user_actions.php?action=delete&user_id=<?php echo $user['id']; ?>"
+                                    class="action-trigger action-btn"
+                                    data-modal-title="Confirm Deletion"
+                                    data-modal-description="Are you sure you want to delete this user? This action is permanent."
+                                    data-modal-icon="fas fa-trash"
+                                    data-modal-theme="modal-danger"
+                                    data-modal-confirm-text="Yes, Delete"
+                                    title="Delete"><i class="fas fa-trash"></i>
+                                </a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

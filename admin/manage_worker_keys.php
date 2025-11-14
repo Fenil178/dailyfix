@@ -201,13 +201,13 @@ try {
                                     <?php if (!$key['is_used']): ?>
                                         <?php if ($key['status'] === 'active'): ?>
                                             <a href="actions/worker_key_actions.php?action=toggle_status&key_id=<?php echo $key['id']; ?>" 
-                                               class="action-trigger"
-                                               data-modal-title="Confirm Suspension"
-                                               data-modal-description="Are you sure you want to suspend this key? A worker will not be able to use it to register."
-                                               data-modal-icon="fas fa-ban"
-                                               data-modal-theme="modal-warning"
-                                               data-modal-confirm-text="Yes, Suspend"
-                                               title="Suspend"><i class="fas fa-ban"></i></a>
+                                                class="action-trigger"
+                                                data-modal-title="Confirm Suspension"
+                                                data-modal-description="Are you sure you want to suspend this key? A worker will not be able to use it to register."
+                                                data-modal-icon="fas fa-ban"
+                                                data-modal-theme="modal-warning"
+                                                data-modal-confirm-text="Yes, Suspend"
+                                                title="Suspend"><i class="fas fa-ban"></i></a>
                                         <?php else: ?>
                                             <a href="actions/worker_key_actions.php?action=toggle_status&key_id=<?php echo $key['id']; ?>"
                                                class="action-trigger"

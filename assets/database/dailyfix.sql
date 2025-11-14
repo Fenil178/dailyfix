@@ -1407,14 +1407,27 @@ ALTER FUNCTION realtime.quote_wal2json(entity regclass) OWNER TO supabase_admin;
 CREATE FUNCTION realtime.send(payload jsonb, event text, topic text, private boolean DEFAULT true) RETURNS void
     LANGUAGE plpgsql
     AS $$
+DECLARE
+  generated_id uuid;
+  final_payload jsonb;
 BEGIN
   BEGIN
+    -- Generate a new UUID for the id
+    generated_id := gen_random_uuid();
+
+    -- Check if payload has an 'id' key, if not, add the generated UUID
+    IF payload ? 'id' THEN
+      final_payload := payload;
+    ELSE
+      final_payload := jsonb_set(payload, '{id}', to_jsonb(generated_id));
+    END IF;
+
     -- Set the topic configuration
     EXECUTE format('SET LOCAL realtime.topic TO %L', topic);
 
     -- Attempt to insert the message
-    INSERT INTO realtime.messages (payload, event, topic, private, extension)
-    VALUES (payload, event, topic, private, 'broadcast');
+    INSERT INTO realtime.messages (id, payload, event, topic, private, extension)
+    VALUES (generated_id, final_payload, event, topic, private, 'broadcast');
   EXCEPTION
     WHEN OTHERS THEN
       -- Capture and notify the error
@@ -4388,44 +4401,44 @@ COPY public.combo_items (combo_id, sub_service_item_id) FROM stdin;
 --
 
 COPY public.notifications (id, user_id, actor_id, message, link, is_read, created_at) FROM stdin;
-98	20	1	New 1-star review by Fenil Pastagia  for booking.	booking-details.php?id=97	f	2025-11-06 09:53:18.54666+00
-42	20	1	Payment received for booking #93 from Fenil Pastagia  (₹450.00).	booking-details.php?id=93	f	2025-11-03 18:21:26.395346+00
-18	20	1	New booking (#91) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=91	f	2025-11-03 14:37:09.314628+00
-44	20	1	New 5-star review by Fenil Pastagia  for booking #93.	booking-details.php?id=93	f	2025-11-03 18:21:42.004857+00
-20	20	21	Worker Veer Thakkar confirmed booking #91.	booking-details.php?id=91	f	2025-11-03 14:37:27.894171+00
-22	20	21	Worker Veer Thakkar started job #91.	booking-details.php?id=91	f	2025-11-03 14:37:49.809227+00
-46	20	1	New booking (#94) from Fenil Pastagia  for worker ID 22.	booking-details.php?id=94	f	2025-11-04 06:01:24.038413+00
-24	20	21	Worker Veer Thakkar completed job #91.	booking-details.php?id=91	f	2025-11-03 14:38:03.351974+00
-26	20	1	Payment received for booking #91 from Fenil Pastagia  (₹450.00).	booking-details.php?id=91	f	2025-11-03 14:39:32.538456+00
-48	20	22	Worker Hemant Sharma confirmed booking #94.	booking-details.php?id=94	f	2025-11-04 06:28:57.000876+00
-28	20	1	New 4-star review by Fenil Pastagia  for booking #91.	booking-details.php?id=91	f	2025-11-03 14:40:06.009213+00
-30	20	1	New booking (#92) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=92	f	2025-11-03 14:41:54.412048+00
-50	20	22	Worker Hemant Sharma started job #94.	booking-details.php?id=94	f	2025-11-04 15:52:33.088145+00
-32	20	1	Customer Fenil Pastagia  cancelled booking #92.	booking-details.php?id=92	f	2025-11-03 14:47:23.793502+00
-34	20	1	New booking (#93) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=93	f	2025-11-03 18:14:13.740561+00
-36	20	21	Worker Veer Thakkar confirmed booking #93.	booking-details.php?id=93	f	2025-11-03 18:20:32.820789+00
-38	20	21	Worker Veer Thakkar started job #93.	booking-details.php?id=93	f	2025-11-03 18:20:49.920947+00
-40	20	21	Worker Veer Thakkar completed job #93.	booking-details.php?id=93	f	2025-11-03 18:21:04.756438+00
-52	20	22	Worker Hemant Sharma completed job #94.	booking-details.php?id=94	f	2025-11-04 15:52:39.236892+00
-54	20	1	Payment received for booking #94 from Fenil Pastagia  (₹250.00).	booking-details.php?id=94	f	2025-11-04 15:53:24.851285+00
-56	20	1	New 4-star review by Fenil Pastagia  for booking #94.	booking-details.php?id=94	f	2025-11-04 15:53:36.691121+00
-58	20	1	New booking (#95) from Fenil Pastagia  for worker ID 22.	booking-details.php?id=95	f	2025-11-04 16:01:55.848215+00
-70	20	1	New booking (#96) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=96	f	2025-11-06 08:35:47.29201+00
-60	20	22	Worker Hemant Sharma confirmed booking #95.	booking-details.php?id=95	f	2025-11-04 17:53:48.67089+00
-62	20	22	Worker Hemant Sharma started job #95.	booking-details.php?id=95	f	2025-11-04 18:26:57.52858+00
-82	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=96	f	2025-11-06 09:42:21.588862+00
-64	20	22	Worker Hemant Sharma completed job #95.	booking-details.php?id=95	f	2025-11-04 18:31:02.232675+00
-66	20	1	Payment received for booking #95 from Fenil Pastagia  (₹200.00).	booking-details.php?id=95	f	2025-11-04 18:31:26.086286+00
-68	20	1	New 4-star review by Fenil Pastagia  for booking #95.	booking-details.php?id=95	f	2025-11-04 18:31:58.887763+00
-84	20	1	New 3-star review by Fenil Pastagia  for booking #96.	booking-details.php?id=96	f	2025-11-06 09:43:13.459119+00
-72	20	21	Worker Veer Thakkar confirmed booking #96.	booking-details.php?id=96	f	2025-11-06 08:37:10.001508+00
-94	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=97	f	2025-11-06 09:49:56.888604+00
-78	20	21	Worker Veer Thakkar started job.	booking-details.php?id=96	f	2025-11-06 09:32:07.20943+00
-80	20	21	Worker Veer Thakkar completed job #96.	booking-details.php?id=96	f	2025-11-06 09:33:20.577928+00
-86	20	1	New booking (#97) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=97	f	2025-11-06 09:46:06.462247+00
-96	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=97	f	2025-11-06 09:52:45.303937+00
-88	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=97	f	2025-11-06 09:46:42.19897+00
-92	20	21	Worker Veer Thakkar started job.	booking-details.php?id=97	f	2025-11-06 09:49:29.473155+00
+98	20	1	New 1-star review by Fenil Pastagia  for booking.	booking-details.php?id=97	t	2025-11-06 09:53:18.54666+00
+42	20	1	Payment received for booking #93 from Fenil Pastagia  (₹450.00).	booking-details.php?id=93	t	2025-11-03 18:21:26.395346+00
+18	20	1	New booking (#91) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=91	t	2025-11-03 14:37:09.314628+00
+44	20	1	New 5-star review by Fenil Pastagia  for booking #93.	booking-details.php?id=93	t	2025-11-03 18:21:42.004857+00
+20	20	21	Worker Veer Thakkar confirmed booking #91.	booking-details.php?id=91	t	2025-11-03 14:37:27.894171+00
+22	20	21	Worker Veer Thakkar started job #91.	booking-details.php?id=91	t	2025-11-03 14:37:49.809227+00
+46	20	1	New booking (#94) from Fenil Pastagia  for worker ID 22.	booking-details.php?id=94	t	2025-11-04 06:01:24.038413+00
+24	20	21	Worker Veer Thakkar completed job #91.	booking-details.php?id=91	t	2025-11-03 14:38:03.351974+00
+26	20	1	Payment received for booking #91 from Fenil Pastagia  (₹450.00).	booking-details.php?id=91	t	2025-11-03 14:39:32.538456+00
+48	20	22	Worker Hemant Sharma confirmed booking #94.	booking-details.php?id=94	t	2025-11-04 06:28:57.000876+00
+28	20	1	New 4-star review by Fenil Pastagia  for booking #91.	booking-details.php?id=91	t	2025-11-03 14:40:06.009213+00
+30	20	1	New booking (#92) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=92	t	2025-11-03 14:41:54.412048+00
+50	20	22	Worker Hemant Sharma started job #94.	booking-details.php?id=94	t	2025-11-04 15:52:33.088145+00
+32	20	1	Customer Fenil Pastagia  cancelled booking #92.	booking-details.php?id=92	t	2025-11-03 14:47:23.793502+00
+34	20	1	New booking (#93) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=93	t	2025-11-03 18:14:13.740561+00
+36	20	21	Worker Veer Thakkar confirmed booking #93.	booking-details.php?id=93	t	2025-11-03 18:20:32.820789+00
+38	20	21	Worker Veer Thakkar started job #93.	booking-details.php?id=93	t	2025-11-03 18:20:49.920947+00
+40	20	21	Worker Veer Thakkar completed job #93.	booking-details.php?id=93	t	2025-11-03 18:21:04.756438+00
+52	20	22	Worker Hemant Sharma completed job #94.	booking-details.php?id=94	t	2025-11-04 15:52:39.236892+00
+54	20	1	Payment received for booking #94 from Fenil Pastagia  (₹250.00).	booking-details.php?id=94	t	2025-11-04 15:53:24.851285+00
+56	20	1	New 4-star review by Fenil Pastagia  for booking #94.	booking-details.php?id=94	t	2025-11-04 15:53:36.691121+00
+58	20	1	New booking (#95) from Fenil Pastagia  for worker ID 22.	booking-details.php?id=95	t	2025-11-04 16:01:55.848215+00
+70	20	1	New booking (#96) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=96	t	2025-11-06 08:35:47.29201+00
+60	20	22	Worker Hemant Sharma confirmed booking #95.	booking-details.php?id=95	t	2025-11-04 17:53:48.67089+00
+62	20	22	Worker Hemant Sharma started job #95.	booking-details.php?id=95	t	2025-11-04 18:26:57.52858+00
+82	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=96	t	2025-11-06 09:42:21.588862+00
+64	20	22	Worker Hemant Sharma completed job #95.	booking-details.php?id=95	t	2025-11-04 18:31:02.232675+00
+66	20	1	Payment received for booking #95 from Fenil Pastagia  (₹200.00).	booking-details.php?id=95	t	2025-11-04 18:31:26.086286+00
+68	20	1	New 4-star review by Fenil Pastagia  for booking #95.	booking-details.php?id=95	t	2025-11-04 18:31:58.887763+00
+84	20	1	New 3-star review by Fenil Pastagia  for booking #96.	booking-details.php?id=96	t	2025-11-06 09:43:13.459119+00
+72	20	21	Worker Veer Thakkar confirmed booking #96.	booking-details.php?id=96	t	2025-11-06 08:37:10.001508+00
+94	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=97	t	2025-11-06 09:49:56.888604+00
+78	20	21	Worker Veer Thakkar started job.	booking-details.php?id=96	t	2025-11-06 09:32:07.20943+00
+80	20	21	Worker Veer Thakkar completed job #96.	booking-details.php?id=96	t	2025-11-06 09:33:20.577928+00
+86	20	1	New booking (#97) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=97	t	2025-11-06 09:46:06.462247+00
+96	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=97	t	2025-11-06 09:52:45.303937+00
+88	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=97	t	2025-11-06 09:46:42.19897+00
+92	20	21	Worker Veer Thakkar started job.	booking-details.php?id=97	t	2025-11-06 09:49:29.473155+00
 \.
 
 
@@ -5293,6 +5306,7 @@ COPY realtime.schema_migrations (version, inserted_at) FROM stdin;
 20250523164012	2025-08-09 08:24:04
 20250714121412	2025-08-09 08:24:04
 20250905041441	2025-09-28 07:25:21
+20251103001201	2025-11-13 10:20:27
 \.
 
 

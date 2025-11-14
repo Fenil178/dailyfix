@@ -596,7 +596,8 @@ try {
                                     <?php
                                     $bookingTimestamp = strtotime($job['booking_time']);
                                     $currentTimestamp = time();
-                                    if ($job['status'] === 'confirmed' && $currentTimestamp >= $bookingTimestamp) :
+                                    // MODIFIED: Allow starting 15 minutes (900 seconds) early
+                                    if ($job['status'] === 'confirmed' && $currentTimestamp >= ($bookingTimestamp - 900)) :
                                     ?>
                                         <button onclick="handleJobAction(<?php echo $job['id']; ?>, 'in_progress', null, this)" class="btn btn-main" style="background-color: #f59e0b; color: #fff;">Start Job</button>
                                     <?php endif; ?>

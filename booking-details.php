@@ -310,13 +310,24 @@ if ($booking['worker_avatar'] && strpos($booking['worker_avatar'], '/') !== 0) {
                         </div>
                         <?php endif; ?>
 
-                        <?php if ($booking['status'] === 'confirmed'): ?>
+                        <?php 
+                        // --- MODIFICATION START ---
+                        if ($booking['status'] === 'confirmed'): 
+                            // Add the 15-minute window logic
+                            $bookingTimestamp = strtotime($booking['booking_time']);
+                            $currentTimestamp = time();
+                            if ($currentTimestamp >= ($bookingTimestamp - 900)) : // 900 seconds = 15 minutes
+                        ?>
                         <div class="action-panel">
                             <h2>Arrived at Job Site?</h2>
                             <p>Once you are physically ready to start the work, update the status.</p>
                             <button onclick="handleJobAction(<?php echo $booking['id']; ?>, 'in_progress', null, this)" class="btn btn-main start-job">Start Job</button>
                         </div>
-                        <?php elseif ($booking['status'] === 'in_progress' && !$booking['work_completed_by_worker']): ?>
+                        <?php 
+                            endif; // End 15-minute window check
+                        elseif ($booking['status'] === 'in_progress' && !$booking['work_completed_by_worker']): 
+                        // --- MODIFICATION END ---
+                        ?>
                         <div class="action-panel">
                             <h2>Work is Finished?</h2>
                             <p>Confirm completion to notify the customer and trigger the payment step.</p>
