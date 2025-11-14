@@ -211,6 +211,63 @@ try {
         .price-summary .discount-applied { color: var(--success-color); font-weight: 500; }
         .price-summary .final-price-display { font-weight: bold; font-size: 1.1em; color: var(--text-color-dark); }
 
+        /* === Quantity Counter Styles === */
+.quantity-counter {
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px; /* Add some space */
+    background-color: var(--hover-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 4px;
+    width: max-content;
+    /* Automatically center it */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* This is the magic: Show counter only when parent is selected */
+.service-option.selected .quantity-counter {
+    display: flex; 
+}
+
+.qty-btn {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 50%; /* Makes it round */
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--primary-color);
+    line-height: 1; /* Helps center the symbol */
+    transition: background-color 0.2s;
+}
+
+.qty-btn:hover {
+    background-color: #f1f1f1;
+}
+
+.qty-btn.minus { 
+    color: var(--danger-color, #ef4444); /* Use your existing danger color */
+}
+
+.qty-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+    color: var(--text-color-dark);
+}
+
+/* Give the card a little more room at the bottom */
+.booking-container .service-option {
+    padding-bottom: 1.5rem;
+}
+
          /* Styles for Available Offer Buttons */
          .available-offer-btn {
                 background-color: var(--hover-color); border: 1px dashed var(--primary-color); color: var(--primary-color);
@@ -355,14 +412,20 @@ try {
                         <div id="service-selection-grid" class="services-grid">
                             <?php if (!empty($subServiceItems)): ?>
                                 <?php foreach ($subServiceItems as $item): ?>
-                                    <div class="service-option"
-                                         data-item-id="<?php echo htmlspecialchars($item['id']); ?>" data-item-name="<?php echo htmlspecialchars($item['name']); ?>"
-                                         data-price="<?php echo htmlspecialchars($item['price']); ?>">
-                                        <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
-                                        <span><?php echo htmlspecialchars($item['name']); ?></span>
-                                        <span class="service-price">₹<?php echo htmlspecialchars(number_format((float)$item['price'], 2)); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
+    <div class="service-option"
+         data-item-id="<?php echo htmlspecialchars($item['id']); ?>"
+         data-item-name="<?php echo htmlspecialchars($item['name']); ?>"
+         data-base-price="<?php echo htmlspecialchars($item['price']); ?>"> <i class="<?php echo htmlspecialchars($item['icon']); ?>"></i>
+        <span><?php echo htmlspecialchars($item['name']); ?></span>
+        <span class="service-price">₹<?php echo htmlspecialchars(number_format((float)$item['price'], 2)); ?></span>
+
+        <div class="quantity-counter">
+            <button type="button" class="qty-btn minus" aria-label="Decrease quantity">-</button>
+            <span class="qty-value">1</span>
+            <button type="button" class="qty-btn plus" aria-label="Increase quantity">+</button>
+        </div>
+    </div>
+<?php endforeach; ?>
                             <?php else: ?>
                                 <p>This worker has not listed any items for this service.</p>
                             <?php endif; ?>
@@ -471,6 +534,42 @@ try {
             const finalPriceDisplay = document.getElementById('final-price-display');
 
             let selectedItemPrice = 0;
+            // ADD THIS NEW FUNCTION
+/**
+ * Helper function to update the main price summary
+ */
+function updatePriceSummary() {
+    // 'selectedItemPrice' is now the new total (base * quantity)
+    // This function assumes any coupons have been reset
+    originalPriceDisplay.textContent = `₹${selectedItemPrice.toFixed(2)}`;
+    platformFeeDisplay.textContent = `₹${platformFee.toFixed(2)}`;
+
+    // Calculate total and update
+    const totalToPay = selectedItemPrice + platformFee;
+    finalPriceDisplay.textContent = `₹${totalToPay.toFixed(2)}`;
+
+    // Hide discount row since we reset coupons
+    document.querySelector('#price-summary-display .discount-row').style.display = 'none';
+    priceSummaryDisplay.style.display = 'block';
+}
+
+// ADD THIS NEW FUNCTION
+/**
+ * Helper function to reset a card's quantity and price display
+ */
+function resetCardToDefault(card) {
+    if (!card) return;
+    try {
+        // Get base price from the card's dataset
+        const basePrice = parseFloat(card.dataset.basePrice);
+        // Reset quantity to 1
+        card.querySelector('.qty-value').textContent = '1';
+        // Reset displayed price to base price
+        card.querySelector('.service-price').textContent = `₹${basePrice.toFixed(2)}`;
+    } catch (e) {
+        console.error("Error resetting card:", e, card);
+    }
+}
             const workerId = bookingForm.dataset.workerId;
 
             // --- Fetch and Display Available Offers ---
@@ -545,40 +644,103 @@ try {
                 });
             }
 
-            // --- Service Selection Logic ---
-            if (serviceSelectionGrid) {
-                serviceSelectionGrid.addEventListener('click', function(e) {
-                    const clickedService = e.target.closest('.service-option');
-                    if (!clickedService) return;
+            // --- Service Selection Logic (REVISED) ---
+if (serviceSelectionGrid) {
+    serviceSelectionGrid.addEventListener('click', function(e) {
+        const clickedButton = e.target.closest('.qty-btn');
+        const clickedService = e.target.closest('.service-option');
 
-                    resetCouponState();
+        if (!clickedService) return; // Clicked outside a service item
 
-                    document.querySelectorAll('.service-option').forEach(option => {
-                        option.classList.remove('selected');
-                    });
-
-                    clickedService.classList.add('selected');
-                    hiddenServiceItemInput.value = clickedService.dataset.itemName;
-                    hiddenSubServiceItemInput.value = clickedService.dataset.itemId;
-                    hiddenPriceInput.value = clickedService.dataset.price;
-                    selectedItemPrice = parseFloat(clickedService.dataset.price);
-
-                    // Show and update the price summary
-                    priceSummaryDisplay.style.display = 'block';
-                    originalPriceDisplay.textContent = `₹${selectedItemPrice.toFixed(2)}`;
-                    platformFeeDisplay.textContent = `₹${platformFee.toFixed(2)}`;
-                    finalPriceDisplay.textContent = `₹${(selectedItemPrice + platformFee).toFixed(2)}`;
-                    document.querySelector('#price-summary-display .discount-row').style.display = 'none';
-
-                    if (selectedItemPrice > 0) {
-                        couponSectionWrapper.style.display = 'block';
-                        fetchAndDisplayOffers();
-                    } else {
-                        couponSectionWrapper.style.display = 'none';
-                        availableOffersContainer.innerHTML = '';
-                    }
-                });
+        // --- Case 1: Clicked on a '+' or '-' button ---
+        if (clickedButton) {
+            // Only update quantity if the card is already selected
+            if (!clickedService.classList.contains('selected')) {
+                return;
             }
+
+            e.stopPropagation(); // Prevent the click from re-triggering selection
+
+            const qtyElement = clickedService.querySelector('.qty-value');
+            let currentQty = parseInt(qtyElement.textContent);
+            const basePrice = parseFloat(clickedService.dataset.basePrice);
+
+            if (clickedButton.classList.contains('plus')) {
+                currentQty++; // Increase quantity
+            } else { // It's a 'minus'
+                if (currentQty <= 1) return; // Don't go below 1
+                currentQty--; // Decrease quantity
+            }
+
+            // Update the card's display
+            qtyElement.textContent = currentQty;
+            const newPrice = basePrice * currentQty;
+            clickedService.querySelector('.service-price').textContent = `₹${newPrice.toFixed(2)}`;
+
+            // Update global price variable and hidden inputs
+            selectedItemPrice = newPrice;
+            hiddenPriceInput.value = selectedItemPrice.toFixed(2);
+
+            // IMPORTANT: Changing quantity resets any applied coupon.
+            // This is the simplest and safest logic.
+            resetCouponState(); // This function already exists
+
+            // Update the main price summary with the new total
+                updatePriceSummary();
+
+                // Re-fetch offers to see if they apply to the new price
+                fetchAndDisplayOffers(); // This function already exists
+
+                // --- ADD THIS LINE TO FIX THE BUG ---
+                // Re-show the coupon section after it was reset
+                couponSectionWrapper.style.display = 'block';
+                // --- END OF FIX ---
+
+                return; // We are done
+            }
+
+        // --- Case 2: Clicked on the card itself (not a button) ---
+
+        // If it's already selected, do nothing
+        if (clickedService.classList.contains('selected')) {
+            return;
+        }
+
+        // Reset all other cards to their default state
+        document.querySelectorAll('.service-option').forEach(option => {
+            if (option !== clickedService) {
+                option.classList.remove('selected');
+                resetCardToDefault(option); // Use new helper
+            }
+        });
+
+        // Select the new card
+        clickedService.classList.add('selected');
+        resetCouponState(); // Reset coupon when changing service
+
+        // Get price from its *current* state (which will be qty 1)
+        const currentQty = parseInt(clickedService.querySelector('.qty-value').textContent);
+        const basePrice = parseFloat(clickedService.dataset.basePrice);
+        selectedItemPrice = basePrice * currentQty; // This will be the base price
+
+        // Update hidden inputs for the form
+        hiddenServiceItemInput.value = clickedService.dataset.itemName;
+        hiddenSubServiceItemInput.value = clickedService.dataset.itemId;
+        hiddenPriceInput.value = selectedItemPrice.toFixed(2);
+
+        // Show and update the price summary
+        updatePriceSummary(); // Use new helper
+
+        // Show coupon section and fetch available offers
+        if (selectedItemPrice > 0) {
+            couponSectionWrapper.style.display = 'block';
+            fetchAndDisplayOffers();
+        } else {
+            couponSectionWrapper.style.display = 'none';
+            availableOffersContainer.innerHTML = '';
+        }
+    });
+}
 
             // --- Reset Coupon State ---
             function resetCouponState() {

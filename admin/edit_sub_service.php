@@ -110,6 +110,35 @@ if ($sub_service_id > 0) {
     .skeleton-label { height: 14px; width: 100px; margin-bottom: 0.5rem; }
     .skeleton-input { height: 40px; width: 100%; margin-bottom: 1.5rem; }
     .skeleton-button { height: 45px; width: 120px; margin-top: 1rem; }
+            /* Back navigation link */
+.back-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0.75;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.45rem 0.9rem;
+  margin: 0;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+}
+
+.back-link:hover {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+.back-link i {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.back-link:hover i {
+  transform: translateX(-6px);
+}
 </style>
 
 <div class="skeleton-loader" id="page-loader">
@@ -135,6 +164,9 @@ if ($sub_service_id > 0) {
     <h1><i class="fas fa-edit"></i> Edit Sub-Service</h1>
     <p>Modify the details for <?php if ($sub_service) echo '<strong>' . htmlspecialchars($sub_service['name']) . '</strong>'; ?>.</p>
 </div>
+<a href="manage_sub_service_items.php" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Service Items List
+</a>
 
 <div class="dashboard-card section-fly-in">
     <div class="card-content">

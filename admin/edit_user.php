@@ -171,6 +171,35 @@ function parseServiceDetails($detailsString) {
     @media (max-width: 900px) {
         .skeleton-edit-grid { grid-template-columns: 1fr; }
     }
+    /* Back navigation link */
+.back-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0.75;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.45rem 0.9rem;
+  margin: 0;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+}
+
+.back-link:hover {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+.back-link i {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.back-link:hover i {
+  transform: translateX(-6px);
+}
 </style>
 
 <div class="skeleton-loader" id="page-loader">
@@ -199,7 +228,7 @@ function parseServiceDetails($detailsString) {
     </div>
 </div>
 
-<a href="manage_users.php" class="back-link section-fly-in" style="margin-bottom: 1.5rem; display: block; max-width: 1400px; margin-left: auto; margin-right: auto; padding-left: 2rem; padding-right: 2rem;">
+<a href="manage_users.php" class="back-link">
     <i class="fas fa-arrow-left"></i> Back to User List
 </a>
 
