@@ -113,6 +113,8 @@ function parseServiceDetails($detailsString) {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
     /* Common skeleton styles (loader, shimmer, dark-mode) */
     .skeleton-loader {
@@ -167,6 +169,45 @@ function parseServiceDetails($detailsString) {
     .skeleton-input { height: 40px; width: 100%; margin-bottom: 1.5rem; }
     .skeleton-button { height: 45px; width: 120px; margin-top: 1rem; }
     .skeleton-list-item { height: 40px; width: 100%; margin-bottom: 1rem; }
+
+    /* --- NEW RESPONSIVE STYLES --- */
+    
+    /* Wrapper for responsive tables */
+    .table-responsive-wrapper {
+        overflow-x: auto;
+        width: 100%;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        margin-top: 1rem;
+    }
+
+    /* Ensure table inside wrapper behaves */
+    .table-responsive-wrapper .data-table {
+        width: 100%;
+        min-width: 650px; /* Force scrolling if viewport is smaller */
+        border: none; /* Remove double border */
+    }
+
+    @media (max-width: 900px) {
+        .skeleton-edit-grid { grid-template-columns: 1fr; }
+
+        /* Stack the main profile/form layout on mobile */
+        .edit-user-layout {
+            /* This overrides the grid/flex layout from profile.css */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Add space between the summary and form blocks */
+        }
+
+        .user-profile-summary {
+            /* Center the summary card's content when stacked */
+            align-items: center; 
+            max-width: 100%; /* Ensure it's full width */
+        }
+    }
+    /* --- END NEW RESPONSIVE STYLES --- */
+
 
     @media (max-width: 900px) {
         .skeleton-edit-grid { grid-template-columns: 1fr; }
@@ -374,43 +415,44 @@ function parseServiceDetails($detailsString) {
                             <?php if (empty($customer_bookings)): ?>
                                 <p>This customer has not made any bookings yet.</p>
                             <?php else: ?>
-                                <table class="data-table booking-history-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Sub-Service</th>
-                                            <th>Item</th>
-                                            <th>Worker</th>
-                                            <th>Date</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($customer_bookings as $booking):
-                                            $serviceDetails = parseServiceDetails($booking['service_details']);
-                                        ?>
+                                <div class="table-responsive-wrapper">
+                                    <table class="data-table booking-history-table">
+                                        <thead>
                                             <tr>
-                                                <td>#<?php echo htmlspecialchars($booking['id']); ?></td>
-                                                <td><?php echo htmlspecialchars($serviceDetails['service']); ?></td>
-                                                <td><?php echo htmlspecialchars($serviceDetails['item']); ?></td>
-                                                <td><?php echo htmlspecialchars($booking['worker_name']); ?></td>
-                                                <td>
-                                                    <?php
-                                                        $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
-                                                        $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
-                                                        echo $bookingTime->format("M d, Y, g:i A");
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <span class="status-badge-table status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>">
-                                                        <?php echo htmlspecialchars(ucfirst($booking['status'])); ?>
-                                                    </span>
-                                                </td>
+                                                <th>ID</th>
+                                                <th>Sub-Service</th>
+                                                <th>Item</th>
+                                                <th>Worker</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                                <?php
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($customer_bookings as $booking):
+                                                $serviceDetails = parseServiceDetails($booking['service_details']);
+                                            ?>
+                                                <tr>
+                                                    <td>#<?php echo htmlspecialchars($booking['id']); ?></td>
+                                                    <td><?php echo htmlspecialchars($serviceDetails['service']); ?></td>
+                                                    <td><?php echo htmlspecialchars($serviceDetails['item']); ?></td>
+                                                    <td><?php echo htmlspecialchars($booking['worker_name']); ?></td>
+                                                    <td>
+                                                        <?php
+                                                            $bookingTime = new DateTime($booking['booking_time'], new DateTimeZone('UTC'));
+                                                            $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
+                                                            echo $bookingTime->format("M d, Y, g:i A");
+                                                        ?>
+                                                    </td>
+                                                    <td>
+                                                        <span class="status-badge-table status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>">
+                                                            <?php echo htmlspecialchars(ucfirst($booking['status'])); ?>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div> <?php
                                 try {
                                     $stmt_count = $conn->prepare("SELECT COUNT(*) FROM public.bookings WHERE customer_id = ?");
                                     $stmt_count->execute([$user_id]);

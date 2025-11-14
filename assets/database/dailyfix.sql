@@ -3123,8 +3123,6 @@ CREATE TABLE public.bookings (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     final_cost numeric(10,2),
     payment_status text DEFAULT 'unpaid'::text NOT NULL,
-    worker_latitude numeric(10,8),
-    worker_longitude numeric(11,8),
     predefined_cost numeric(10,2),
     customer_offer numeric(10,2),
     cost_status text DEFAULT 'pending'::text NOT NULL,
@@ -3141,6 +3139,8 @@ CREATE TABLE public.bookings (
     platform_fee numeric(10,2),
     hourly_reminder_sent boolean DEFAULT false,
     daily_reminder_sent boolean DEFAULT false,
+    worker_latitude numeric(10,8),
+    worker_longitude numeric(11,8),
     CONSTRAINT check_different_users CHECK ((customer_id <> worker_id))
 );
 
@@ -3575,8 +3575,6 @@ CREATE TABLE public.users (
     profile_image character varying(255),
     account_status public.account_status DEFAULT 'active'::public.account_status NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    latitude numeric(10,8),
-    longitude numeric(11,8),
     address_line1 text,
     address_line2 text,
     city character varying(100),
@@ -3584,7 +3582,9 @@ CREATE TABLE public.users (
     state character varying(100),
     otp_code character varying(6),
     otp_expires_at timestamp without time zone,
-    auth_user_id uuid
+    auth_user_id uuid,
+    latitude numeric(10,8),
+    longitude numeric(11,8)
 );
 
 
@@ -4295,96 +4295,94 @@ COPY auth.users (instance_id, id, aud, role, email, encrypted_password, email_co
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, worker_latitude, worker_longitude, predefined_cost, customer_offer, cost_status, work_completed_by_worker, rejection_reason, applied_offer_id, discount_amount, applied_admin_offer_id, combo_id, confirmed_at, cancellation_reason, sub_service_item_id, worker_earning, platform_fee, hourly_reminder_sent, daily_reminder_sent) FROM stdin;
-97	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-06 10:30:00+00	completed	2025-11-06 09:46:01.351568+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-06 09:46:42.19897	\N	5	400.00	50.00	f	t
-1	1	14	Work Details: Bike cleaning\nAddress: Adajan, Surat	2025-08-21 15:30:00+00	confirmed	2025-08-20 15:00:32.54813+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-2	1	3	Work Details: Bike wash\nAddress: Pal, Surat	2025-08-23 13:30:00+00	confirmed	2025-08-20 18:11:09.665157+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-51	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 13:30:00+00	completed	2025-10-24 10:11:28.693135+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f
-78	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 12:30:00+00	completed	2025-10-31 11:26:57.901594+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 11:55:53.784317	\N	6	\N	\N	f	f
-93	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 04:30:00+00	completed	2025-11-03 18:14:11.835583+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 18:20:32.820789	\N	6	400.00	50.00	f	f
-94	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 08:30:00+00	completed	2025-11-04 06:01:23.692652+00	250.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 06:28:57.000876	\N	6	200.00	50.00	f	f
-95	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-05 04:30:00+00	completed	2025-11-04 16:01:55.513187+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 17:53:48.67089	\N	8	150.00	50.00	f	f
-96	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-06 10:30:00+00	completed	2025-11-06 08:35:39.061266+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-06 08:37:10.001508	\N	6	400.00	50.00	t	t
-3	1	11	Work Details: Bike repair\nAddress: Katargam, Surat	2025-08-22 20:00:00+00	cancelled	2025-08-20 18:22:25.590372+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-4	1	14	Work Details: Car cleaning\nAddress: Surat	2025-08-23 20:00:00+00	confirmed	2025-08-20 18:33:15.134815+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-5	1	14	Work Details: Car\nAddress: Surat	2025-08-26 20:00:00+00	confirmed	2025-08-20 18:36:18.152578+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-7	1	11	Work Details: bike repair\nAddress: Surat	2025-08-30 20:00:00+00	cancelled	2025-08-21 12:49:57.156465+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-8	1	3	Work Details: Car Washing\nAddress: Shiv Shakti Society, Bhavnagar	2025-08-25 06:30:00+00	confirmed	2025-08-21 16:40:58.668966+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-14	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 13:30:00+00	confirmed	2025-09-29 17:14:27.833622+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-9	1	3	Work Details: Car\nAddress: Krishna Nagar, Bhavnagar	2025-08-27 14:30:00+00	confirmed	2025-08-21 16:49:10.657749+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-32	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 05:30:00+00	completed	2025-10-18 05:14:52.199154+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-10	1	3	Work Details: Car\nAddress: surat	2025-08-21 07:30:00+00	confirmed	2025-08-21 17:00:46.857854+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-25	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 13:30:00+00	cancelled	2025-10-02 13:04:56.354655+00	\N	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-29	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 17:54:53.352846+00	800.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-31	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-13 06:30:00+00	completed	2025-10-13 06:29:36.977952+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-28	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 03:30:00+00	completed	2025-10-11 16:34:49.173792+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-27	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-11 12:30:00+00	completed	2025-10-11 12:19:19.160657+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-30	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 18:15:17.567517+00	800.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-33	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	cancelled	2025-10-18 06:34:40.502885+00	400.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-34	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	completed	2025-10-18 06:35:50.741859+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-35	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 08:30:00+00	completed	2025-10-18 08:01:33.651839+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f
-52	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 11:30:00+00	completed	2025-10-25 09:30:56.923956+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	2025-10-25 15:50:44	\N	\N	\N	\N	f	f
-45	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-23 12:30:00+00	completed	2025-10-23 09:12:39.71435+00	300.00	paid	\N	\N	300.00	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-42	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-20 07:30:00+00	completed	2025-10-20 07:10:49.222588+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f
-39	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 12:07:00.161281+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-36	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 05:30:00+00	completed	2025-10-19 04:58:43.913505+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f
-47	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 04:30:00+00	completed	2025-10-23 18:24:23.477435+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-37	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 06:30:00+00	completed	2025-10-19 05:27:12.849197+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f
-40	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:31:39.210274+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f
-44	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-22 12:30:00+00	cancelled	2025-10-22 07:43:28.417044+00	300.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f
-43	23	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: 20,Jay Shivam Soc; Part - 2, Cozway Road, Surat, Gujarat, 395004	2025-10-20 12:30:00+00	completed	2025-10-20 08:07:36.860614+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-41	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:38:05.403527+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-38	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 10:59:09.456605+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-50	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 11:30:00+00	completed	2025-10-24 09:44:54.226177+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f
-48	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 09:30:00+00	completed	2025-10-24 08:30:04.450775+00	350.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f
-49	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 11:30:00+00	completed	2025-10-24 09:09:03.871618+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f
-46	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 03:30:00+00	completed	2025-10-23 15:22:29.52538+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f
-60	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 12:38:09.75846+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 18:15:37	\N	4	\N	\N	f	f
-58	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 16:30:00+00	completed	2025-10-25 16:48:35.819799+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	4	20.00	\N	\N	2025-10-25 21:18:33	\N	\N	\N	\N	f	f
-57	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 15:30:00+00	completed	2025-10-25 14:26:36.393896+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-25 19:57:52	\N	\N	\N	\N	f	f
-59	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 12:30:52.484706+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	5	25.00	\N	\N	2025-10-26 18:01:21	\N	4	\N	\N	f	f
-61	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	cancelled	2025-10-26 13:56:46.010678+00	350.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	2025-10-26 19:48:20	I do not want to	7	\N	\N	f	f
-62	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	cancelled	2025-10-26 15:16:14.576715+00	400.00	unpaid	\N	\N	\N	\N	pending	f	I do not want	5	25.00	\N	\N	\N	\N	6	\N	\N	f	f
-63	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	completed	2025-10-26 16:09:48.868124+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 16:10:09.124071	\N	6	\N	\N	f	f
-64	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	cancelled	2025-10-26 16:15:55.839201+00	400.00	unpaid	\N	\N	\N	\N	pending	f	I do not want	\N	\N	\N	\N	\N	\N	5	\N	\N	f	f
-73	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:45:17.435715+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 19:15:42	\N	8	\N	\N	f	f
-65	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 05:30:00+00	completed	2025-10-26 16:16:35.561217+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 16:16:55.218734	\N	5	\N	\N	f	f
-72	1	22	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:27:48.117062+00	150.00	paid	\N	\N	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 18:58:15	\N	5	\N	\N	f	f
-70	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 14:30:00+00	completed	2025-10-26 19:03:33.691717+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	5	25.00	\N	\N	2025-10-26 18:33:56	\N	5	\N	\N	f	f
-66	1	22	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	in_progress	2025-10-26 17:57:51.613396+00	150.00	unpaid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 17:29:20	\N	5	\N	\N	f	f
-67	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 18:05:16.8367+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 17:36:51	\N	6	\N	\N	f	f
-68	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 18:20:46.609381+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 17:51:20	\N	6	\N	\N	f	f
-83	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-01 07:30:00+00	completed	2025-11-01 07:13:58.877858+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-01 07:15:10.709654	\N	6	\N	\N	f	f
-76	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 11:30:00+00	completed	2025-10-31 09:41:31.20456+00	350.00	paid	\N	\N	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-31 09:45:21.322716	\N	7	\N	\N	f	f
-74	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 13:30:00+00	completed	2025-10-27 16:23:42.597005+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-27 16:24:23.443536	\N	6	\N	\N	f	f
-69	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 18:46:17.186618+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 18:17:12	\N	5	\N	\N	f	f
-71	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:21:56.944906+00	200.00	paid	\N	\N	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 18:52:18	\N	6	\N	\N	f	f
-81	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 04:30:00+00	completed	2025-10-31 19:18:59.617552+00	400.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 19:19:55.318473	\N	6	\N	\N	f	f
-75	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 08:30:00+00	completed	2025-10-31 07:45:30.484848+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	5	25.00	\N	\N	2025-10-31 08:12:45.780488	\N	3	\N	\N	f	f
-79	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 12:30:00+00	completed	2025-10-31 12:02:35.442995+00	300.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 12:03:17.676286	\N	3	\N	\N	f	f
-77	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 11:30:00+00	completed	2025-10-31 10:45:26.248187+00	350.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 10:47:35.324345	\N	7	\N	\N	f	f
-80	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 13:30:00+00	cancelled	2025-10-31 12:44:21.56275+00	300.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	Booked bymistake.	4	\N	\N	f	f
-82	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 05:30:00+00	cancelled	2025-10-31 19:24:18.116328+00	400.00	unpaid	\N	\N	\N	\N	pending	f	\N	7	200.00	\N	\N	\N	My Mistake, So Sorry	5	\N	\N	f	f
-86	24	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: H-2, Florida Bunglows, Motavarachha, Surat, Surat, Gujarat, 394101	2025-11-02 12:30:00+00	completed	2025-11-02 11:45:32.651275+00	350.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-02 11:46:12.186747	\N	4	300.00	50.00	f	f
-84	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-01 15:30:00+00	completed	2025-11-01 15:22:36.409574+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-01 15:28:20.806772	\N	1	400.00	50.00	f	f
-88	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 10:30:00+00	completed	2025-11-03 08:39:22.541787+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 08:40:42.128944	\N	6	400.00	50.00	f	f
-85	24	21	Service: Bike\nItem: Washing\nAddress: H-2, Florida Bunglows, Motavarachha, Surat, Surat, Gujarat, 394101	2025-11-02 08:30:00+00	completed	2025-11-02 07:49:37.290483+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	7	270.00	\N	\N	2025-11-02 07:50:09.915079	\N	1	400.00	50.00	f	f
-90	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	completed	2025-11-03 14:19:38.996347+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 14:20:11.368077	\N	5	400.00	50.00	f	f
-91	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	completed	2025-11-03 14:37:08.989454+00	450.00	paid	\N	\N	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 14:37:27.894171	\N	6	400.00	50.00	f	f
-92	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	cancelled	2025-11-03 14:41:54.167495+00	450.00	unpaid	\N	\N	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	By mistake Anna	6	400.00	50.00	f	f
+COPY public.bookings (id, customer_id, worker_id, service_details, booking_time, status, created_at, final_cost, payment_status, predefined_cost, customer_offer, cost_status, work_completed_by_worker, rejection_reason, applied_offer_id, discount_amount, applied_admin_offer_id, combo_id, confirmed_at, cancellation_reason, sub_service_item_id, worker_earning, platform_fee, hourly_reminder_sent, daily_reminder_sent, worker_latitude, worker_longitude) FROM stdin;
+97	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-06 10:30:00+00	completed	2025-11-06 09:46:01.351568+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-06 09:46:42.19897	\N	5	400.00	50.00	f	t	\N	\N
+102	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 12:30:00+00	completed	2025-11-14 11:45:49.092688+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 11:46:13.933089	\N	6	400.00	50.00	f	f	\N	\N
+98	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 11:30:00+00	completed	2025-11-14 11:24:41.51302+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 11:25:43.561725	\N	6	400.00	50.00	f	f	\N	\N
+103	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 13:30:00+00	completed	2025-11-14 12:00:57.68154+00	850.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 12:04:16.42226	\N	5	800.00	50.00	f	f	\N	\N
+51	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 13:30:00+00	completed	2025-10-24 10:11:28.693135+00	150.00	paid	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+99	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 11:30:00+00	completed	2025-11-14 11:30:45.490879+00	650.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 11:33:18.741993	\N	3	600.00	50.00	f	f	\N	\N
+104	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 15:30:00+00	completed	2025-11-14 12:44:36.486371+00	500.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 12:48:31.366394	\N	8	450.00	50.00	f	f	\N	\N
+78	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 12:30:00+00	completed	2025-10-31 11:26:57.901594+00	200.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 11:55:53.784317	\N	6	\N	\N	f	f	\N	\N
+93	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 04:30:00+00	completed	2025-11-03 18:14:11.835583+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 18:20:32.820789	\N	6	400.00	50.00	f	f	\N	\N
+94	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-04 08:30:00+00	completed	2025-11-04 06:01:23.692652+00	250.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 06:28:57.000876	\N	6	200.00	50.00	f	f	\N	\N
+95	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-05 04:30:00+00	completed	2025-11-04 16:01:55.513187+00	200.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-04 17:53:48.67089	\N	8	150.00	50.00	f	f	\N	\N
+96	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-06 10:30:00+00	completed	2025-11-06 08:35:39.061266+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-06 08:37:10.001508	\N	6	400.00	50.00	t	t	\N	\N
+14	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 13:30:00+00	confirmed	2025-09-29 17:14:27.833622+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+32	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 05:30:00+00	completed	2025-10-18 05:14:52.199154+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+20	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 04:30:00+00	confirmed	2025-10-01 17:07:04.869216+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+21	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:10:45.02402+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+15	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	completed	2025-09-29 17:26:44.084732+00	\N	paid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+12	1	4	Work Details: I want to repair AC!\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 15:30:00+00	completed	2025-09-29 15:05:25.449578+00	\N	paid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+13	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-30 05:30:00+00	completed	2025-09-29 15:15:21.958879+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+100	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 12:30:00+00	completed	2025-11-14 11:35:28.522154+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 11:36:32.612997	\N	6	400.00	50.00	f	f	\N	\N
+22	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:12:04.654504+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+16	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 05:30:00+00	cancelled	2025-09-30 13:27:02.509927+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+11	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-09-29 14:30:00+00	completed	2025-09-29 13:55:49.327299+00	\N	paid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+17	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 14:30:00+00	confirmed	2025-09-30 14:21:08.972019+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+18	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 04:30:00+00	cancelled	2025-09-30 15:10:20.55109+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+19	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-01 13:30:00+00	confirmed	2025-09-30 16:24:10.772214+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+24	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	confirmed	2025-10-01 17:21:29.105309+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+23	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 14:30:00+00	cancelled	2025-10-01 17:20:50.288641+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+25	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-02 13:30:00+00	cancelled	2025-10-02 13:04:56.354655+00	\N	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+29	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 17:54:53.352846+00	800.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+31	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-13 06:30:00+00	completed	2025-10-13 06:29:36.977952+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+28	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 03:30:00+00	completed	2025-10-11 16:34:49.173792+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+27	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-11 12:30:00+00	completed	2025-10-11 12:19:19.160657+00	300.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+30	1	21	Service: Bike\nItem: Repair\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-12 04:30:00+00	completed	2025-10-11 18:15:17.567517+00	800.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+33	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	cancelled	2025-10-18 06:34:40.502885+00	400.00	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+34	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 07:30:00+00	completed	2025-10-18 06:35:50.741859+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+35	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-18 08:30:00+00	completed	2025-10-18 08:01:33.651839+00	300.00	paid	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+52	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 11:30:00+00	completed	2025-10-25 09:30:56.923956+00	300.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	2025-10-25 15:50:44	\N	\N	\N	\N	f	f	\N	\N
+45	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-23 12:30:00+00	completed	2025-10-23 09:12:39.71435+00	300.00	paid	300.00	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+42	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-20 07:30:00+00	completed	2025-10-20 07:10:49.222588+00	300.00	paid	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+39	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 12:07:00.161281+00	300.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+36	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 05:30:00+00	completed	2025-10-19 04:58:43.913505+00	400.00	paid	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+47	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 04:30:00+00	completed	2025-10-23 18:24:23.477435+00	300.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+37	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 06:30:00+00	completed	2025-10-19 05:27:12.849197+00	300.00	paid	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+40	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:31:39.210274+00	300.00	paid	\N	\N	pending	t	\N	1	50.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+44	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-22 12:30:00+00	cancelled	2025-10-22 07:43:28.417044+00	300.00	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+43	23	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: 20,Jay Shivam Soc; Part - 2, Cozway Road, Surat, Gujarat, 395004	2025-10-20 12:30:00+00	completed	2025-10-20 08:07:36.860614+00	300.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+41	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 14:30:00+00	completed	2025-10-19 13:38:05.403527+00	400.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+38	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-19 12:30:00+00	completed	2025-10-19 10:59:09.456605+00	400.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+50	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 11:30:00+00	completed	2025-10-24 09:44:54.226177+00	200.00	paid	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+48	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 09:30:00+00	completed	2025-10-24 08:30:04.450775+00	350.00	paid	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+49	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 11:30:00+00	completed	2025-10-24 09:09:03.871618+00	200.00	paid	\N	\N	pending	t	\N	4	20.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+46	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-24 03:30:00+00	completed	2025-10-23 15:22:29.52538+00	300.00	paid	\N	\N	pending	t	\N	3	35.00	\N	\N	\N	\N	\N	\N	\N	f	f	\N	\N
+60	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 12:38:09.75846+00	300.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 18:15:37	\N	4	\N	\N	f	f	\N	\N
+58	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 16:30:00+00	completed	2025-10-25 16:48:35.819799+00	150.00	paid	\N	\N	pending	t	\N	4	20.00	\N	\N	2025-10-25 21:18:33	\N	\N	\N	\N	f	f	\N	\N
+57	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-25 15:30:00+00	completed	2025-10-25 14:26:36.393896+00	150.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-25 19:57:52	\N	\N	\N	\N	f	f	\N	\N
+59	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 12:30:52.484706+00	300.00	paid	\N	\N	pending	t	\N	5	25.00	\N	\N	2025-10-26 18:01:21	\N	4	\N	\N	f	f	\N	\N
+61	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	cancelled	2025-10-26 13:56:46.010678+00	350.00	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	2025-10-26 19:48:20	I do not want to	7	\N	\N	f	f	\N	\N
+62	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	cancelled	2025-10-26 15:16:14.576715+00	400.00	unpaid	\N	\N	pending	f	I do not want	5	25.00	\N	\N	\N	\N	6	\N	\N	f	f	\N	\N
+63	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	completed	2025-10-26 16:09:48.868124+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 16:10:09.124071	\N	6	\N	\N	f	f	\N	\N
+64	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 04:30:00+00	cancelled	2025-10-26 16:15:55.839201+00	400.00	unpaid	\N	\N	pending	f	I do not want	\N	\N	\N	\N	\N	\N	5	\N	\N	f	f	\N	\N
+73	1	22	Service: Shoes\nItem: Running\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:45:17.435715+00	150.00	paid	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 19:15:42	\N	8	\N	\N	f	f	\N	\N
+65	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 05:30:00+00	completed	2025-10-26 16:16:35.561217+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 16:16:55.218734	\N	5	\N	\N	f	f	\N	\N
+72	1	22	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:27:48.117062+00	150.00	paid	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 18:58:15	\N	5	\N	\N	f	f	\N	\N
+70	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 14:30:00+00	completed	2025-10-26 19:03:33.691717+00	400.00	paid	\N	\N	pending	t	\N	5	25.00	\N	\N	2025-10-26 18:33:56	\N	5	\N	\N	f	f	\N	\N
+66	1	22	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	in_progress	2025-10-26 17:57:51.613396+00	150.00	unpaid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 17:29:20	\N	5	\N	\N	f	f	\N	\N
+67	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 18:05:16.8367+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 17:36:51	\N	6	\N	\N	f	f	\N	\N
+68	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 18:20:46.609381+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 17:51:20	\N	6	\N	\N	f	f	\N	\N
+83	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-01 07:30:00+00	completed	2025-11-01 07:13:58.877858+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-01 07:15:10.709654	\N	6	\N	\N	f	f	\N	\N
+76	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 11:30:00+00	completed	2025-10-31 09:41:31.20456+00	350.00	paid	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-31 09:45:21.322716	\N	7	\N	\N	f	f	\N	\N
+74	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-27 13:30:00+00	completed	2025-10-27 16:23:42.597005+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-27 16:24:23.443536	\N	6	\N	\N	f	f	\N	\N
+69	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 13:30:00+00	completed	2025-10-26 18:46:17.186618+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-26 18:17:12	\N	5	\N	\N	f	f	\N	\N
+71	1	22	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-26 15:30:00+00	completed	2025-10-26 19:21:56.944906+00	200.00	paid	\N	\N	pending	t	\N	6	30.00	\N	\N	2025-10-26 18:52:18	\N	6	\N	\N	f	f	\N	\N
+81	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 04:30:00+00	completed	2025-10-31 19:18:59.617552+00	400.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 19:19:55.318473	\N	6	\N	\N	f	f	\N	\N
+75	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 08:30:00+00	completed	2025-10-31 07:45:30.484848+00	300.00	paid	\N	\N	pending	t	\N	5	25.00	\N	\N	2025-10-31 08:12:45.780488	\N	3	\N	\N	f	f	\N	\N
+79	1	21	Service: Home Cleaning\nItem: Sweeping\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 12:30:00+00	completed	2025-10-31 12:02:35.442995+00	300.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 12:03:17.676286	\N	3	\N	\N	f	f	\N	\N
+77	1	22	Service: Shoes\nItem: Sneakers\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 11:30:00+00	completed	2025-10-31 10:45:26.248187+00	350.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-10-31 10:47:35.324345	\N	7	\N	\N	f	f	\N	\N
+80	1	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 13:30:00+00	cancelled	2025-10-31 12:44:21.56275+00	300.00	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	Booked bymistake.	4	\N	\N	f	f	\N	\N
+82	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-10-31 05:30:00+00	cancelled	2025-10-31 19:24:18.116328+00	400.00	unpaid	\N	\N	pending	f	\N	7	200.00	\N	\N	\N	My Mistake, So Sorry	5	\N	\N	f	f	\N	\N
+86	24	21	Service: Home Cleaning\nItem: Washing Utensils\nAddress: H-2, Florida Bunglows, Motavarachha, Surat, Surat, Gujarat, 394101	2025-11-02 12:30:00+00	completed	2025-11-02 11:45:32.651275+00	350.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-02 11:46:12.186747	\N	4	300.00	50.00	f	f	\N	\N
+84	1	21	Service: Bike\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-01 15:30:00+00	completed	2025-11-01 15:22:36.409574+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-01 15:28:20.806772	\N	1	400.00	50.00	f	f	\N	\N
+88	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 10:30:00+00	completed	2025-11-03 08:39:22.541787+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 08:40:42.128944	\N	6	400.00	50.00	f	f	\N	\N
+85	24	21	Service: Bike\nItem: Washing\nAddress: H-2, Florida Bunglows, Motavarachha, Surat, Surat, Gujarat, 394101	2025-11-02 08:30:00+00	completed	2025-11-02 07:49:37.290483+00	450.00	paid	\N	\N	pending	t	\N	7	270.00	\N	\N	2025-11-02 07:50:09.915079	\N	1	400.00	50.00	f	f	\N	\N
+90	1	21	Service: Clothes\nItem: Washing\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	completed	2025-11-03 14:19:38.996347+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 14:20:11.368077	\N	5	400.00	50.00	f	f	\N	\N
+91	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	completed	2025-11-03 14:37:08.989454+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-03 14:37:27.894171	\N	6	400.00	50.00	f	f	\N	\N
+92	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-03 15:30:00+00	cancelled	2025-11-03 14:41:54.167495+00	450.00	unpaid	\N	\N	pending	f	\N	\N	\N	\N	\N	\N	By mistake Anna	6	400.00	50.00	f	f	\N	\N
+101	1	21	Service: Clothes\nItem: Dry Clean\nAddress: C-1/501, Sai Milan Residency, Opposite jalaram international school, Palanpore canal road, adajan, Surat, Gujarat, 395009	2025-11-14 12:30:00+00	completed	2025-11-14 11:40:48.109246+00	450.00	paid	\N	\N	pending	t	\N	\N	\N	\N	\N	2025-11-14 11:41:15.449193	\N	6	400.00	50.00	f	f	\N	\N
 \.
 
 
@@ -4439,6 +4437,63 @@ COPY public.notifications (id, user_id, actor_id, message, link, is_read, create
 96	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=97	t	2025-11-06 09:52:45.303937+00
 88	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=97	t	2025-11-06 09:46:42.19897+00
 92	20	21	Worker Veer Thakkar started job.	booking-details.php?id=97	t	2025-11-06 09:49:29.473155+00
+100	20	1	New booking (#98) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=98	f	2025-11-14 11:24:46.552412+00
+102	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=98	f	2025-11-14 11:25:43.561725+00
+104	20	21	Worker Veer Thakkar started job.	booking-details.php?id=98	f	2025-11-14 11:26:16.148011+00
+106	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=98	f	2025-11-14 11:26:38.857558+00
+134	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=101	f	2025-11-14 11:41:15.449193+00
+142	20	1	New 1-star review by Fenil Pastagia  for booking.	booking-details.php?id=101	f	2025-11-14 11:42:56.819467+00
+108	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=98	f	2025-11-14 11:28:05.899051+00
+110	20	1	New 3-star review by Fenil Pastagia  for booking.	booking-details.php?id=98	f	2025-11-14 11:28:30.029248+00
+112	20	1	New booking (#99) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=99	f	2025-11-14 11:30:51.32919+00
+144	20	1	Payment received for booking from Fenil Pastagia  (₹650.00).	booking-details.php?id=99	f	2025-11-14 11:44:03.534219+00
+114	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=99	f	2025-11-14 11:33:18.741993+00
+116	20	21	Worker Veer Thakkar started job.	booking-details.php?id=99	f	2025-11-14 11:33:41.062776+00
+118	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=99	f	2025-11-14 11:34:07.469315+00
+120	20	1	New booking (#100) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=100	f	2025-11-14 11:35:33.012196+00
+128	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=100	f	2025-11-14 11:38:12.665089+00
+122	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=100	f	2025-11-14 11:36:32.612997+00
+124	20	21	Worker Veer Thakkar started job.	booking-details.php?id=100	f	2025-11-14 11:36:58.338523+00
+126	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=100	f	2025-11-14 11:37:20.488922+00
+130	20	1	New 3-star review by Fenil Pastagia  for booking.	booking-details.php?id=100	f	2025-11-14 11:38:33.357589+00
+132	20	1	New booking (#101) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=101	f	2025-11-14 11:40:52.425244+00
+136	20	21	Worker Veer Thakkar started job.	booking-details.php?id=101	f	2025-11-14 11:41:29.258292+00
+138	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=101	f	2025-11-14 11:41:48.776867+00
+140	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=101	f	2025-11-14 11:42:17.852641+00
+146	20	1	New 4-star review by Fenil Pastagia  for booking.	booking-details.php?id=99	f	2025-11-14 11:44:22.996906+00
+150	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=102	f	2025-11-14 11:46:13.933089+00
+149	1	21	Veer Thakkar has confirmed your booking.	booking-details.php?id=102	t	2025-11-14 11:46:13.933089+00
+148	20	1	New booking (#102) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=102	f	2025-11-14 11:45:53.306961+00
+152	20	1	New booking (#103) from Fenil Pastagia  for worker ID 21.	booking-details.php?id=103	f	2025-11-14 12:01:03.187143+00
+154	20	21	Worker Veer Thakkar started job.	booking-details.php?id=102	f	2025-11-14 12:02:11.321177+00
+156	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=102	f	2025-11-14 12:02:33.155663+00
+151	21	1	Fenil Pastagia  has sent you a new booking request.	booking-details.php?id=103	t	2025-11-14 12:00:57.849399+00
+158	20	21	Worker Veer Thakkar confirmed booking.	booking-details.php?id=103	f	2025-11-14 12:04:16.42226+00
+160	20	21	Worker Veer Thakkar started job.	booking-details.php?id=103	f	2025-11-14 12:04:31.596586+00
+162	20	21	Worker Veer Thakkar completed job.	booking-details.php?id=103	f	2025-11-14 12:04:53.355627+00
+153	1	21	Veer Thakkar has started the job for booking.	booking-details.php?id=102	t	2025-11-14 12:02:11.321177+00
+155	1	21	Veer Thakkar has marked booking as complete. Please proceed with payment.	booking-details.php?id=102	t	2025-11-14 12:02:27.14069+00
+157	1	21	Veer Thakkar has confirmed your booking.	booking-details.php?id=103	t	2025-11-14 12:04:16.42226+00
+159	1	21	Veer Thakkar has started the job for booking.	booking-details.php?id=103	t	2025-11-14 12:04:31.596586+00
+161	1	21	Veer Thakkar has marked booking as complete. Please proceed with payment.	booking-details.php?id=103	t	2025-11-14 12:04:48.791545+00
+164	20	1	Payment received for booking from Fenil Pastagia  (₹850.00).	booking-details.php?id=103	f	2025-11-14 12:06:15.598739+00
+166	20	1	New 4-star review by Fenil Pastagia  for booking.	booking-details.php?id=103	f	2025-11-14 12:08:07.437665+00
+167	22	1	Fenil Pastagia  has sent you a new booking request.	booking-details.php?id=104	f	2025-11-14 12:44:36.642032+00
+168	20	1	New booking (#104) from Fenil Pastagia  for worker ID 22.	booking-details.php?id=104	f	2025-11-14 12:44:43.859563+00
+170	20	22	Worker Hemant Sharma confirmed booking.	booking-details.php?id=104	f	2025-11-14 12:48:31.366394+00
+172	20	22	Worker Hemant Sharma started job.	booking-details.php?id=104	f	2025-11-14 12:48:51.066799+00
+174	20	22	Worker Hemant Sharma completed job.	booking-details.php?id=104	f	2025-11-14 12:49:16.262402+00
+169	1	22	Hemant Sharma has confirmed your booking.	booking-details.php?id=104	t	2025-11-14 12:48:31.366394+00
+171	1	22	Hemant Sharma has started the job for booking.	booking-details.php?id=104	t	2025-11-14 12:48:51.066799+00
+173	1	22	Hemant Sharma has marked booking as complete. Please proceed with payment.	booking-details.php?id=104	t	2025-11-14 12:49:10.587765+00
+175	22	1	Payment received! Fenil Pastagia  paid ₹500.00 for booking.	booking-details.php?id=104	f	2025-11-14 12:54:55.748528+00
+176	20	1	Payment received for booking from Fenil Pastagia  (₹500.00).	booking-details.php?id=104	f	2025-11-14 12:54:55.748528+00
+177	22	1	Fenil Pastagia  left you a 4-star review for booking.	booking-details.php?id=104	f	2025-11-14 12:56:09.736009+00
+178	20	1	New 4-star review by Fenil Pastagia  for booking.	booking-details.php?id=104	f	2025-11-14 12:56:18.13055+00
+180	20	1	Payment received for booking from Fenil Pastagia  (₹450.00).	booking-details.php?id=102	f	2025-11-14 13:26:35.392403+00
+163	21	1	Payment received! Fenil Pastagia  paid ₹850.00 for booking.	booking-details.php?id=103	t	2025-11-14 12:06:15.598739+00
+165	21	1	Fenil Pastagia  left you a 4-star review for booking.	booking-details.php?id=103	t	2025-11-14 12:08:02.905249+00
+179	21	1	Payment received! Fenil Pastagia  paid ₹450.00 for booking.	booking-details.php?id=102	t	2025-11-14 13:26:35.392403+00
 \.
 
 
@@ -4523,6 +4578,12 @@ COPY public.reviews (id, booking_id, reviewer_id, worker_id, rating, comment, cr
 51	95	1	22	4		2025-11-04 18:31:58.722882+00
 52	96	1	21	3		2025-11-06 09:43:07.809117+00
 53	97	1	21	1	worst	2025-11-06 09:53:13.401744+00
+54	98	1	21	3		2025-11-14 11:28:25.367088+00
+55	100	1	21	3		2025-11-14 11:38:29.074787+00
+56	101	1	21	1		2025-11-14 11:42:52.639713+00
+57	99	1	21	4		2025-11-14 11:44:18.194319+00
+58	103	1	21	4		2025-11-14 12:08:02.83206+00
+59	104	1	22	4		2025-11-14 12:56:09.685654+00
 \.
 
 
@@ -4662,6 +4723,13 @@ COPY public.transactions (id, wallet_id, booking_id, type, amount, description, 
 60	2	95	credit	150.00	Payment for Booking #95	2025-11-04 18:31:26.086286+00
 61	1	96	credit	400.00	Payment for Booking #96	2025-11-06 09:42:21.588862+00
 62	1	97	credit	400.00	Payment for Booking #97	2025-11-06 09:52:45.303937+00
+63	1	98	credit	400.00	Payment for Booking #98	2025-11-14 11:28:05.899051+00
+64	1	100	credit	400.00	Payment for Booking #100	2025-11-14 11:38:12.665089+00
+65	1	101	credit	400.00	Payment for Booking #101	2025-11-14 11:42:17.852641+00
+66	1	99	credit	600.00	Payment for Booking #99	2025-11-14 11:44:03.534219+00
+67	1	103	credit	800.00	Payment for Booking #103	2025-11-14 12:06:15.598739+00
+68	2	104	credit	450.00	Payment for Booking #104	2025-11-14 12:54:55.748528+00
+69	1	102	credit	400.00	Payment for Booking #102	2025-11-14 13:26:35.392403+00
 \.
 
 
@@ -4688,26 +4756,14 @@ COPY public.user_coupon_usage (id, user_id, offer_id, sub_service_item_id, booki
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (id, full_name, email, password, phone, role, profile_image, account_status, created_at, latitude, longitude, address_line1, address_line2, city, pincode, state, otp_code, otp_expires_at, auth_user_id) FROM stdin;
-7	Swayam Shah	swayam@gmail.com	$2y$10$EKVBlEHgag1sAKIl0Cmp8Oor/rLjv7OgJnjKtHzTHffBhSinsknym	9623001236	customer	\N	active	2025-08-16 09:48:01.576568+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-8	Ankit Verma	ankit@gmail.com	$2y$10$h0lmMCHM3ae9qv342gWjZ.BJQ69as.7JvPDJa5QBWjb5YOl3oFRhq	8523001456	customer	\N	active	2025-08-16 09:52:37.721337+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-9	Sushant Rajput	sushant@gmail.com	$2y$10$oWRFuH4Qgcgu6HSAPcCx1uDvV/k8qYWMvqF2dSgZz41xQHApe.jrC	9852110036	customer	\N	active	2025-08-16 09:56:45.35922+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-21	Veer Thakkar	veer@gmail.com	$2y$10$Hf5QHQMiWXlGvJyhNQ4Jpe2BkUuAHIAm9WOK34S/t./di/XBQ3r9q	9632015877	worker	uploads/profile_images/user_21_1762001199.png	active	2025-09-28 13:16:38.414164+00	21.22064510	72.89456170	G-90, Shital Residency	Yogi chowk	Surat	395006	Gujarat	\N	\N	\N
-23	jay	jay1509@gmail.com	$2y$10$IW5WX/sdoLsU0aGYTqlcYeue.EPxTJXsLCF/ud9D2BVB3MSrYW9sS	6352121293	customer	uploads/profile_images/68f5ed6bca016.jpg	active	2025-10-20 08:06:14.508593+00	22.28881053	70.76566453	20,Jay Shivam Soc; Part - 2	Cozway Road	Surat	395004	Gujarat	\N	\N	\N
+COPY public.users (id, full_name, email, password, phone, role, profile_image, account_status, created_at, address_line1, address_line2, city, pincode, state, otp_code, otp_expires_at, auth_user_id, latitude, longitude) FROM stdin;
+21	Veer Thakkar	veer@gmail.com	$2y$10$Hf5QHQMiWXlGvJyhNQ4Jpe2BkUuAHIAm9WOK34S/t./di/XBQ3r9q	9632015877	worker	uploads/profile_images/user_21_1762001199.png	active	2025-09-28 13:16:38.414164+00	G-90, Shital Residency	Yogi chowk	Surat	395006	Gujarat	\N	\N	\N	21.22064510	72.89456170
+23	jay	jay1509@gmail.com	$2y$10$IW5WX/sdoLsU0aGYTqlcYeue.EPxTJXsLCF/ud9D2BVB3MSrYW9sS	6352121293	customer	uploads/profile_images/68f5ed6bca016.jpg	active	2025-10-20 08:06:14.508593+00	20,Jay Shivam Soc; Part - 2	Cozway Road	Surat	395004	Gujarat	\N	\N	\N	22.28881053	70.76566453
 20	Admin	admin@dailyfix.com	$2y$10$9Y52WOIkRx0SJHJ82NXYXOYRLEt/pgwVwm56RlEOF6zLPIGBN9GXm	\N	admin	\N	active	2025-09-20 09:59:34.499611+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-24	Yashvi Rana	yashvi@gmail.com	$2y$10$hHOg9jXuw8odCQseuDcrU.fdJhBcKOV4k6lJYdpTAd2/9cfg8gpNW	9632014782	customer	uploads/profile_images/6904acf553c4c.jpg	active	2025-10-31 12:35:01.925419+00	21.21139906	72.82916210	H-2, Florida Bunglows	Motavarachha, Surat	Surat	394101	Gujarat	\N	\N	\N
-3	Virat Kohli	virat@gmail.com	$2y$10$xCaKDIuIIXcrgmgbhG1qauii9eg.I6xoVBRhpdIFMbfIc6fMkP4Fq	9567845678	worker	worker/uploads/689f09ae6e9e93.79883047.jpg	active	2025-08-15 10:19:25.929927+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	21.23536635	72.85583496	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N	\N
-5	Hitesh Shah	hitesh@gmail.com	$2y$10$QZgi4HWyj5TVuCEfpIq.o.tLBq35nguAGeV90xiI06UMgdzLGY2Di	6932012369	worker	worker/uploads/68a04602ad52c3.52796117.jpg	active	2025-08-16 08:49:03.588917+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-6	Rahul Vora	rahul@gmail.com	$2y$10$o5ghyaUlqZkfCHYgKwlFN.Y3atdc/8jkNg6cCW0bvqfGi51c8sUii	9632012365	customer	customer/uploads/68a0525b8283f3.07493807.jpg	active	2025-08-16 09:41:44.250926+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-10	Aditi Patel	aditi@gmail.com	$2y$10$0aB6BMI7DRHkFcAovv9ED.jNIz0mSQquJ8EpURzvNLoQv.qn1FQ7K	9874100023	customer	customer/uploads/68a065cbd58185.96856248.jpg	active	2025-08-16 11:04:40.74063+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-11	Rohan Desai	rohan@gmail.com	$2y$10$nVqwaKveVe5Mfg8BAEFtaeKHzwTNQwE/r58P3bptk/SacGFay.2c.	8523698741	worker	worker/uploads/68a0671d71e664.67024751.jpg	active	2025-08-16 11:10:18.349969+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-12	Digvesh Rathi	digvesh@gmail.com	$2y$10$1RJVdcmwyqNsovlfCor3m.fd/37Vr70k3HgKmQeqiNxJAmoITwoDK	9852001423	customer	customer/uploads/68a06a0b3a4c22.03167999.png	active	2025-08-16 11:22:48.144741+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-17	Rudra Shah	rudra@gmail.com	$2y$10$RNmrvbr0r6pmADrz4Xt8MOo.NpZdHA0rHCb/a7uz/8EsYLtDmXzyO	9123546789	customer	uploads/profile_images/68a760fa384d7.png	active	2025-08-21 18:10:02.379476+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-14	Jay Parmar	jay@gmail.com	$2y$10$ppm4pfQmN/myqpLhkBdAZuuUjItBBGqa5rs/f8r/eFuWNjFsIrxdK	9678657898	worker	worker/uploads/68a5e1d8beb549.59203232.jpg	active	2025-08-20 14:55:20.430197+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-18	Rupesh Patel	rupesh@gmail.com	$2y$10$ZLkkPrvfOKjGu9ldMOs9fe/r0mVK.vk6ucMEwDCQWngZ1cS.hvZWS	9235467896	worker	uploads/profile_images/68a7619b016ed.jpg	active	2025-08-21 18:12:43.168886+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-22	Hemant Sharma	hemant@gmail.com	$2y$10$sreN4.DgD8U9MSaZIY8XSOBtZiFwKs67/przmb4WIfPmzyJfFI.eO	9853201478	worker	uploads/profile_images/68eaa49e7192b.jpg	active	2025-10-11 18:40:22.808899+00	21.23831114	72.83171587	J-10, WeCare Laudry, Sumeru Complex	Laxmikant Ashram Road	Surat	305994	Gujarat	\N	\N	\N
-1	Fenil Pastagia 	17fenill@gmail.com	$2y$10$UuPLUH4YyaSChm/ETqTxN.9Qsu8BhJGn2Hayg9/VbiGP7wUYge17m	9924976503	customer	customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	21.17795584	72.83668498	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	301575	2025-10-13 08:35:26	\N
+4	Meet Patel	meet@gmail.com	$2y$10$Fc52.M4rjTo1VYJ8Twozte8/tB.L7.SDLLJGMQn800kTVTTFWbHUC	8623014565	worker	worker/uploads/68a02953e7d0c8.06014632.jpg	active	2025-08-16 06:46:40.089848+00	A-201, Skylar Heights,	Motavarachha	Surat	394101	Gujarat	\N	\N	\N	21.23536635	72.85583496
+24	Yashvi Unadkat	yashvi@gmail.com	$2y$10$hHOg9jXuw8odCQseuDcrU.fdJhBcKOV4k6lJYdpTAd2/9cfg8gpNW	9632014782	customer	uploads/profile_images/6904acf553c4c.jpg	active	2025-10-31 12:35:01.925419+00	H-2, Florida Bunglows	Motavarachha, Surat	Surat	394101	Gujarat	\N	\N	\N	21.21139906	72.82916210
+22	Hemant Sharma	hemant@gmail.com	$2y$10$sreN4.DgD8U9MSaZIY8XSOBtZiFwKs67/przmb4WIfPmzyJfFI.eO	9853201478	worker	uploads/profile_images/68eaa49e7192b.jpg	active	2025-10-11 18:40:22.808899+00	J-10, WeCare Laudry, Sumeru Complex	Laxmikant Ashram Road	Surat	305994	Gujarat	\N	\N	\N	21.23831114	72.83171587
+1	Fenil Pastagia 	17fenill@gmail.com	$2y$10$UuPLUH4YyaSChm/ETqTxN.9Qsu8BhJGn2Hayg9/VbiGP7wUYge17m	9924976503	customer	customer/uploads/689ef2dd50d8f0.56531819.jpg	active	2025-08-15 08:42:04.605469+00	C-1/501, Sai Milan Residency	Opposite jalaram international school, Palanpore canal road, adajan	Surat	395009	Gujarat	301575	2025-10-13 08:35:26	\N	21.17795584	72.83668498
 \.
 
 
@@ -4716,8 +4772,8 @@ COPY public.users (id, full_name, email, password, phone, role, profile_image, a
 --
 
 COPY public.wallets (id, worker_id, balance, created_at, updated_at) FROM stdin;
-2	22	2730.00	2025-10-24 09:05:34.301241+00	2025-10-24 09:05:34.301241+00
-1	21	2700.00	2025-10-11 12:57:28.098856+00	2025-11-02 11:43:51.832453+00
+2	22	3180.00	2025-10-24 09:05:34.301241+00	2025-10-24 09:05:34.301241+00
+1	21	5700.00	2025-10-11 12:57:28.098856+00	2025-11-02 11:43:51.832453+00
 \.
 
 
@@ -4786,22 +4842,29 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 411	4	2025-10-03	17:00:00	2025-10-01 15:36:29.221974+00
 412	4	2025-10-02	17:00:00	2025-10-01 15:36:29.215619+00
 414	4	2025-10-01	20:00:00	2025-10-01 15:36:29.19684+00
+969	21	2025-11-14	09:00:00	2025-11-14 11:23:59.311085+00
 416	4	2025-10-03	20:00:00	2025-10-01 15:36:29.221974+00
 418	4	2025-10-02	20:00:00	2025-10-01 15:36:29.215619+00
+970	21	2025-11-16	09:00:00	2025-11-14 11:23:59.302226+00
 465	21	2025-10-21	10:00:00	2025-10-18 05:14:30.685539+00
 430	4	2025-10-06	11:00:00	2025-10-04 18:12:19.256617+00
 434	4	2025-10-06	18:00:00	2025-10-04 18:12:19.256617+00
 437	4	2025-10-05	11:00:00	2025-10-04 18:12:19.304729+00
 439	4	2025-10-05	18:00:00	2025-10-04 18:12:19.304729+00
 466	21	2025-10-23	09:00:00	2025-10-18 05:14:30.793653+00
+975	21	2025-11-16	10:00:00	2025-11-14 11:23:59.302226+00
 470	21	2025-10-21	11:00:00	2025-10-18 05:14:30.685539+00
 471	21	2025-10-23	10:00:00	2025-10-18 05:14:30.793653+00
+980	21	2025-11-14	10:00:00	2025-11-14 11:23:59.311085+00
 476	21	2025-10-21	12:00:00	2025-10-18 05:14:30.685539+00
 477	21	2025-10-23	11:00:00	2025-10-18 05:14:30.793653+00
+982	21	2025-11-16	11:00:00	2025-11-14 11:23:59.302226+00
 482	21	2025-10-21	13:00:00	2025-10-18 05:14:30.685539+00
+986	21	2025-11-14	11:00:00	2025-11-14 11:23:59.311085+00
 486	21	2025-10-21	18:00:00	2025-10-18 05:14:30.685539+00
 487	21	2025-10-23	12:00:00	2025-10-18 05:14:30.793653+00
 490	21	2025-10-21	19:00:00	2025-10-18 05:14:30.685539+00
+988	21	2025-11-16	13:00:00	2025-11-14 11:23:59.302226+00
 493	21	2025-10-23	13:00:00	2025-10-18 05:14:30.793653+00
 496	21	2025-10-23	18:00:00	2025-10-18 05:14:30.793653+00
 498	21	2025-10-23	19:00:00	2025-10-18 05:14:30.793653+00
@@ -4857,12 +4920,19 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 250	21	2025-09-28	19:00:00	2025-09-28 13:18:07.392457+00
 451	21	2025-10-12	09:00:00	2025-10-11 16:34:33.178052+00
 452	21	2025-10-12	10:00:00	2025-10-11 16:34:33.178052+00
+971	21	2025-11-15	09:00:00	2025-11-14 11:23:59.310615+00
 353	21	2025-10-05	10:00:00	2025-09-30 15:47:08.001006+00
+978	21	2025-11-15	10:00:00	2025-11-14 11:23:59.310615+00
 360	21	2025-10-05	11:00:00	2025-09-30 15:47:08.001006+00
+981	21	2025-11-15	11:00:00	2025-11-14 11:23:59.310615+00
 472	21	2025-10-22	09:00:00	2025-10-18 05:14:30.87386+00
 365	21	2025-10-05	17:00:00	2025-09-30 15:47:08.001006+00
+987	21	2025-11-15	13:00:00	2025-11-14 11:23:59.310615+00
 478	21	2025-10-22	10:00:00	2025-10-18 05:14:30.87386+00
+993	21	2025-11-15	14:00:00	2025-11-14 11:23:59.310615+00
+998	21	2025-11-15	16:00:00	2025-11-14 11:23:59.310615+00
 488	21	2025-10-22	11:00:00	2025-10-18 05:14:30.87386+00
+1004	21	2025-11-15	17:00:00	2025-11-14 11:23:59.310615+00
 494	21	2025-10-22	12:00:00	2025-10-18 05:14:30.87386+00
 497	21	2025-10-22	13:00:00	2025-10-18 05:14:30.87386+00
 499	21	2025-10-22	18:00:00	2025-10-18 05:14:30.87386+00
@@ -4927,6 +4997,8 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 629	21	2025-10-29	18:00:00	2025-10-25 09:29:46.805948+00
 631	21	2025-10-29	19:00:00	2025-10-25 09:29:46.805948+00
 633	21	2025-10-29	20:00:00	2025-10-25 09:29:46.805948+00
+1010	21	2025-11-15	18:00:00	2025-11-14 11:23:59.310615+00
+1016	21	2025-11-15	19:00:00	2025-11-14 11:23:59.310615+00
 662	22	2025-11-02	10:00:00	2025-10-31 09:40:34.375251+00
 664	22	2025-11-05	10:00:00	2025-10-31 09:40:34.381259+00
 667	22	2025-11-02	11:00:00	2025-10-31 09:40:34.375251+00
@@ -4998,20 +5070,28 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 505	21	2025-10-24	13:00:00	2025-10-18 05:14:31.462455+00
 506	21	2025-10-24	18:00:00	2025-10-18 05:14:31.462455+00
 507	21	2025-10-24	19:00:00	2025-10-18 05:14:31.462455+00
+972	21	2025-11-19	09:00:00	2025-11-14 11:23:59.328356+00
 524	22	2025-10-26	10:00:00	2025-10-24 08:22:59.0197+00
 528	22	2025-10-27	10:00:00	2025-10-24 08:22:59.025115+00
+979	21	2025-11-19	10:00:00	2025-11-14 11:23:59.328356+00
 530	22	2025-10-26	11:00:00	2025-10-24 08:22:59.0197+00
 534	22	2025-10-27	11:00:00	2025-10-24 08:22:59.025115+00
+985	21	2025-11-19	11:00:00	2025-11-14 11:23:59.328356+00
 536	22	2025-10-26	12:00:00	2025-10-24 08:22:59.0197+00
+992	21	2025-11-19	13:00:00	2025-11-14 11:23:59.328356+00
 541	22	2025-10-27	12:00:00	2025-10-24 08:22:59.025115+00
 542	22	2025-10-26	15:00:00	2025-10-24 08:22:59.0197+00
 544	22	2025-10-26	17:00:00	2025-10-24 08:22:59.0197+00
+999	21	2025-11-19	14:00:00	2025-11-14 11:23:59.328356+00
 547	22	2025-10-27	15:00:00	2025-10-24 08:22:59.025115+00
 550	22	2025-10-26	18:00:00	2025-10-24 08:22:59.0197+00
+1009	21	2025-11-19	16:00:00	2025-11-14 11:23:59.328356+00
 553	22	2025-10-27	17:00:00	2025-10-24 08:22:59.025115+00
 555	22	2025-10-26	19:00:00	2025-10-24 08:22:59.0197+00
+1015	21	2025-11-19	17:00:00	2025-11-14 11:23:59.328356+00
 559	22	2025-10-27	18:00:00	2025-10-24 08:22:59.025115+00
 561	22	2025-10-26	21:00:00	2025-10-24 08:22:59.0197+00
+1021	21	2025-11-19	18:00:00	2025-11-14 11:23:59.328356+00
 565	22	2025-10-27	19:00:00	2025-10-24 08:22:59.025115+00
 569	22	2025-10-27	21:00:00	2025-10-24 08:22:59.025115+00
 580	21	2025-10-26	10:00:00	2025-10-25 09:29:46.760403+00
@@ -5080,6 +5160,53 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 721	22	2025-11-06	18:00:00	2025-10-31 09:40:34.867876+00
 722	22	2025-11-06	19:00:00	2025-10-31 09:40:34.867876+00
 723	22	2025-11-06	21:00:00	2025-10-31 09:40:34.867876+00
+1022	21	2025-11-19	19:00:00	2025-11-14 11:23:59.328356+00
+973	21	2025-11-17	09:00:00	2025-11-14 11:23:59.333401+00
+976	21	2025-11-17	10:00:00	2025-11-14 11:23:59.333401+00
+983	21	2025-11-17	11:00:00	2025-11-14 11:23:59.333401+00
+990	21	2025-11-17	13:00:00	2025-11-14 11:23:59.333401+00
+995	21	2025-11-17	14:00:00	2025-11-14 11:23:59.333401+00
+1003	21	2025-11-17	16:00:00	2025-11-14 11:23:59.333401+00
+1007	21	2025-11-17	17:00:00	2025-11-14 11:23:59.333401+00
+1014	21	2025-11-17	18:00:00	2025-11-14 11:23:59.333401+00
+1019	21	2025-11-17	19:00:00	2025-11-14 11:23:59.333401+00
+974	21	2025-11-18	09:00:00	2025-11-14 11:23:59.320184+00
+977	21	2025-11-18	10:00:00	2025-11-14 11:23:59.320184+00
+984	21	2025-11-18	11:00:00	2025-11-14 11:23:59.320184+00
+991	21	2025-11-18	13:00:00	2025-11-14 11:23:59.320184+00
+996	21	2025-11-18	14:00:00	2025-11-14 11:23:59.320184+00
+1002	21	2025-11-18	16:00:00	2025-11-14 11:23:59.320184+00
+1008	21	2025-11-18	17:00:00	2025-11-14 11:23:59.320184+00
+1013	21	2025-11-18	18:00:00	2025-11-14 11:23:59.320184+00
+1020	21	2025-11-18	19:00:00	2025-11-14 11:23:59.320184+00
+989	21	2025-11-14	13:00:00	2025-11-14 11:23:59.311085+00
+997	21	2025-11-14	14:00:00	2025-11-14 11:23:59.311085+00
+1001	21	2025-11-14	16:00:00	2025-11-14 11:23:59.311085+00
+1006	21	2025-11-14	17:00:00	2025-11-14 11:23:59.311085+00
+1012	21	2025-11-14	18:00:00	2025-11-14 11:23:59.311085+00
+1018	21	2025-11-14	19:00:00	2025-11-14 11:23:59.311085+00
+994	21	2025-11-16	14:00:00	2025-11-14 11:23:59.302226+00
+1000	21	2025-11-16	16:00:00	2025-11-14 11:23:59.302226+00
+1005	21	2025-11-16	17:00:00	2025-11-14 11:23:59.302226+00
+1011	21	2025-11-16	18:00:00	2025-11-14 11:23:59.302226+00
+1017	21	2025-11-16	19:00:00	2025-11-14 11:23:59.302226+00
+1023	21	2025-11-20	09:00:00	2025-11-14 11:23:59.998468+00
+1024	21	2025-11-20	10:00:00	2025-11-14 11:23:59.998468+00
+1025	21	2025-11-20	11:00:00	2025-11-14 11:23:59.998468+00
+1026	21	2025-11-20	13:00:00	2025-11-14 11:23:59.998468+00
+1027	21	2025-11-20	14:00:00	2025-11-14 11:23:59.998468+00
+1028	21	2025-11-20	16:00:00	2025-11-14 11:23:59.998468+00
+1029	21	2025-11-20	17:00:00	2025-11-14 11:23:59.998468+00
+1030	21	2025-11-20	18:00:00	2025-11-14 11:23:59.998468+00
+1031	21	2025-11-20	19:00:00	2025-11-14 11:23:59.998468+00
+1032	22	2025-11-16	09:00:00	2025-11-14 12:10:02.509607+00
+1033	22	2025-11-16	10:00:00	2025-11-14 12:10:02.509607+00
+1036	22	2025-11-16	12:00:00	2025-11-14 12:10:02.509607+00
+1039	22	2025-11-16	14:00:00	2025-11-14 12:10:02.509607+00
+1044	22	2025-11-16	17:00:00	2025-11-14 12:10:02.509607+00
+1050	22	2025-11-16	19:00:00	2025-11-14 12:10:02.509607+00
+1056	22	2025-11-16	21:00:00	2025-11-14 12:10:02.509607+00
+1059	22	2025-11-16	22:00:00	2025-11-14 12:10:02.509607+00
 813	21	2025-11-03	10:00:00	2025-10-31 18:02:20.076745+00
 814	21	2025-11-01	10:00:00	2025-10-31 18:02:19.995137+00
 815	21	2025-11-03	11:00:00	2025-10-31 18:02:20.076745+00
@@ -5157,6 +5284,54 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 887	21	2025-11-06	19:00:00	2025-10-31 18:02:21.137525+00
 888	21	2025-11-06	20:00:00	2025-10-31 18:02:21.137525+00
 889	21	2025-11-06	21:00:00	2025-10-31 18:02:21.137525+00
+1034	22	2025-11-14	09:00:00	2025-11-14 12:10:02.537322+00
+1040	22	2025-11-14	10:00:00	2025-11-14 12:10:02.537322+00
+1046	22	2025-11-14	12:00:00	2025-11-14 12:10:02.537322+00
+1052	22	2025-11-14	14:00:00	2025-11-14 12:10:02.537322+00
+1061	22	2025-11-14	17:00:00	2025-11-14 12:10:02.537322+00
+1066	22	2025-11-14	19:00:00	2025-11-14 12:10:02.537322+00
+1071	22	2025-11-14	21:00:00	2025-11-14 12:10:02.537322+00
+1075	22	2025-11-14	22:00:00	2025-11-14 12:10:02.537322+00
+1035	22	2025-11-15	09:00:00	2025-11-14 12:10:02.533452+00
+1042	22	2025-11-15	10:00:00	2025-11-14 12:10:02.533452+00
+1047	22	2025-11-15	12:00:00	2025-11-14 12:10:02.533452+00
+1053	22	2025-11-15	14:00:00	2025-11-14 12:10:02.533452+00
+1058	22	2025-11-15	17:00:00	2025-11-14 12:10:02.533452+00
+1065	22	2025-11-15	19:00:00	2025-11-14 12:10:02.533452+00
+1070	22	2025-11-15	21:00:00	2025-11-14 12:10:02.533452+00
+1078	22	2025-11-15	22:00:00	2025-11-14 12:10:02.533452+00
+1037	22	2025-11-17	09:00:00	2025-11-14 12:10:02.542193+00
+1043	22	2025-11-17	10:00:00	2025-11-14 12:10:02.542193+00
+1049	22	2025-11-17	12:00:00	2025-11-14 12:10:02.542193+00
+1054	22	2025-11-17	14:00:00	2025-11-14 12:10:02.542193+00
+1062	22	2025-11-17	17:00:00	2025-11-14 12:10:02.542193+00
+1068	22	2025-11-17	19:00:00	2025-11-14 12:10:02.542193+00
+1072	22	2025-11-17	21:00:00	2025-11-14 12:10:02.542193+00
+1076	22	2025-11-17	22:00:00	2025-11-14 12:10:02.542193+00
+1038	22	2025-11-19	09:00:00	2025-11-14 12:10:02.555536+00
+1045	22	2025-11-19	10:00:00	2025-11-14 12:10:02.555536+00
+1051	22	2025-11-19	12:00:00	2025-11-14 12:10:02.555536+00
+1057	22	2025-11-19	14:00:00	2025-11-14 12:10:02.555536+00
+1060	22	2025-11-19	17:00:00	2025-11-14 12:10:02.555536+00
+1064	22	2025-11-19	19:00:00	2025-11-14 12:10:02.555536+00
+1069	22	2025-11-19	21:00:00	2025-11-14 12:10:02.555536+00
+1074	22	2025-11-19	22:00:00	2025-11-14 12:10:02.555536+00
+1041	22	2025-11-18	09:00:00	2025-11-14 12:10:02.555977+00
+1048	22	2025-11-18	10:00:00	2025-11-14 12:10:02.555977+00
+1055	22	2025-11-18	12:00:00	2025-11-14 12:10:02.555977+00
+1063	22	2025-11-18	14:00:00	2025-11-14 12:10:02.555977+00
+1067	22	2025-11-18	17:00:00	2025-11-14 12:10:02.555977+00
+1073	22	2025-11-18	19:00:00	2025-11-14 12:10:02.555977+00
+1077	22	2025-11-18	21:00:00	2025-11-14 12:10:02.555977+00
+1079	22	2025-11-18	22:00:00	2025-11-14 12:10:02.555977+00
+1080	22	2025-11-20	09:00:00	2025-11-14 12:10:03.006951+00
+1081	22	2025-11-20	10:00:00	2025-11-14 12:10:03.006951+00
+1082	22	2025-11-20	12:00:00	2025-11-14 12:10:03.006951+00
+1083	22	2025-11-20	14:00:00	2025-11-14 12:10:03.006951+00
+1084	22	2025-11-20	17:00:00	2025-11-14 12:10:03.006951+00
+1085	22	2025-11-20	19:00:00	2025-11-14 12:10:03.006951+00
+1086	22	2025-11-20	21:00:00	2025-11-14 12:10:03.006951+00
+1087	22	2025-11-20	22:00:00	2025-11-14 12:10:03.006951+00
 \.
 
 
@@ -5165,10 +5340,10 @@ COPY public.worker_availability (id, user_id, date, time_slot, created_at) FROM 
 --
 
 COPY public.worker_keys (id, access_key, is_used, used_by_worker_id, created_at, status, deleted_at) FROM stdin;
-1	F1N6MJ	t	18	2025-08-21 17:13:21.31666+00	active	\N
 2	A2B3C4	t	21	2025-08-21 17:13:21.31666+00	active	\N
 7	Q9TPL6	t	22	2025-10-11 18:27:26.206986+00	active	\N
 8	V413CL	f	\N	2025-10-11 19:33:24.330107+00	active	\N
+1	F1N6MJ	t	\N	2025-08-21 17:13:21.31666+00	active	\N
 \.
 
 
@@ -5191,11 +5366,6 @@ COPY public.worker_offers (id, worker_id, coupon_code, discount_type, discount_v
 --
 
 COPY public.worker_profiles (user_id, bio, experience_years, hourly_rate, is_verified) FROM stdin;
-3	Hello! I'm Virat, and I love making vehicles sparkle. For me, cleaning a car or bike is about restoring its beauty and making it look its absolute best. I use the best techniques to 'cover drive' away dirt and grime from every nook and cranny. You can trust me to be reliable, professional, and passionate about giving your ride the care it deserves.	7	200.00	f
-5	I am Washing Machine Repairer and a cleaner, my shop name is "Ashu Washing Machine Services" in Varachha, Surat , we provide all types of services related to the washing machine. All technical and manufacturing errors can be solved.	4	350.00	f
-11	I am Rohan Desai, i own a garage named "Rohan Bike and Car Garage" , we provide all kind of services related to bike and car. Let it be oil, horn, engine, spare parts- we take care of everything.	2	600.00	f
-14	My Name is Jay, I lived in surat, and I provide service of bike and car cleaning!	5	250.00	f
-18	My Name is Rupesh	4	200.00	f
 4	I was working as an employee at Llyod AC where i was working as a AC repairer and has been expertise in technological aspects of all types of ACs. So, i have 3+ years of experience and looking forward to serve you.	8	600.00	f
 22	I provide a Laundry Service Provider. \r\nI have a Drier and a Washing Machine to wash clothes and shoes with modern technology.	5	250.00	f
 21	I provide Home Cleaning and Vehicle related services	6	300.00	f
@@ -5437,14 +5607,14 @@ SELECT pg_catalog.setval('auth.refresh_tokens_id_seq', 1, false);
 -- Name: bookings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_id_seq', 97, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 104, true);
 
 
 --
 -- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.notifications_id_seq', 98, true);
+SELECT pg_catalog.setval('public.notifications_id_seq', 180, true);
 
 
 --
@@ -5465,7 +5635,7 @@ SELECT pg_catalog.setval('public.platform_payouts_id_seq', 3, true);
 -- Name: reviews_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.reviews_id_seq', 53, true);
+SELECT pg_catalog.setval('public.reviews_id_seq', 59, true);
 
 
 --
@@ -5500,7 +5670,7 @@ SELECT pg_catalog.setval('public.sub_services_id_seq', 22, true);
 -- Name: transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.transactions_id_seq', 62, true);
+SELECT pg_catalog.setval('public.transactions_id_seq', 69, true);
 
 
 --
@@ -5528,7 +5698,7 @@ SELECT pg_catalog.setval('public.wallets_id_seq', 2, true);
 -- Name: worker_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.worker_availability_id_seq', 889, true);
+SELECT pg_catalog.setval('public.worker_availability_id_seq', 1087, true);
 
 
 --

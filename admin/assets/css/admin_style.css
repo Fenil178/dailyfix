@@ -1604,7 +1604,7 @@ background-color: transparent;
     right: -300px; /* Start off-screen */
     width: 300px;
     max-width: 80vw;
-    height: 100vh;
+    bottom: 0;
     background-color: var(--menu-bg-color); /* <-- USE THE NEW VARIABLE */
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1001;
