@@ -1,126 +1,195 @@
-/* ============================================== */
-/* == Refined Minimal Activity Card Styles     == */
-/* ============================================== */
-
-/* --- 1. Root Variables --- */
-:root {
-    /* Define shadows for a clean "lift" effect */
-    --card-shadow-light: 0 2px 5px rgba(0, 0, 0, 0.05);
-    --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
-
-    /* Define a smooth, modern transition */
-    --card-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+/* FORCE FONT: Fix for style override */
+body {
+    font-family: 'Poppins', sans-serif !important;
 }
 
-/* --- 2. List & Card Layout --- */
-
-/* The main container for all the cards */
-.activity-card-list {
-    display: grid;
-    gap: 1rem; /* This creates the vertical space between cards */
+.all-activity-container {
+    margin: 2rem 5%; /* 2rem top/bottom, 5% left/right */
+    padding: 1.5rem;
+    background-color: var(--background-color-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* The individual activity card */
-.activity-card {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem; /* Horizontal space between items (icon, details, etc.) */
-  padding: 1.25rem;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-  transition: background-color 240ms ease;
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
-/* --- 3. Card Hover Effect --- */
-.activity-card:hover {
-  background-color: rgba(59, 130, 246, 0.08); /* Light blue background on hover */ 
+.activity-header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color-dark);
 }
 
-/* --- 4. Card Content --- */
-
-/* The icon (from your PHP) */
-.activity-icon {
-    flex-shrink: 0; /* Prevents icon from shrinking */
+.clear-all-btn-page {
+    background-color: var(--danger-color-light);
+    color: var(--danger-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    /* transition: all 0.2s ease; -- REMOVED */
+    text-decoration: none;
 }
 
-/* The main text area (title and subtitle) */
-.activity-card-details {
-    flex-grow: 1; /* Tells details to take all available space */
-    min-width: 0; /* Important! Prevents text overflow issues */
+/* REMOVED .clear-all-btn-page:hover rule */
+
+.clear-all-btn-page i {
+    margin-right: 0.5rem;
 }
 
-.activity-card-details p { 
-    margin: 0; 
+/* --- Full Notification List --- */
+.notification-list-full {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.notification-item-full {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--background-color);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-color);
+    /* transition: background-color 0.2s ease; -- REMOVED */
+    position: relative; /* For unread dot */
+    border: 1px solid var(--border-color);
+}
+
+/* REMOVED .notification-item-full:hover rule */
+
+/* Style for unread items */
+.notification-item-full.unread {
+    background-color: var(--primary-color-light);
+    border-color: var(--primary-color-medium);
+}
+
+/* REMOVED .notification-item-full.unread:hover rule */
+
+.unread-dot {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+}
+
+.item-icon-full {
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.actor-avatar-full {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.system-notification-icon-wrapper-full {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color-medium);
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.item-content-full {
+    flex-grow: 1;
+}
+
+.item-content-full p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-color-dark);
+    line-height: 1.4;
+}
+
+.time-full {
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* --- Empty State --- */
+.no-notifications-full {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-color-light);
+}
+
+.no-notifications-full i {
+    font-size: 3rem;
+    color: var(--border-color-dark);
+    margin-bottom: 1rem;
+}
+
+.no-notifications-full p {
+    font-size: 1.2rem;
     font-weight: 500;
     color: var(--text-color);
-
-    /* On desktop, text will cut off with "..." */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin: 0.5rem 0;
 }
 
-.activity-card-details small { 
-    color: var(--text-color-light); 
-    font-size: 0.9rem;
+.no-notifications-full span {
+    font-size: 0.95rem;
 }
 
-/* The status text and view button */
-.item-status,
-.activity-card .btn-main {
-    flex-shrink: 0; /* Stops them from shrinking */
-    white-space: nowrap; /* Keeps text on one line */
-}
-
-/* --- 5. Navigation (Back Link) --- */
-.back-link {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  opacity: 0.75;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0.45rem 0.9rem;
-  margin: 0;
-  border-radius: 8px;
-}
-
-.back-link:hover {
-  opacity: 1;
-  background-color: rgba(59, 130, 246, 0.08);
-}
-
-.back-link i {
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.back-link:hover i {
-  transform: translateX(-6px);
-}
-
-/* ============================================== */
-/* == 6. Responsive Adjustments                == */
-/* ============================================== */
-
-/* * On screens 640px wide or less (phones and small tablets),
- * we adjust the card to be more flexible.
- */
-@media (max-width: 640px) {
-
-    .activity-card {
-        /* This allows items to wrap to the next line if they don't fit */
-        flex-wrap: wrap;
-        /* Adds a small gap for any items that wrap to the next line */
-        row-gap: 0.75rem; 
+/* --- Mobile Responsive --- */
+@media (max-width: 768px) {
+    .all-activity-container {
+        margin: 1rem 5%; /* 1rem top/bottom, 5% left/right */
+        padding: 1rem;
+        /* Adjust for bottom nav */
+        margin-bottom: calc(var(--bottom-nav-height) + 1rem);
     }
 
-    .activity-card-details p {
-        /* This allows the main title to wrap to multiple lines */
-        white-space: normal; 
-        overflow: visible;
-        text-overflow: clip;
+    .activity-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .activity-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .clear-all-btn-page {
+        width: 100%;
+        text-align: right;
+    }
+
+    .item-icon-full {
+        margin-right: 0.75rem;
+    }
+
+    .actor-avatar-full,
+    .system-notification-icon-wrapper-full {
+        width: 40px;
+        height: 40px;
+    }
+
+    .system-notification-icon-wrapper-full {
+        font-size: 1rem;
+    }
+
+    .item-content-full p {
+        font-size: 0.9rem;
     }
 }

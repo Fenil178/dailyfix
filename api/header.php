@@ -92,6 +92,7 @@ if ($userId) {
     <link rel="stylesheet" href="/dailyfix/assets/css/header.css" />
     <link rel="stylesheet" href="/dailyfix/assets/css/notifications.css" />
     <link rel="icon" type="image/png" href="/dailyfix/assets/images/logo.png">
+    <link rel="stylesheet" href="/dailyfix/assets/css/all_activity.css" />
     <style>body { opacity: 0; transition: opacity 0.3s ease; }</style>
 </head>
 <body>
