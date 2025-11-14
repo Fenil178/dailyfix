@@ -26,10 +26,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="index.php"><img src="/dailyfix/assets/images/logo.png" alt="DailyFix Logo" /></a>
             </div>
             
-            <button class="mobile-menu-btn" id="mobile-menu" aria-label="Toggle Navigation">
-                <i class="fas fa-bars"></i>
-            </button>
-            
             <ul class="nav-links" id="navLinks">
                 <li><a href="index.php" class="<?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">Dashboard</a></li>
                 <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a></li>
@@ -38,15 +34,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <li><a href="platform_earnings.php" class="<?php echo ($currentPage == 'platform_earnings.php') ? 'active' : ''; ?>">Earnings</a></li>
                 <li><a href="manage_reviews.php" class="<?php echo ($currentPage == 'manage_reviews.php') ? 'active' : ''; ?>">Reviews</a></li>
                 <li class="nav-item-dropdown">
-    <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php' || $currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">
-        Services <i class="fas fa-caret-down dropdown-arrow"></i>
-    </a>
-    <ul class="dropdown-nav-menu">
-        <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
-        <li><a href="manage_sub_services.php" class="<?php echo ($currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">Manage Sub-Services</a></li>
-        <li><a href="manage_sub_service_items.php" class="<?php echo ($currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">Manage Service Items</a></li>
-    </ul>
-</li>
+                    <a href="#" class="nav-link-dropdown-toggle <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php' || $currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">
+                        Services <i class="fas fa-caret-down dropdown-arrow"></i>
+                    </a>
+                    <ul class="dropdown-nav-menu">
+                        <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
+                        <li><a href="manage_sub_services.php" class="<?php echo ($currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">Manage Sub-Services</a></li>
+                        <li><a href="manage_sub_service_items.php" class="<?php echo ($currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">Manage Service Items</a></li>
+                    </ul>
+                </li>
                 <li><a href="manage_worker_keys.php" class="<?php echo ($currentPage == 'manage_worker_keys.php') ? 'active' : ''; ?>">Worker Keys</a></li>
                 <li><a href="manage_admins.php" class="<?php echo ($currentPage == 'manage_admins.php') ? 'active' : ''; ?>">Admins</a></li>
             </ul>
@@ -59,8 +55,46 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <a href="logout.php" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
+
+            <button class="mobile-menu-toggle-btn" id="mobile-menu-toggle" aria-label="Toggle Navigation">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
+
+    <div class="mobile-nav-slider" id="mobileNavSlider">
+        <button class="mobile-menu-close-btn" id="mobile-menu-close" aria-label="Close menu">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <ul class="mobile-nav-links">
+            <li><a href="index.php" class="<?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">Dashboard</a></li>
+            <li><a href="manage_users.php" class="<?php echo ($currentPage == 'manage_users.php') ? 'active' : ''; ?>">Users</a></li>
+            <li><a href="view_bookings.php" class="<?php echo ($currentPage == 'view_bookings.php') ? 'active' : ''; ?>">Bookings</a></li>
+            <li><a href="reports.php" class="<?php echo ($currentPage == 'reports.php') ? 'active' : ''; ?>">Reports</a></li>
+            <li><a href="platform_earnings.php" class="<?php echo ($currentPage == 'platform_earnings.php') ? 'active' : ''; ?>">Earnings</a></li>
+            <li><a href="manage_reviews.php" class="<?php echo ($currentPage == 'manage_reviews.php') ? 'active' : ''; ?>">Reviews</a></li>
+            <li class="nav-item-dropdown-mobile">
+                <a href="#" class="nav-link-dropdown-toggle-mobile <?php echo ($currentPage == 'manage_services.php' || $currentPage == 'manage_sub_services.php' || $currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">
+                    Services <i class="fas fa-caret-down dropdown-arrow"></i>
+                </a>
+                <ul class="dropdown-nav-menu-mobile">
+                    <li><a href="manage_services.php" class="<?php echo ($currentPage == 'manage_services.php') ? 'active' : ''; ?>">Manage Categories</a></li>
+                    <li><a href="manage_sub_services.php" class="<?php echo ($currentPage == 'manage_sub_services.php') ? 'active' : ''; ?>">Manage Sub-Services</a></li>
+                    <li><a href="manage_sub_service_items.php" class="<?php echo ($currentPage == 'manage_sub_service_items.php') ? 'active' : ''; ?>">Manage Service Items</a></li>
+                </ul>
+            </li>
+            <li><a href="manage_worker_keys.php" class="<?php echo ($currentPage == 'manage_worker_keys.php') ? 'active' : ''; ?>">Worker Keys</a></li>
+            <li><a href="manage_admins.php" class="<?php echo ($currentPage == 'manage_admins.php') ? 'active' : ''; ?>">Admins</a></li>
+        </ul>
+
+        <div class="mobile-nav-controls">
+            <button id="theme-toggle-btn-mobile"><i class="fas fa-moon"></i> Toggle Theme</button>
+            <a href="#" id="logout-link-mobile"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+
 
     <div id="custom-logout-modal" class="modal confirmation-modal modal-danger" role="dialog" aria-hidden="true">
         <div class="modal-content">
@@ -77,24 +111,86 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Logic for the new Services dropdown
+        // --- ORIGINAL DESKTOP DROPDOWN SCRIPT ---
         const servicesDropdown = document.querySelector('.nav-item-dropdown');
         if (servicesDropdown) {
             const dropdownToggle = servicesDropdown.querySelector('.nav-link-dropdown-toggle');
             
             dropdownToggle.addEventListener('click', function(event) {
-                // Prevent the link from navigating, as it's just a toggle
                 event.preventDefault();
                 servicesDropdown.classList.toggle('open');
             });
         }
-
-        // Close the dropdown if the user clicks outside of it
         document.addEventListener('click', function(event) {
             if (servicesDropdown && !servicesDropdown.contains(event.target)) {
                 servicesDropdown.classList.remove('open');
             }
         });
+
+        // --- NEW MOBILE MENU SCRIPT ---
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenuClose = document.getElementById('mobile-menu-close');
+        const mobileNavSlider = document.getElementById('mobileNavSlider');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+
+        const openMenu = () => {
+            mobileNavSlider.classList.add('open');
+            mobileNavOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        };
+
+        const closeMenu = () => {
+            mobileNavSlider.classList.remove('open');
+            mobileNavOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+
+        mobileMenuToggle.addEventListener('click', openMenu);
+        mobileMenuClose.addEventListener('click', closeMenu);
+        mobileNavOverlay.addEventListener('click', closeMenu);
+
+        // --- NEW MOBILE *SERVICES* DROPDOWN SCRIPT ---
+        const servicesDropdownMobile = document.querySelector('.nav-item-dropdown-mobile');
+        if (servicesDropdownMobile) {
+            const dropdownToggleMobile = servicesDropdownMobile.querySelector('.nav-link-dropdown-toggle-mobile');
+            
+            dropdownToggleMobile.addEventListener('click', function(event) {
+                event.preventDefault();
+                servicesDropdownMobile.classList.toggle('open');
+            });
+        }
+
+        // --- SCRIPT TO CONNECT MOBILE BUTTONS TO ORIGINAL BUTTONS ---
+        
+        // Connect mobile theme toggle to original theme toggle
+        const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+        const originalThemeToggleBtn = document.getElementById('theme-toggle-btn');
+        if (themeToggleBtnMobile && originalThemeToggleBtn) {
+            themeToggleBtnMobile.addEventListener('click', function() {
+                originalThemeToggleBtn.click(); // Trigger a click on the original button
+                
+                // Update mobile icon if original has one (assuming it swaps)
+                const originalIcon = originalThemeToggleBtn.querySelector('i');
+                const mobileIcon = themeToggleBtnMobile.querySelector('i');
+                if(originalIcon && mobileIcon) {
+                    // This assumes your original script swaps the icon class
+                    setTimeout(() => { 
+                         mobileIcon.className = originalIcon.className;
+                    }, 100);
+                }
+            });
+        }
+
+        // Connect mobile logout link to original logout link
+        const logoutLinkMobile = document.getElementById('logout-link-mobile');
+        const originalLogoutLink = document.getElementById('logout-link');
+        if (logoutLinkMobile && originalLogoutLink) {
+            logoutLinkMobile.addEventListener('click', function(event) {
+                event.preventDefault(); // Stop <a> from navigating
+                originalLogoutLink.click(); // Trigger a click on the original link
+                closeMenu(); // Close the menu
+            });
+        }
     });
     </script>
 

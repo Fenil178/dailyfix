@@ -1,6 +1,23 @@
 /* admin_style.css */
 
 /* --- 1.0 ROOT & THEME VARIABLES --- */
+/* Add this line inside your :root { ... } selector */
+:root {
+    /* ... your other light mode colors ... */
+    --menu-bg-color: #ffffff; /* Solid white for light mode */
+}
+
+/* Find this block in your CSS */
+[data-theme="dark"] {
+    /* ... you have other dark mode colors here like... */
+    --bg-color: #1a1a1a;
+    --text-color-primary: #ffffff;
+    --text-color-secondary: #b0b0b0;
+    
+    /* ADD THIS LINE INSIDE THE BLOCK: */
+    --menu-bg-color: #0f172a; /* Or any dark color from your theme */
+}
+
 :root {
   --primary-color: #4f46e5;
   --primary-hover: #4338ca;
@@ -270,7 +287,6 @@ body {
 .dropdown-menu button:hover {
   background-color: var(--background-tertiary);
   color: var(--primary-color);
-  transform: translateX(4px);
 }
 
 /* --- 5.0 MAIN CONTENT & PAGE HEADER --- */
@@ -495,16 +511,6 @@ background-color: transparent;
 }
 .skip-link:focus {
   top: 6px;
-}
-
-.section-fly-in {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-.section-fly-in.visible {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* --- 9.0 MOBILE & RESPONSIVE DESIGN --- */
@@ -1552,7 +1558,7 @@ background-color: transparent;
 }
 
 @media (max-width: 600px) {
-  .details-grid {
+  .details-grid { 
     grid-template-columns: 1fr; /* Stack on smaller screens */
   }
   .booking-details-modal .modal-header-custom {
@@ -1572,4 +1578,241 @@ background-color: transparent;
 }
 .rating .fa-star.selected {
   color: #ffc107;
+}
+
+/*
+------------------------------------------------
+--- MOBILE NAVIGATION & RESPONSIVE STYLES ---
+------------------------------------------------
+*/
+
+/* --- Default state (hidden on desktop) --- */
+
+.mobile-menu-toggle-btn {
+    display: none; /* Hidden by default, shown in media query */
+    background: none;
+    border: none;
+    color: var(--text-color-primary); /* Use your theme color */
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.mobile-nav-slider {
+    position: fixed;
+    top: 0;
+    right: -300px; /* Start off-screen */
+    width: 300px;
+    max-width: 80vw;
+    height: 100vh;
+    background-color: var(--menu-bg-color); /* <-- USE THE NEW VARIABLE */
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    transition: right 0.3s ease-in-out; /* Smooth slide effect */
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto; /* Allow scrolling if links are many */
+}
+
+.mobile-nav-slider.open {
+    right: 0; /* Slide in */
+}
+
+.mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-nav-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-color-primary);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-left: auto; /* Push to the right */
+    margin-bottom: 1rem;
+}
+
+/* --- Mobile Menu Links --- */
+.mobile-nav-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1; /* Take up available space, pushing controls down */
+}
+
+.mobile-nav-links li a,
+.nav-link-dropdown-toggle-mobile {
+    display: block;
+    padding: 0.9rem 0.5rem;
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mobile-nav-links li a:hover,
+.nav-link-dropdown-toggle-mobile:hover {
+    background-color: var(--hover-bg-color); /* Use your theme's hover color */
+    color: var(--text-color-primary);
+}
+
+.mobile-nav-links li a.active,
+.nav-link-dropdown-toggle-mobile.active {
+    color: var(--primary-color); /* Use your theme's active color */
+    font-weight: 600;
+}
+
+/* Mobile Services Dropdown */
+.nav-item-dropdown-mobile .dropdown-nav-menu-mobile {
+    list-style: none;
+    padding-left: 1.5rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.nav-item-dropdown-mobile.open .dropdown-nav-menu-mobile {
+    max-height: 500px; /* Animate open */
+}
+
+.nav-item-dropdown-mobile .dropdown-arrow {
+    transition: transform 0.3s ease;
+    display: inline-block;
+    margin-left: 0.25rem;
+}
+
+.nav-item-dropdown-mobile.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* --- Mobile Menu Controls (Bottom) --- */
+.mobile-nav-controls {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color); /* Use your theme's border */
+}
+
+.mobile-nav-controls button,
+.mobile-nav-controls a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.9rem 0.5rem;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif; /* Ensure font matches */
+}
+
+.mobile-nav-controls button:hover,
+.mobile-nav-controls a:hover {
+    background-color: var(--hover-bg-color);
+    color: var(--text-color-primary);
+}
+
+.mobile-nav-controls button i,
+.mobile-nav-controls a i {
+    width: 25px;
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+}
+
+
+/*
+------------------------------------------------
+--- MEDIA QUERY (e.g., 992px) ---
+------------------------------------------------
+*/
+/* Adjust this max-width as needed */
+@media (max-width: 992px) {
+    .navbar-container {
+        justify-content: space-between; /* Push logo left, icon right */
+    }
+
+    /* Hide desktop nav */
+    .nav-links,
+    .user-menu {
+        display: none;
+    }
+
+    /* Show mobile hamburger button */
+    .mobile-menu-toggle-btn {
+        display: block;
+    }
+}
+
+/*
+------------------------------------------------
+--- DARK MODE: MOBILE NAV SLIDER FIX (body.dark-mode) ---
+------------------------------------------------
+*/
+
+body.dark-mode .mobile-nav-slider {
+    background-color: #252526; /* A solid dark background */
+    border-left: 1px solid #333;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .mobile-menu-close-btn {
+    color: #f0f0f0; /* Light color for the 'X' icon */
+}
+
+body.dark-mode .mobile-menu-close-btn:hover {
+    background-color: #3e3e3e;
+}
+
+body.dark-mode .mobile-nav-links li a,
+body.dark-mode .nav-link-dropdown-toggle-mobile {
+    color: #d4d4d4; /* Light grey text */
+}
+
+body.dark-mode .mobile-nav-links li a:hover,
+body.dark-mode .nav-link-dropdown-toggle-mobile:hover {
+    background-color: #333;  /* Darker hover background */
+    color: #ffffff;           /* Pure white text on hover */
+}
+
+body.dark-mode .mobile-nav-links li a.active,
+body.dark-mode .nav-link-dropdown-toggle-mobile.active {
+    color: var(--primary-color, #4a90e2); /* Your theme's primary color */
+    font-weight: 600;
+}
+
+body.dark-mode .mobile-nav-controls {
+    border-top: 1px solid #3a3a3a; /* Darker border */
+}
+
+body.dark-mode .mobile-nav-controls button,
+body.dark-mode .mobile-nav-controls a {
+    color: #d4d4d4; /* Light grey text */
+}
+
+body.dark-mode .mobile-nav-controls button:hover,
+body.dark-mode .mobile-nav-controls a:hover {
+    background-color: #333;
+    color: #ffffff;
 }
