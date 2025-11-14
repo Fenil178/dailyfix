@@ -72,6 +72,11 @@ $bookingTime->setTimezone(new DateTimeZone('Asia/Kolkata'));
 $dateIssued = new DateTime($invoice['created_at']); // Assuming creation date is issue date
 $dateIssued->setTimezone(new DateTimeZone('Asia/Kolkata'));
 
+// --- NEW FIX: Set "Generated on" time to IST ---
+$generatedDate = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
+$generatedDateFormatted = $generatedDate->format('Y-m-d g:i A T');
+// --- END NEW FIX ---
+
 // --- 5. PARSE SERVICE DETAILS ---
 $serviceDetails = explode("\n", $invoice['service_details'] ?? '');
 $serviceData = ['Service' => 'N/A', 'Item' => 'N/A', 'Address' => 'N/A']; // Initialize
@@ -240,7 +245,7 @@ $html = '
 </head>
 <body>
     <div class="footer">
-        This is a computer-generated invoice from DailyFix. Thank you for using our services. | Generated on: ' . date('Y-m-d H:i:s T') . '
+        This is a computer-generated invoice from DailyFix. Thank you for using our services. | Generated on: ' . $generatedDateFormatted . '
     </div>
     <main class="invoice-wrapper">
         <table class="header-table" style="margin-bottom: 40px;">
