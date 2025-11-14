@@ -211,15 +211,15 @@ try {
         .price-summary .discount-applied { color: var(--success-color); font-weight: 500; }
         .price-summary .final-price-display { font-weight: bold; font-size: 1.1em; color: var(--text-color-dark); }
 
-        /* === Quantity Counter Styles === */
+       /* === Quantity Counter Styles === */
 .quantity-counter {
-    display: none; /* Hidden by default */
+    display: none; 
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-top: 12px; /* Add some space */
-    background-color: var(--hover-color);
-    border: 1px solid var(--border-color);
+    margin-top: 12px; 
+    background-color: transparent; 
+    border: none;                 
     border-radius: 20px;
     padding: 4px;
     width: max-content;
@@ -234,25 +234,32 @@ try {
 }
 
 .qty-btn {
-    background-color: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 50%; /* Makes it round */
-    width: 28px;
-    height: 28px;
-    font-size: 20px;
+    /* These styles are from our previous step and are correct */
+    background-color: var(--success-color);
+    border: 1px solid var(--success-color);
+    color: var(--text-color-white);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
-    color: var(--primary-color);
-    line-height: 1; /* Helps center the symbol */
-    transition: background-color 0.2s;
+    line-height: 1;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .qty-btn:hover {
-    background-color: #f1f1f1;
+    opacity: 0.85;
 }
 
 .qty-btn.minus { 
-    color: var(--danger-color, #ef4444); /* Use your existing danger color */
+    /* These styles are from our previous step and are correct */
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: var(--text-color-white);
 }
 
 .qty-value {
@@ -260,7 +267,13 @@ try {
     font-weight: 600;
     min-width: 20px;
     text-align: center;
-    color: var(--text-color-dark);
+    color: var(--text-color-white);
+
+}
+
+/* Give the card a little more room at the bottom */
+.booking-container .service-option {
+    padding-bottom: 1.5rem;
 }
 
 /* Give the card a little more room at the bottom */
